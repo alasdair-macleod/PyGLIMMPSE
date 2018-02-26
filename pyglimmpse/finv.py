@@ -3,10 +3,9 @@ from scipy.stats import f
 
 def finv(alpha, df1, df2):
     """
-    This module returns the critical value from a central F(DF1, DF2)
-    distribution for a given signficance level alpha.  It screens the
-    FINV function for numerator DF greater than 1*10^7.6 or denominator
-    DF greater than 1*10^9.4.  For large degrees of freedom, it returns
+    This function returns the critical value from a central F(DF1, DF2) where df is degree of freedom
+    distribution for a given signficance level alpha.  It screens the FINV function for numerator DF
+    greater than 1*10^7.6 or denominator DF greater than 1*10^9.4. For large degrees of freedom, it returns
     a missing value.
 
     :param alpha:
