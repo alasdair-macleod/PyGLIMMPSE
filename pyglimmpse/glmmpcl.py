@@ -11,7 +11,7 @@ from pyglimmpse.probf import probf
 def glmmpcl(alphatest, dfh, n2, dfe2, cl_type, n_est, rank_est,
             alpha_cl, alpha_cu, tolerance, power, omega):
     """
-    This module computes confidence intervals for noncentrality and
+    This function computes confidence intervals for noncentrality and
     power for a General Linear Hypothesis (GLH  Ho:C*beta=theta0) test
     in the General Linear Univariate Model (GLUM: y=X*beta+e, HILE
     GAUSS), based on estimating the effect, error variance, or neither.
