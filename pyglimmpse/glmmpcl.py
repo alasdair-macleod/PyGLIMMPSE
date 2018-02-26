@@ -52,16 +52,16 @@ def glmmpcl(alphatest, dfh, n2, dfe2, cl_type, n_est, rank_est,
     """
     if cl_type == Constants.CLTYPE_DESIRED_KNOWN or cl_type == Constants.CLTYPE_DESIRED_ESTIMATE:
         if np.isnan(power):
-            warnings.warn('Powerwarn16: Confidence limits are missing because power is missing.')
+            warnings.warn('Confidence limits are missing because power is missing.')
         else:
             f_a = omega / dfh
-            dfe1, fcrit, noncen_e = calc_noncentrality(alphatest, dfe2, dfh, f_a, n_est, rank_est)
-            noncen_l = lowerbound_noncentrality(alpha_cl, cl_type, dfe1, dfh, f_a, noncen_e, tolerance)
-            fmethod_l, power_l = lowerbound_power(alpha_cl, alphatest, dfe2, dfh, fcrit, noncen_l, tolerance)
-            noncen_u = upperbound_noncentrality(alpha_cu, cl_type, dfe1, dfh, f_a, noncen_e, tolerance)
-            fmethod_u, power_u = upperbound_power(alpha_cu, alphatest, dfe2, dfh, fcrit, noncen_u, tolerance)
+            dfe1, fcrit, noncen_e = _calc_noncentrality(alphatest, dfe2, dfh, f_a, n_est, rank_est)
+            noncen_l = _lowerbound_noncentrality(alpha_cl, cl_type, dfe1, dfh, f_a, noncen_e, tolerance)
+            fmethod_l, power_l = _lowerbound_power(alpha_cl, alphatest, dfe2, dfh, fcrit, noncen_l, tolerance)
+            noncen_u = _upperbound_noncentrality(alpha_cu, cl_type, dfe1, dfh, f_a, noncen_e, tolerance)
+            fmethod_u, power_u = _upperbound_power(alpha_cu, alphatest, dfe2, dfh, fcrit, noncen_u, tolerance)
 
-            warn_conservative_ci(alpha_cl, cl_type, n2, n_est, noncen_l, noncen_u)
+            _warn_conservative_ci(alpha_cl, cl_type, n2, n_est, noncen_l, noncen_u)
     else:
         power_l = None
         power_u = None
@@ -73,17 +73,17 @@ def glmmpcl(alphatest, dfh, n2, dfe2, cl_type, n_est, rank_est,
     return power_l, power_u, fmethod_l, fmethod_u, noncen_l, noncen_u
 
 
-def warn_conservative_ci(alpha_cl, cl_type, n2, n_est, noncen_l, noncen_u):
+def _warn_conservative_ci(alpha_cl, cl_type, n2, n_est, noncen_l, noncen_u):
     """warning for conservative confidence interval"""
     if (cl_type == Constants.CLTYPE_DESIRED_KNOWN or
             cl_type == Constants.CLTYPE_DESIRED_ESTIMATE) and n2 != n_est:
         if alpha_cl > 0 and noncen_l == 0:
-            warnings.warn('PowerWarn5: The lower confidence limit on power is conservative.')
+            warnings.warn('The lower confidence limit on power is conservative.')
         if alpha_cl == 0 and noncen_u == 0:
-            warnings.warn('PowerWarn10: The upper confidence limit on power is conservative.')
+            warnings.warn('The upper confidence limit on power is conservative.')
 
 
-def upperbound_power(alpha_cu, alphatest, dfe2, dfh, fcrit, noncen_u, tolerance):
+def _upperbound_power(alpha_cu, alphatest, dfe2, dfh, fcrit, noncen_u, tolerance):
     """Calculate upper bound for power"""
     if alpha_cu <= tolerance:
         prob = 0
@@ -97,7 +97,7 @@ def upperbound_power(alpha_cu, alphatest, dfe2, dfh, fcrit, noncen_u, tolerance)
     return fmethod_u, power_u
 
 
-def lowerbound_power(alpha_cl, alphatest, dfe2, dfh, fcrit, noncen_l, tolerance):
+def _lowerbound_power(alpha_cl, alphatest, dfe2, dfh, fcrit, noncen_l, tolerance):
     """Calculate lower bound for power"""
     if alpha_cl <= tolerance:
         prob = 1 - alphatest
@@ -111,7 +111,7 @@ def lowerbound_power(alpha_cl, alphatest, dfe2, dfh, fcrit, noncen_l, tolerance)
     return fmethod_l, power_l
 
 
-def upperbound_noncentrality(alpha_cu, cl_type, dfe1, dfh, f_a, noncen_e, tolerance):
+def _upperbound_noncentrality(alpha_cu, cl_type, dfe1, dfh, f_a, noncen_e, tolerance):
     """Calculate upper bound for noncentrality"""
     if alpha_cu <= tolerance:
         noncen_u = float('Inf')
@@ -127,7 +127,7 @@ def upperbound_noncentrality(alpha_cu, cl_type, dfe1, dfh, f_a, noncen_e, tolera
     return noncen_u
 
 
-def lowerbound_noncentrality(alpha_cl, cl_type, dfe1, dfh, f_a, noncen_e, tolerance):
+def _lowerbound_noncentrality(alpha_cl, cl_type, dfe1, dfh, f_a, noncen_e, tolerance):
     """Calculate lower bound for noncentrality"""
     if alpha_cl <= tolerance:
         noncen_l = 0
@@ -144,7 +144,7 @@ def lowerbound_noncentrality(alpha_cl, cl_type, dfe1, dfh, f_a, noncen_e, tolera
     return noncen_l
 
 
-def calc_noncentrality(alphatest, dfe2, dfh, f_a, n_est, rank_est):
+def _calc_noncentrality(alphatest, dfe2, dfh, f_a, n_est, rank_est):
     """Calculate noncentrality"""
     dfe1 = n_est - rank_est
     noncen_e = dfh * f_a
