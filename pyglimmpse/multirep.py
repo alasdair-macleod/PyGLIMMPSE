@@ -7,10 +7,89 @@ from pyglimmpse.finv import finv
 from pyglimmpse.probf import probf
 from pyglimmpse.glmmpcl import glmmpcl
 
-
-def hlt(rank_C, rank_U, rank_X, total_N, eval_HINVE, MultiHLT, CL, Scalar):
+def _hlt(rank_C, rank_U, rank_X, total_N, eval_HINVE, df2Method):
     """
-    This module calculates power for Hotelling-Lawley trace
+    shell function for hotelling lawley traces.
+    :param rank_C:
+    :param rank_U:
+    :param rank_X:
+    :param total_N:
+    :param eval_HINVE:
+    :return:
+    """
+    min_rank_C_U = min(rank_C, rank_U)
+    df1 = rank_C * rank_U
+    df2 = df2Method()
+
+    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+        power = float('nan')
+        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+    else:
+
+    power, fmethod = _multi_power(Scalar.alpha, df1, df2, omega)
+    power_l, power_u, fmethod_l, fmethod_u, noncen_l, noncen_u = glmmpcl(Scalar.alpha, df1, total_N, df2,
+                                                                         CL.cl_type, CL.n_est, CL.rank_est,
+                                                                         CL.alpha_cl, CL.alpha_cu, Scalar.tolerance,
+                                                                         power, omega)
+    return {'lower': power_l, 'power': power, 'upper': power_u}
+
+
+def hltOneMomentNullApproximator(rank_C, rank_U, rank_X, total_N, eval_HINVE ):
+    """
+    This function calculates power for Hotelling-Lawley trace
+    based on the Pillai F approximation. HLT is the "population value"
+    Hotelling Lawley trace. F1 and DF2 are the hypothesis and
+    error degrees of freedom, OMEGA is the non-centrality parameter, and
+    FCRIT is the critical value from the F distribution.
+
+    :param rank_C: rank of C matrix
+    :param rank_U: rank of U matrix
+    :param rank_X: rank of X matrix
+    :param total_N: total N
+    :param eval_HINVE: eigenvalues for H*INV(E)
+    :param mmethod: multirep method
+    :return: power, power for Hotelling-Lawley trace & CL if requested
+    """
+    # MMETHOD default= [4,2,2]
+    # MultiHLT  Choices for Hotelling-Lawley Trace
+    #       = 1  Pillai (1954, 55) 1 moment null approx
+
+
+    df2Method = oneMomentDf2(rank_U, rank_X, total_N)
+
+    # df2 need to > 0 and eigenvalues not missing
+    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+        power = float('nan')
+        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+    else:
+        hlt, omega = calcHltOmega(eval_HINVE, rank_X, total_N)
+
+        power, fmethod = _multi_power(Scalar.alpha, df1, df2, omega)
+
+    power_l, power_u, fmethod_l, fmethod_u, noncen_l, noncen_u = glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est, CL.rank_est,
+                                                                         CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+
+    return {'lower': power_l, 'power': power, 'upper': power_u}
+
+
+def calcHltOmega(eval_HINVE, rank_X, total_N):
+    if min_rank_C_U == 1:
+        hlt = eval_HINVE * (total_N - rank_X) / total_N
+        omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
+    else:
+        hlt = eval_HINVE
+        omega = df2 * (hlt / min_rank_C_U)
+    return hlt, omega
+
+
+def oneMomentDf2(rank_U, rank_X, total_N):
+    df2 = min_rank_C_U * (total_N - rank_X - rank_U - 1) + 2
+    return df2
+
+
+def hltTwoMomentNullApproximator(rank_C, rank_U, rank_X, total_N, eval_HINVE ):
+    """
+    This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
     Hotelling Lawley trace. F1 and DF2 are the hypothesis and
     error degrees of freedom, OMEGA is the non-centrality parameter, and
@@ -29,24 +108,17 @@ def hlt(rank_C, rank_U, rank_X, total_N, eval_HINVE, MultiHLT, CL, Scalar):
 
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
-    #       = 1  Pillai (1954, 55) 1 moment null approx
     #       = 2  McKeon (1974) two moment null approx
-    #       = 3  Pillai (1959) one moment null approx+ OS noncen mult
-    #       = 4  McKeon (1974) two moment null approx+ OS noncen mult
-    if MultiHLT == Constants.MULTI_HLT_PILLAI or MultiHLT == Constants.MULTI_HLT_PILLAI_OS:
-        df2 = min_rank_C_U * (total_N - rank_X - rank_U - 1) + 2
-    elif MultiHLT == Constants.MULTI_HLT_MCKEON or MultiHLT == Constants.MULTI_HLT_MCKEON_OS:
-        nu_df2 = (total_N - rank_X)*(total_N - rank_X) - (total_N - rank_X)*(2*rank_U + 3) + rank_U*(rank_U + 3)
-        de_df2 = (total_N - rank_X)*(rank_C + rank_U + 1) - (rank_C + 2*rank_U + rank_U*rank_U - 1)
-        df2 = 4 + (rank_C*rank_U + 2) * (nu_df2/de_df2)
+    nu_df2 = (total_N - rank_X)*(total_N - rank_X) - (total_N - rank_X)*(2*rank_U + 3) + rank_U*(rank_U + 3)
+    de_df2 = (total_N - rank_X)*(rank_C + rank_U + 1) - (rank_C + 2*rank_U + rank_U*rank_U - 1)
+    df2 = 4 + (rank_C*rank_U + 2) * (nu_df2/de_df2)
 
     # df2 need to > 0 and eigenvalues not missing
     if df2 <= 0 or np.isnan(eval_HINVE[0]):
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
-        if (MultiHLT == Constants.MULTI_HLT_PILLAI_OS or
-                MultiHLT == Constants.MULTI_HLT_MCKEON_OS) or min_rank_C_U == 1:
+        if min_rank_C_U == 1:
             hlt = eval_HINVE * (total_N - rank_X) / total_N
             omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
         else:
@@ -60,10 +132,90 @@ def hlt(rank_C, rank_U, rank_X, total_N, eval_HINVE, MultiHLT, CL, Scalar):
 
     return {'lower': power_l, 'power': power, 'upper': power_u}
 
-
-def pbt(rank_C, rank_U, rank_X, total_N, eval_HINVE, MultiPBT, CL, Scalar):
+def hltOneMomentNullApproximatorObrienShee(rank_C, rank_U, rank_X, total_N, eval_HINVE ):
     """
-    This module calculates power for Pillai-Bartlett trace based on the
+    This function calculates power for Hotelling-Lawley trace
+    based on the Pillai F approximation. HLT is the "population value"
+    Hotelling Lawley trace. F1 and DF2 are the hypothesis and
+    error degrees of freedom, OMEGA is the non-centrality parameter, and
+    FCRIT is the critical value from the F distribution.
+
+    :param rank_C: rank of C matrix
+    :param rank_U: rank of U matrix
+    :param rank_X: rank of X matrix
+    :param total_N: total N
+    :param eval_HINVE: eigenvalues for H*INV(E)
+    :param mmethod: multirep method
+    :return: power, power for Hotelling-Lawley trace & CL if requested
+    """
+    min_rank_C_U = min(rank_C, rank_U)
+    df1 = rank_C * rank_U
+
+    # MMETHOD default= [4,2,2]
+    # MultiHLT  Choices for Hotelling-Lawley Trace
+    #       = 3  Pillai (1959) one moment null approx+ OS noncen mult
+    df2 = min_rank_C_U * (total_N - rank_X - rank_U - 1) + 2
+
+    # df2 need to > 0 and eigenvalues not missing
+    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+        power = float('nan')
+        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+    else:
+        hlt = eval_HINVE * (total_N - rank_X) / total_N
+        omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
+
+        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+
+    power_l, power_u, fmethod_l, fmethod_u, noncen_l, noncen_u = glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est, CL.rank_est,
+                                                                         CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+
+    return {'lower': power_l, 'power': power, 'upper': power_u}
+
+def hltTwoMomentNullApproximatorObrienShee(rank_C, rank_U, rank_X, total_N, eval_HINVE ):
+    """
+    This function calculates power for Hotelling-Lawley trace
+    based on the Pillai F approximation. HLT is the "population value"
+    Hotelling Lawley trace. F1 and DF2 are the hypothesis and
+    error degrees of freedom, OMEGA is the non-centrality parameter, and
+    FCRIT is the critical value from the F distribution.
+
+    :param rank_C: rank of C matrix
+    :param rank_U: rank of U matrix
+    :param rank_X: rank of X matrix
+    :param total_N: total N
+    :param eval_HINVE: eigenvalues for H*INV(E)
+    :param mmethod: multirep method
+    :return: power, power for Hotelling-Lawley trace & CL if requested
+    """
+    min_rank_C_U = min(rank_C, rank_U)
+    df1 = rank_C * rank_U
+
+    # MMETHOD default= [4,2,2]
+    # MultiHLT  Choices for Hotelling-Lawley Trace
+    #       = 4  McKeon (1974) two moment null approx+ OS noncen mult
+    nu_df2 = (total_N - rank_X)*(total_N - rank_X) - (total_N - rank_X)*(2*rank_U + 3) + rank_U*(rank_U + 3)
+    de_df2 = (total_N - rank_X)*(rank_C + rank_U + 1) - (rank_C + 2*rank_U + rank_U*rank_U - 1)
+    df2 = 4 + (rank_C*rank_U + 2) * (nu_df2/de_df2)
+
+    # df2 need to > 0 and eigenvalues not missing
+    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+        power = float('nan')
+        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+    else:
+        hlt = eval_HINVE * (total_N - rank_X) / total_N
+        omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
+
+        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+
+    power_l, power_u, fmethod_l, fmethod_u, noncen_l, noncen_u = glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est, CL.rank_est,
+                                                                         CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+
+    return {'lower': power_l, 'power': power, 'upper': power_u}
+
+
+def pbt(rank_C, rank_U, rank_X, total_N, eval_HINVE ):
+    """
+    This function calculates power for Pillai-Bartlett trace based on the
     F approx. method.  V is the "population value" of PBT,
     DF1 and DF2 are the hypothesis and error degrees of freedom,
     OMEGA is the noncentrality parameter, and FCRIT is the
@@ -129,9 +281,9 @@ def pbt(rank_C, rank_U, rank_X, total_N, eval_HINVE, MultiPBT, CL, Scalar):
     return {'lower': power_l, 'power': power, 'upper': power_u}
 
 
-def wlk(rank_C, rank_U, rank_X, total_N, eval_HINVE, MultiWLK, CL, Scalar):
+def wlk(rank_C, rank_U, rank_X, total_N, eval_HINVE ):
     """
-    This module calculates power for Wilk's Lambda based on
+    This function calculates power for Wilk's Lambda based on
     the F approx. method.  W is the "population value" of Wilks` Lambda,
     DF1 and DF2 are the hypothesis and error degrees of freedom, OMEGA
     is the noncentrality parameter, and FCRIT is the critical value
@@ -153,7 +305,7 @@ def wlk(rank_C, rank_U, rank_X, total_N, eval_HINVE, MultiWLK, CL, Scalar):
     # MMETHOD[2] Choices for Wilks' Lambda
     #       = 1  Rao (1951) two moment null approx
     #       = 2  Rao (1951) two moment null approx
-    #       = 3  Rao (1951) two moment null approx + OS noncen mult
+    #       = 3  Rao (1951) two moment null approx + OS Obrien Shee noncen mult
     #       = 4  Rao (1951) two moment null approx + OS noncen mult
     if np.isnan(eval_HINVE[0]):
         w = float('nan')
@@ -199,9 +351,9 @@ def wlk(rank_C, rank_U, rank_X, total_N, eval_HINVE, MultiWLK, CL, Scalar):
     return {'lower': power_l, 'power': power, 'upper': power_u}
 
 
-def special(rank_C, rank_U, rank_X, total_N, eval_HINVE, CL, Scalar):
+def special(rank_C, rank_U, rank_X, total_N, eval_HINVE ):
     """
-    This module performs two disparate tasks. For B=1 (UNIVARIATE
+    This function performs two disparate tasks. For B=1 (UNIVARIATE
     TEST), the powers are calculated more efficiently. For A=1 (SPECIAL
     MULTIVARIATE CASE), exact multivariate powers are calculated.
     Powers for the univariate tests require separate treatment.
@@ -233,7 +385,7 @@ def special(rank_C, rank_U, rank_X, total_N, eval_HINVE, CL, Scalar):
     return {'lower': power_l, 'power': power, 'upper': power_u}
 
 
-def multi_power(alpha, df1, df2, omega):
+def _multi_power(alpha, df1, df2, omega):
     """ The common part for these four multirep methods
         Computing power
         :rtype: object"""
