@@ -3,7 +3,7 @@ import numpy as np
 from pyglimmpse.exceptions.ranksymm_validation_exception import RanksymmValidationException
 
 
-def ranksymm(matrix, tolerance):
+def ranksymm(matrix: np.matrix, tolerance: float) -> np.matrix:
     """This function computes the rank of a square symmetric
            nonnegative definite matrix via eigenvalues.
                                                             

@@ -1,24 +1,18 @@
 import numpy as np
 
-class Power:
+class Epsilon: #dfFactors
     """
-    Object representing power and associated metadata returned by power calculations.
-    """
-    def __init__(self):
-        self.power = 0
-        self.noncentrality_parameter = 0
-        self.fmethod = 'DEFAULT'
-        self.lowerBound = Power()
-        self.upperBound = Power()
-
-class Epsilon:
-    """
+    LIBRARY?????
     This class produces matrices required for Geisser-Greenhouse,
     Huynh-Feldt or uncorrected repeated measures power calculations. It
     is the first step. Program uses approximations of expected values of
     epsilon estimates due to Muller (1985), based on theorem of Fujikoshi
     (1978). Program requires that U be orthonormal and orthogonal to a
     columns of 1's.
+
+    Epsilon is a measure of dispersion.
+    scale free measure of heterogeneity of the eigenvalues of the covariance
+    U' * SIGMA * U = SIGMA_STAR
     """
 
     def __init__(self, sigma_star, rank_U):
@@ -50,3 +44,4 @@ class Epsilon:
         self.d = len(deigval_array)
         self.deigval = np.matrix(deigval_array).T
         self.mtp = np.matrix(mtp_array).T
+        #todo  what is .T???? <- transpose

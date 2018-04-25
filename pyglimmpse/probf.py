@@ -44,8 +44,6 @@ def probf(fcrit, df1, df2, noncen):
         zscore = _get_zscore(df1, df2, fcrit, noncen)
         prob, fmethod = _normal_approximation(zscore)
     return prob, fmethod
-
-
 def _normal_approximation(zscore):
     """Normal approximation, value dependent on zscore"""
     if math.fabs(zscore) < 6:
@@ -58,8 +56,6 @@ def _normal_approximation(zscore):
         elif zscore > 6:
             prob = 1
     return prob, fmethod
-
-
 def _get_zscore(df1, df2, fcrit, noncen):
     """Calculate zscore for Normal approximation"""
     p1 = 1 / 3
@@ -73,8 +69,6 @@ def _get_zscore(df1, df2, fcrit, noncen):
     denz = (arg2 + arg3 * arg1**p4) ** p3
     zscore = numz / denz
     return zscore
-
-
 def _tiku_approximation(df1, df2, fcrit, noncen):
     """Tiku approximation (best approximation)"""
     h_tiku = 2 * (df1 + noncen)**3 + 3 * (df1 + noncen) * (df1 + 2 * noncen) * (df2 - 2) + (df1 + 3 * noncen) * (df2 - 2)**2
@@ -86,8 +80,6 @@ def _tiku_approximation(df1, df2, fcrit, noncen):
     prob = special.ncfdtr(df1_tiku, df2, 0, fcrit_tiku)
     fmethod = Constants.FMETHOD_TIKU
     return prob, fmethod
-
-
 def _nonadjusted(df1, df2, fcrit, noncen):
     """CDF function (no approximation)"""
     prob = special.ncfdtr(df1, df2, noncen, fcrit)
