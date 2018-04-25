@@ -10,12 +10,12 @@ class Power:
     """
     Object representing power and associated metadata returned by power calculations.
     """
-    def __init__(self):
-        self.power = 0
-        self.noncentrality_parameter = 0
-        self.fmethod = "DEFAULT"
-        self.lowerBound = Power()
-        self.upperBound = Power()
+    def __init__(self, power=0, noncentrality_parameter=0, fmethod="DEFAULT"):
+        self.power = power
+        self.noncentrality_parameter = noncentrality_parameter
+        self.fmethod = fmethod
+        self.lowerBound = None
+        self.upperBound = None
 
     def glmmpcl(self,
                 alphatest,
@@ -104,37 +104,37 @@ class Power:
 
     def _upperbound_noncentrality(self, alphatest, alpha_cu, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance):
         """Calculate upper bound for noncentrality"""
-        x = 1 - alpha_cu
-        y = alpha_cu
+        lower_tail_prob = 1 - alpha_cu
+        upper_tail_prob = alpha_cu
         # default values if alpha < tolerance
         noncentrality = float('Inf')
         prob = 0
-        power = self._calc_bound(alphatest, alpha_cu, x, y, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance)
+        power = self._calc_bound(alphatest, alpha_cu, lower_tail_prob, upper_tail_prob, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance)
         return power
 
     def _lowerbound_noncentrality(self, alphatest, alpha_cl, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance):
         """Calculate lower bound for noncentrality"""
-        x = alpha_cl
-        y = 1 - alpha_cl
+        lower_tail_prob = alpha_cl
+        upper_tail_prob = 1 - alpha_cl
         # default values if alpha < tolerance
         noncentrality = 0
         prob = 1 - alphatest
-        power =  self._calc_bound(alphatest, alpha_cl, x, y, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance)
+        power = self._calc_bound(alphatest, alpha_cl, lower_tail_prob, upper_tail_prob, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance)
         return power
 
-    def _calc_bound(self, alphatest, alpha, x, y, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance):
+    def _calc_bound(self, alphatest, alpha, lower_tail_prob, upper_tail_prob, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance):
         """Calculate power bounds """
         fmethod = Constants.FMETHOD_MISSING
         if alpha > tolerance:
             if cl_type == Constants.CLTYPE_DESIRED_KNOWN:
-                chi = chi2.ppf(x, dfe1)
+                chi = chi2.ppf(lower_tail_prob, dfe1)
                 noncentrality = (chi / dfe1) * noncen_e
             elif cl_type == Constants.CLTYPE_DESIRED_ESTIMATE:
-                bound = finv(y, dfh, dfe1)
+                bound = finv(upper_tail_prob, dfh, dfe1)
                 if f_a <= bound:
                     noncentrality = 0
                 else:
-                    noncentrality = special.ncfdtrinc(dfh, dfe1, y, f_a)
+                    noncentrality = special.ncfdtrinc(dfh, dfe1, upper_tail_prob, f_a)
             prob, fmethod = probf(fcrit, dfh, dfe2, noncentrality)
         if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
             power_bound = alphatest
