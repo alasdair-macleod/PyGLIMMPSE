@@ -4,15 +4,21 @@ from pyglimmpse.exceptions.ranksymm_validation_exception import RanksymmValidati
 
 
 def ranksymm(matrix: np.matrix, tolerance: float) -> np.matrix:
-    """This function computes the rank of a square symmetric
-           nonnegative definite matrix via eigenvalues.
-                                                            
-       :param matrix: Class define by Matrix(), with matrix and label
-       :param tolerance:  value not tolerated, numeric zero (global)
-                                                
-       :return rankmatrix: 
-           = . if MATRIX is not symmetric or positive definite
-           = rank of the matrix
+    """This function computes the rank of a square symmetric nonnegative definite matrix via eigenvalues.
+
+        Parameters
+        ----------
+            matrix:
+                Matrix for which rank is to be calculated
+            tolerance:
+                Value below which numbers are declared zero
+
+        Returns
+        -------
+        rankmatrix:
+            if MATRIX is not symmetric or positive definite return .
+            else returns the rank of the matrix
+
     """
     # empty matrix
     if np.shape(matrix)[1] == 0:
