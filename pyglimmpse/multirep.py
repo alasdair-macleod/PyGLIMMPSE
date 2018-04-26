@@ -16,13 +16,25 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     error degrees of freedom, OMEGA is the non-centrality parameter, and
     FCRIT is the critical value from the F distribution.
 
-    :param rank_C: rank of C matrix
-    :param rank_U: rank of U matrix
-    :param rank_X: rank of X matrix
-    :param total_N: total N
-    :param eval_HINVE: eigenvalues for H*INV(E)
-    :param mmethod: multirep method
-    :return: power, power for Hotelling-Lawley trace & CL if requested
+    Parameters
+    ----------
+    rank_C
+        rank of C matrix
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    eval_HINVE
+        eigenvalues for H*INV(E)
+    mmethod
+        multirep method
+    
+    Returns
+    -------
+    power
+        power for Hotelling-Lawley trace & CL if requested
     """
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
@@ -51,13 +63,26 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     error degrees of freedom, OMEGA is the non-centrality parameter, and
     FCRIT is the critical value from the F distribution.
 
-    :param rank_C: rank of C matrix
-    :param rank_U: rank of U matrix
-    :param rank_X: rank of X matrix
-    :param total_N: total N
-    :param eval_HINVE: eigenvalues for H*INV(E)
-    :param mmethod: multirep method
-    :return: power, power for Hotelling-Lawley trace & CL if requested
+
+    Parameters
+    ----------
+    rank_C
+        rank of C matrix
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    eval_HINVE
+        eigenvalues for H*INV(E)
+    mmethod
+        multirep method
+    
+    Returns
+    -------
+    power
+        power for Hotelling-Lawley trace & CL if requested
     """
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
@@ -95,13 +120,25 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     error degrees of freedom, OMEGA is the non-centrality parameter, and
     FCRIT is the critical value from the F distribution.
 
-    :param rank_C: rank of C matrix
-    :param rank_U: rank of U matrix
-    :param rank_X: rank of X matrix
-    :param total_N: total N
-    :param eval_HINVE: eigenvalues for H*INV(E)
-    :param mmethod: multirep method
-    :return: power, power for Hotelling-Lawley trace & CL if requested
+    Parameters
+    ----------
+    rank_C
+        rank of C matrix
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    eval_HINVE
+        eigenvalues for H*INV(E)
+    mmethod
+        multirep method
+    
+    Returns
+    -------
+    power
+        power for Hotelling-Lawley trace & CL if requested
     """
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
@@ -132,13 +169,25 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     error degrees of freedom, OMEGA is the non-centrality parameter, and
     FCRIT is the critical value from the F distribution.
 
-    :param rank_C: rank of C matrix
-    :param rank_U: rank of U matrix
-    :param rank_X: rank of X matrix
-    :param total_N: total N
-    :param eval_HINVE: eigenvalues for H*INV(E)
-    :param mmethod: multirep method
-    :return: power, power for Hotelling-Lawley trace & CL if requested
+    Parameters
+    ----------
+    rank_C
+        rank of C matrix
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    eval_HINVE
+        eigenvalues for H*INV(E)
+    mmethod
+        multirep method
+    
+    Returns
+    -------
+    power
+        power for Hotelling-Lawley trace & CL if requested
     """
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
@@ -254,13 +303,25 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
     OMEGA is the noncentrality parameter, and FCRIT is the
     critical value from the F distribution.
 
-    :param rank_C: rank of C matrix
-    :param rank_U: rank of U matrix
-    :param rank_X: rank of X matrix
-    :param total_N: total N
-    :param eval_HINVE: eigenvalues for H*INV(E)
-    :param MultiPBT: multirep method
-    :return: power, power for Pillai-Bartlett trace & CL if requested
+    Parameters
+    ----------
+    rank_C
+        rank of C matrix
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    eval_HINVE
+        eigenvalues for H*INV(E)
+    mmethod
+        multirep method
+    
+    Returns
+    -------
+    power
+        power for Pillai-Bartlett trace & CL if requested
     """
     mu1 = rank_C * rank_U / (total_N - rank_X + rank_C)
     factor1 = (total_N - rank_X + rank_C -rank_U) / (total_N - rank_X + rank_C - 1)
@@ -445,13 +506,25 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
     from the F distribution. RM, RS, R1, and TEMP are intermediate
     variables.
 
-    :param rank_C: rank of C matrix
-    :param rank_U: rank of U matrix
-    :param rank_X: rank of X matrix
-    :param total_N: total N
-    :param eval_HINVE: eigenvalues for H*INV(E)
-    :param MultiWLK: multirep method
-    :return: power, power for Hotelling-Lawley trace & CL if requested
+    Parameters
+    ----------
+    rank_C
+        rank of C matrix
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    eval_HINVE
+        eigenvalues for H*INV(E)
+    mmethod
+        multirep method
+    
+    Returns
+    -------
+    power
+        power for Hotelling-Lawley trace & CL if requested
     """
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
@@ -513,12 +586,25 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
     OMEGA is the noncentrality parameter, and FCRIT is the critical
     value from the F distribution.
 
-    :param rank_C: rank of C matrix
-    :param rank_U: rank of U matrix
-    :param rank_X: rank of X matrix
-    :param total_N: total N
-    :param eval_HINVE: eigenvalues for H*INV(E)
-    :return: power, power for Hotelling-Lawley trace & CL if requested
+    Parameters
+    ----------
+    rank_C
+        rank of C matrix
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    eval_HINVE
+        eigenvalues for H*INV(E)
+    mmethod
+        multirep method
+    
+    Returns
+    -------
+    power
+        power for Hotelling-Lawley trace & CL if requested
     """
     df1 = rank_C * rank_U
     df2 = total_N - rank_X - rank_U + 1
@@ -551,12 +637,26 @@ def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
 def _hlt(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], df2Method: str) -> Power:
     """
     shell function for hotelling lawley traces.
-    :param rank_C:
-    :param rank_U:
-    :param rank_X:
-    :param total_N:
-    :param eval_HINVE:
-    :return:
+
+    Parameters
+    ----------
+    rank_C
+        rank of C matrix
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    eval_HINVE
+        eigenvalues for H*INV(E)
+    mmethod
+        multirep method
+
+    Returns
+    -------
+    some
+        return value
     """
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U

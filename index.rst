@@ -1,5 +1,8 @@
 Welcome to pyglimmpse's documentation!
 ======================================
+.. automodule:: pyglimmpse.multirep
+    :members:
+
 .. automodule:: pyglimmpse.model.power
     :members:
 
