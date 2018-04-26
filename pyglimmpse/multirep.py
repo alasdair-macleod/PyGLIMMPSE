@@ -566,8 +566,7 @@ def _hlt(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
-
-    power, fmethod = _multi_power(Scalar.alpha, df1, df2, omega)
+        power, fmethod = _multi_power(Scalar.alpha, df1, df2, omega)
     power_l, power_u, fmethod_l, fmethod_u, noncen_l, noncen_u = glmmpcl(Scalar.alpha, df1, total_N, df2,
                                                                          CL.cl_type, CL.n_est, CL.rank_est,
                                                                          CL.alpha_cl, CL.alpha_cu, Scalar.tolerance,
