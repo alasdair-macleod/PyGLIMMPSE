@@ -6,6 +6,12 @@ Welcome to pyglimmpse's documentation!
 .. automodule:: pyglimmpse.ranksymm
     :members:
 
+.. automodule:: pyglimmpse.qprob
+    :members:
+
+.. automodule:: pyglimmpse.orpol
+    :members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

@@ -4,12 +4,18 @@ import copy
 import itertools
 
 
-def uploy(factor_list):
+def upoly(factor_list):
     """
     This module creates a U contrast matrix with orthogonal polynomial coding for within subject factors.
 
-    :param factor_list:list of levels of factors
-    :return: U contrast matrix
+    Parameters
+    ----------
+    factor_list
+        list of levels of factors
+    Returns
+    -------
+    U
+        contrast matrix
     """
 
     return_list = dict()
@@ -54,11 +60,19 @@ def orpol(x, maxdegree=None, weights=None):
     The orpol function generates orthogonal polynomials on a discrete set of points.
     Reference: Emerson 1968
 
-    :param x: is an n*1 vector of values on which the polynomials are to be defined.
-    :param maxdegree: specifies the maximum degree polynomial to be computed.
-                        If maxdegree is omitted, the default value is min(n, 19).
-    :param weights: specifies an n*1 vector of nonnegative weights associated with the points in x.
-    :return: a matrix with n rows and maxdegree+1 columns
+    Parameters
+    ----------
+    x
+        is an n*1 vector of values on which the polynomials are to be defined.
+    maxdegree
+        specifies the maximum degree polynomial to be computed.
+        If maxdegree is omitted, the default value is min(n, 19).
+    weights
+        specifies an n*1 vector of nonnegative weights associated with the points in x.
+    Returns
+    -------
+    m
+        a matrix with n rows and maxdegree+1 columns
     """
 
     # deal with x

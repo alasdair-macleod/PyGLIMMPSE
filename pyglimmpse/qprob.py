@@ -1,32 +1,21 @@
 import numpy as np
 import sys
-class Countr(object):
-    """ object to hold number of calls of Countr"""
-
-    def __init__(self):
-        self.count = 0
-
-    def counting(self, lim):
-        """
-        This module counts number of calls to ERRBD(), TRUNCN(), and CFE().
-        :param lim: Maximum number of integration terms
-        :return:
-        """
-        if self.count > lim:
-            raise Exception("QF: CANNOT LOCATE INTEGRATION PARAMETERS")
-        else:
-            self.count = self.count + 1
-
 
 def alog1(x, first):
     """
     For a number X, this function computes either LN(1+x) or LN(1+x)-x
 
-    :param x: Number on which to perform computation
-    :param first:
-            = TRUE, when this module is called for a matrix for the first time
-            = FALSE , otherwise
-    :return: alog1
+
+    Parameters
+    ----------
+    x
+        Number on which to perform computation
+    first
+        TRUE, when this module is called for a matrix for the first time
+        FALSE, otherwise
+    Returns
+    -------
+        alog1
     """
 
     if abs(x) <= 0.1:
@@ -56,10 +45,16 @@ def alog1(x, first):
 def exp1(x):
     """
     This function computes e^X for X > -706.
-    :param x: scalar
-    :return:
-            0, if X <= -706
-            e^X, if X > -706
+
+
+    Parameters
+    ----------
+    x:
+        scalar
+    Returns
+    -------
+        0 if X <= -706
+        e^X if X > -706
     """
     if x <= -706:
         return 0
@@ -72,10 +67,17 @@ def order(alb):
     This module finds the ranks of absolute values of elements of ALB.
     Ties are ranked arbitrarily, e.g., the matrix {2,2} is ranked {1,2}.
 
-    :param alb: IRx1 vector of constant multipliers, np.array
-    :return:
-            ITH, Vector of ranks of absolute values of ALB
-            NDTSRT, = False if this module has been run
+
+    Parameters
+    ----------
+    alb
+        IRx1 vector of constant multipliers, np.array
+    Returns
+    -------
+        ITH
+            Vector of ranks of absolute values of ALB
+        NDTSRT
+            False if this module has been run
     """
     ith = abs(alb).argsort().argsort()
     ndtsrt = False
@@ -86,17 +88,31 @@ def errbd(n, alb, anc, uu, lim, icount, sigsq, ir):
     """
     This module finds bound on tail probability using moment-generating function
 
-    :param n: Vector of degrees of freedom
-    :param alb: IRx1 vector of constant multipliers
-    :param anc: Vector of noncentrality parameters
-    :param uu:
-    :param lim: Maximum number of integration terms
-    :param icount: Count of number of times this module is called
-    :param sigsq: square of SIGMA, the coefficient of normal term
-    :param ir: Number of chi-squared terms in the sum
-    :return:
-            ERRBD, Bound on tail probability
-            CX,
+    Parameters
+    ----------
+     n
+        Vector of degrees of freedom
+     alb
+        IRx1 vector of constant multipliers
+     anc
+        Vector of noncentrality parameters
+     uu
+        what is uu???
+     lim
+        Maximum number of integration terms
+     icount
+        Count of number of times this module is called
+     sigsq
+        square of SIGMA, the coefficient of normal term
+     ir\
+        Number of chi-squared terms in the sum
+
+    Returns
+    -------
+        ERRBD
+            Bound on tail probability
+        CX
+            WHAT IS THIS???
     """
     icount.counting(lim)
 
@@ -124,24 +140,42 @@ def errbd(n, alb, anc, uu, lim, icount, sigsq, ir):
 def ctff(upn, n, alb, anc, accx, amean, almin, almax, lim, icount, sigsq, ir):
     """
     This module finds CTF so that:
-      If UPN > 0:     P(QF > CTFF) < ACCX
-      Otherwise:      P(QF < CTFF) < ACCX
+      If UPN > 0
+            P(QF > CTFF) < ACCX
+      Otherwise
+             P(QF < CTFF) < ACCX
 
-    :param unp:
-    :param n: Vector of degrees of freedom
-    :param alb: IRx1 vector of constant multipliers
-    :param anc: Vector of noncentrality parameters
-    :param accx: Error bound
-    :param amean: Scalar representing the expected value of the QF
-    :param almin: Minimum of the constant multipliers
-    :param almax: Maximum of the constant multipliers
-    :param lim: Maximum number of integration terms
-    :param icount: Count of number of times this module is called
-    :param sigsq: square of SIGMA, the coefficient of normal term
-    :param ir: Number of chi-squared terms in the sum
-    :return:
-            upn:
-            fctff:
+    Parameters
+    ----------
+    unp
+        ???
+    nVector of degrees of freedom
+    alb
+        IRx1 vector of constant multipliers
+    anc
+        Vector of noncentrality parameters
+    accx
+        Error bound
+    amean
+        Scalar representing the expected value of the QF
+    almin
+        Minimum of the constant multipliers
+    almax
+        Maximum of the constant multipliers
+    lim
+        Maximum number of integration terms
+    icount
+        Count of number of times this module is called
+    sigsq
+        square of SIGMA, the coefficient of normal term
+    ir
+        Number of chi-squared terms in the sum
+    Returns
+    -------
+    upn
+        WHAT IS THIS???
+    fctff
+        WHAT IS THIS???
     """
 
     u2 = upn
@@ -184,17 +218,31 @@ def ctff(upn, n, alb, anc, accx, amean, almin, almax, lim, icount, sigsq, ir):
 def truncn(n, alb, anc, uu, tausq, lim, icount, sigsq, ir):
     """
     This function bounds integration error due to truncation at U.
-
-    :param n: Vector of degrees of freedom
-    :param alb: IRx1 vector of constant multipliers
-    :param anc: Vector of noncentrality parameters
-    :param uu:
-    :param tausq:
-    :param lim: Maximum number of integration terms
-    :param icount: Count of number of times this module is called
-    :param sigsq: square of SIGMA, the coefficient of normal term
-    :param ir: Number of chi-squared terms in the sum
-    :return: TRUNCN, integration error
+    
+    Parameters
+    ----------
+    n
+        Vector of degrees of freedom
+    alb
+        IRx1 vector of constant multipliers
+    anc
+        Vector of noncentrality parameters
+    uu
+        WHAT IS THIS???
+    tausq
+        WHAT IS THIS???
+    lim
+        Maximum number of integration terms
+    icount
+        Count of number of times this module is called
+    sigsq
+        square of SIGMA, the coefficient of normal term
+    ir
+        Number of chi-squared terms in the sum
+    Returns
+    -------
+    TRUNCN
+        integration error
     """
     icount.counting(lim)
 
@@ -259,16 +307,31 @@ def truncn(n, alb, anc, uu, tausq, lim, icount, sigsq, ir):
 def findu(utx, n, alb, anc, accx, lim, icount, sigsq, ir):
     """
     This module finds U such that _TRUNCN(U) < ACCX and _TRUNCN(U / 1.2) > ACCX.
-    :param utx:
-    :param n: Vector of degrees of freedom
-    :param alb: IRx1 vector of constant multipliers
-    :param anc: Vector of noncentrality parameters
-    :param accx:
-    :param lim: Maximum number of integration terms
-    :param icount: Count of number of times this module is called
-    :param sigsq: square of SIGMA, the coefficient of normal term
-    :param ir: Number of chi-squared terms in the sum
-    :return: utx
+
+    Parameters
+    ----------
+    utx
+        WHAT IS THIS???
+    n
+        Vector of degrees of freedom
+    alb
+        IRx1 vector of constant multipliers
+    anc
+        Vector of noncentrality parameters
+    accx
+        WHAT IS THIS???
+    lim
+        Maximum number of integration terms
+    icount
+        Count of number of times this module is called
+    sigsq
+        square of SIGMA, the coefficient of normal term
+    ir
+        Number of chi-squared terms in the sum
+    Returns
+    -------
+    utx
+        WHAT ID THIS??
     """
     divis = [2.0, 1.4, 1.2, 1.1]
     ut = utx
@@ -300,20 +363,38 @@ def findu(utx, n, alb, anc, accx, lim, icount, sigsq, ir):
 
 def integr(n, alb, anc, nterm, aintrv, tausq, main, c, sigsq, ir):
     """
+    What doe this one do???
+    
+    Parameters
+    ----------
+     n
+        Vector of degrees of freedom
+     alb
+        IRx1 vector of constant multipliers
+     anc
+        Vector of noncentrality parameters
+     nterm
+        Number of terms in integration
+     aintrv
+        WHAT IS THIS???
+     tausq
+        WHAT IS THIS???
+     main
+        True, False
+     c
+        Point at which the distribution function should be evaluated
+     sigsq
+        square of SIGMA, the coefficient of normal term
+     ir
+        Number of chi-squared terms in the sum
 
-    :param n: Vector of degrees of freedom
-    :param alb: IRx1 vector of constant multipliers
-    :param anc: Vector of noncentrality parameters
-    :param nterm: Number of terms in integration
-    :param aintrv:
-    :param tausq:
-    :param main: True, False
-    :param c: Point at which the distribution function should be evaluated
-    :param sigsq: square of SIGMA, the coefficient of normal term
-    :param ir: Number of chi-squared terms in the sum
-    :return:
-            aintl:
-            ersm:
+    Returns
+    -------
+
+        aintl
+            WHAT IS THIS???
+        ersm
+            WHAT IS THIS???
     """
     pi = 2 * np.arccos(0)
     ainpi = aintrv / pi
@@ -357,19 +438,34 @@ def cfe(n, alb, anc, ith, x, lim, icount, ndtsrt, ir):
     the convergence factor of Exp(-0.5 * TAUSQ * U**2) is used when DF
     is evaluated at X.
 
-    :param n: Vector of degrees of freedom
-    :param alb: IRx1 vector of constant multipliers
-    :param anc: Vector of noncentrality parameters
-    :param ith: Vector of ranks of absolute values of ALB
-    :param x:
-    :param lim: Maximum number of integration terms
-    :param icount: Count of number of times this module is called
-    :param ndtsrt:   =True if _ORDER module has not been run
-                     =False if _ORDER module has been run
-    :param ir: Number of chi-squared terms in the sum
-    :return:
-            fail, =True if module produces unreasonable values
-            fcfe, Coefficient of TAUSQ
+    Parameters
+    ----------
+     n
+        Vector of degrees of freedom
+     alb
+        IRx1 vector of constant multipliers
+     anc
+        Vector of noncentrality parameters
+     ith
+        Vector of ranks of absolute values of ALB
+     x
+        WHAT IS THIS???
+     lim
+        Maximum number of integration terms
+     icount
+        Count of number of times this module is called
+     ndtsrt
+          True if _ORDER module has not been run
+          False if _ORDER module has been run
+     ir
+        Number of chi-squared terms in the sum
+
+    Returns
+    -------
+        fail
+            True if module produces unreasonable values
+        fcfe
+            Coefficient of TAUSQ
     """
     icount.counting(lim)
 
