@@ -14,22 +14,41 @@ class Power:
 
     Parameters
     ----------
-    power :  the power value
-    noncentrality_parameter : the noncentrality parameter used to calculate this power
-    fmethod : constant string referring to the method used to calculate this power
-    lower_bound :  the power value chosen as the lower bound for this power calculation. This is itself a Power object
-    upper_bound : the power value chosen as the upper bound for this power calculation. This is itself a Power object
+    power
+        the power value
+    noncentrality_parameter
+        the noncentrality parameter used to calculate this power
+    fmethod
+        constant string referring to the method used to calculate this power
+    lower_bound
+        the power value chosen as the lower bound for this power calculation. This is itself a Power object
+    upper_bound
+        the power value chosen as the upper bound for this power calculation. This is itself a Power object
 
 
     Methods
     -------
+    glmmpcl(self,alphatest,dfh,n2,dfe2,cl_type,n_est,rank_est,alpha_cl,alpha_cu,tolerance,power,omega)
 
     Notes
     -----
+    lower_bound
+        power
+            confidence interval lower bound
+        noncentrality_parameter
+            noncentrality confidence interval lower bound
+        fmethod
+            Method used to calculate probability from F CDF used in lower confidence limits power calculation
+    upper_bound
+        power
+            power confidence interval upper bound
+        noncentrality_parameter
+            noncentrality confidence interval upper bound
+        fmethod
+            Method used to calculate probability from F CDF used in lower confidence limits power calculation
 
     Examples
     --------
-
 
     """
     def __init__(self, power=0, noncentrality_parameter=0, fmethod="DEFAULT"):
@@ -59,38 +78,37 @@ class Power:
         GAUSS), based on estimating the effect, error variance, or neither.
         Methods from Taylor and Muller (1995).
 
-        :param f_a: = MSH/MSE, the F value observed if BETAhat=BETA and
-                    Sigmahat=Sigma, under the alternative hypothesis, with:
-                        MSH=Mean Square Hypothesis (effect variance)
-                        MSE=Mean Square Error (error variance)
-                    NOTE:
-                        F_A = (N2/N1)*F_EST and
-                        MSH = (N2/N1)*MSH_EST,
-                        with "_EST" indicating value which was observed
-                        in sample 1 (source of estimates)
-        :param alphatest: Significance level for target GLUM test
-        :param dfh: degrees of freedom for target GLH
+        :param f_a:
+            MSH/MSE, the F value observed if BETAhat=BETA and Sigmahat=Sigma, under the alternative hypothesis, with:
+                MSH=Mean Square Hypothesis (effect variance)
+                MSE=Mean Square Error (error variance)
+            NOTE:
+                F_A = (N2/N1)*F_EST and
+                MSH = (N2/N1)*MSH_EST,
+                with "_EST" indicating value which was observed
+                in sample 1 (source of estimates)
+        :param alphatest:
+            Significance level for target GLUM test
+        :param dfh:
+            degrees of freedom for target GLH
         :param n2:
-        :param dfe2: Error df for target hypothesis
-        :param cl_type:  =1 if Sigma estimated and Beta known
-                        =2 if Sigma estimated and Beta estimated
-        :param n_est: (scalar) # of observations in analysis which yielded
-                        BETA and SIGMA estimates
-        :param rank_est: (scalar) design matrix rank in analysis which
-                            yielded BETA and SIGMA estimates
-        :param alpha_cl: Lower tail probability for confidence interval
-        :param alpha_cu: Upper tail probability for confidence interval
+            What is this???
+        :param dfe2:
+            Error df for target hypothesis
+        :param cl_type:
+            =1 if Sigma estimated and Beta known
+            =2 if Sigma estimated and Beta estimated
+        :param n_est:
+            (scalar) # of observations in analysis which yielded BETA and SIGMA estimates
+        :param rank_est:
+            (scalar) design matrix rank in analysis which yielded BETA and SIGMA estimates
+        :param alpha_cl:
+            Lower tail probability for confidence interval
+        :param alpha_cu:
+            Upper tail probability for confidence interval
         :param tolerance:
-        :return:
-            power_l, power confidence interval lower bound
-            power_u, power confidence interval upper bound
-            fmethod_l, Method used to calculate probability from F CDF
-                        used in lower confidence limits power calculation
-            fmethod_u, Method used to calculate probability from F CDF
-                        used in lower confidence limits power calculation
-            noncen_l, noncentrality confidence interval lower bound
-            noncen_u, noncentrality confidence interval upper bound
-            powerwarn, vector of power calculation warning counts
+            value below which numbes are declared zero
+
         """
         if self.cl_type == Constants.CLTYPE_DESIRED_KNOWN or self.cl_type == Constants.CLTYPE_DESIRED_ESTIMATE:
             if np.isnan(power):
