@@ -118,19 +118,19 @@ class Power:
 
                 self.lower_bound = self._calc_lower_bound(alphatest, alpha_cl, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance)
                 self.upper_bound = self._calc_upper_bound(alphatest, alpha_cu, cl_type, dfe1, dfe2, dfh, fcrit, f_a, noncen_e, tolerance)
-            #    self._warn_conservative_ci(alpha_cl, cl_type, n2, n_est, self.lower_bound.noncentrality_parameter, self.upper_bound.noncentrality_parameter)
+                self._warn_conservative_ci(alpha_cl, cl_type, n2, n_est)
         else:
             self.lower_bound = None
             self.upper_bound = None
 
-    def _warn_conservative_ci(self, alpha_cl, cl_type, n2, n_est, noncen_l, noncen_u):
+    def _warn_conservative_ci(self, alpha_cl, cl_type, n2, n_est):
         """warning for conservative confidence interval"""
         if (cl_type == Constants.CLTYPE_DESIRED_KNOWN or
                     cl_type == Constants.CLTYPE_DESIRED_ESTIMATE) and n2 != n_est:
-            if alpha_cl > 0 and noncen_l == 0:
-                warnings.warn('PowerWarn5: The lower confidence limit on power is conservative.')
-            if alpha_cl == 0 and noncen_u == 0:
-                warnings.warn('PowerWarn10: The upper confidence limit on power is conservative.')
+            if self.lower_bound and self.lower_bound.noncentrality_parameter and alpha_cl > 0 and self.lower_bound.noncentrality_parameter == 0:
+                warnings.warn('The lower confidence limit on power is conservative.')
+            if self.upper_bound and self.upper_bound.noncentrality_parameter and alpha_cl == 0 and self.upper_bound.noncentrality_parameter == 0:
+                warnings.warn('The upper confidence limit on power is conservative.')
 
     def _calc_noncentrality(self, alphatest, dfe2, dfh, f_a, n_est, rank_est):
         """Calculate noncentrality"""
