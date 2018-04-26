@@ -1,3 +1,5 @@
+import warnings
+import numpy as np
 from scipy import special
 from scipy.stats import chi2
 
@@ -8,14 +10,34 @@ from pyglimmpse.probf import probf
 
 class Power:
     """
-    Object representing power and associated metadata returned by power calculations.
+    This object represents power and contains metedata about how it was calculated
+
+    Parameters
+    ----------
+    power :  the power value
+    noncentrality_parameter : the noncentrality parameter used to calculate this power
+    fmethod : constant string referring to the method used to calculate this power
+    lower_bound :  the power value chosen as the lower bound for this power calculation. This is itself a Power object
+    upper_bound : the power value chosen as the upper bound for this power calculation. This is itself a Power object
+
+
+    Methods
+    -------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+
     """
     def __init__(self, power=0, noncentrality_parameter=0, fmethod="DEFAULT"):
         self.power = power
         self.noncentrality_parameter = noncentrality_parameter
         self.fmethod = fmethod
-        self.lowerBound = None
-        self.upperBound = None
+        self.lower_bound = None
+        self.upper_bound = None
 
     def glmmpcl(self,
                 alphatest,
@@ -77,16 +99,16 @@ class Power:
                 f_a = omega/dfh
                 dfe1, fcrit, noncen_e = self._calc_noncentrality(alphatest, dfe2, dfh, f_a, n_est, rank_est)
 
-                self.lowerBound.noncentrality_parameter  = self._lowerbound_noncentrality(alpha_cl, cl_type, dfe1, dfh, f_a, noncen_e, tolerance)
-                self.lowerBound.fmethod, self.lowerBound.power = self._lowerbound_power(alpha_cl, alphatest, dfe2, dfh, fcrit, self.lowerBound.noncentrality_parameter, tolerance)
+                self.lower_bound.noncentrality_parameter  = self._lowerbound_noncentrality(alpha_cl, cl_type, dfe1, dfh, f_a, noncen_e, tolerance)
+                self.lower_bound.fmethod, self.lower_bound.power = self._lowerbound_power(alpha_cl, alphatest, dfe2, dfh, fcrit, self.lower_bound.noncentrality_parameter, tolerance)
 
-                self.upperBound.noncentrality_parameter = self._upperbound_noncentrality(alpha_cu, cl_type, dfe1, dfh, f_a, noncen_e, tolerance)
-                self.upperBound.fmethod, self.upperBound.power = self._upperbound_power(alpha_cu, alphatest, dfe2, dfh, fcrit, self.upperBound.noncentrality_parameter , tolerance)
+                self.upper_bound.noncentrality_parameter = self._upperbound_noncentrality(alpha_cu, cl_type, dfe1, dfh, f_a, noncen_e, tolerance)
+                self.upper_bound.fmethod, self.upper_bound.power = self._upperbound_power(alpha_cu, alphatest, dfe2, dfh, fcrit, self.upper_bound.noncentrality_parameter, tolerance)
 
-                self._warn_conservative_ci(alpha_cl, cl_type, n2, n_est, self.lowerBound.noncentrality_parameter, self.upperBound.noncentrality_parameter)
+                self._warn_conservative_ci(alpha_cl, cl_type, n2, n_est, self.lower_bound.noncentrality_parameter, self.upper_bound.noncentrality_parameter)
         else:
-            self.lowerBound = None
-            self.upperBound = None
+            self.lower_bound = None
+            self.upper_bound = None
     def _warn_conservative_ci(self):
         """warning for conservative confidence interval"""
         if (self.cl_type == Constants.CLTYPE_DESIRED_KNOWN or
