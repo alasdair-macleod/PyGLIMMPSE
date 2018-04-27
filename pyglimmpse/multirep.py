@@ -43,12 +43,11 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 1  Pillai (1954, 55) 1 moment null approx
+    min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
-    df2 = _hlt_one_moment_df2(min(rank_C, rank_U), rank_U, rank_X, total_N)
-
-    # df2 need to > 0 and eigenvalues not missing
+    df2 = _hlt_one_moment_df2(min_rank_C_U, rank_U, rank_X, total_N)
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
-        omega = _calc_hlt_omega(min(rank_C, rank_U), eval_HINVE, rank_X, total_N, df2)
+        omega = _calc_hlt_omega(min_rank_C_U, eval_HINVE, rank_X, total_N, df2)
         return _multi_power(alpha, df1, df2, omega)
     return undefined_power
 
@@ -82,16 +81,13 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     -------
     power
         power for Hotelling-Lawley trace & CL if requested
-    """
-    min_rank_C_U = min(rank_C, rank_U)
-    df1 = _df1_rank_c_u(rank_C, rank_U)
-
-    # MMETHOD default= [4,2,2]
+    """    # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 2  McKeon (1974) two moment null approx
+    min_rank_C_U = min(rank_C, rank_U)
+    df1 = _df1_rank_c_u(rank_C, rank_U)
     df2 = _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N)
 
-    # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_hlt_omega(min_rank_C_U, eval_HINVE, rank_X, total_N, df2)
         return _multi_power(alpha, df1, df2, omega)
@@ -135,7 +131,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 3  Pillai (1959) one moment null approx+ OS noncen mult
-    df2 = _hlt_one_moment_df2(min(rank_C, rank_U), rank_U, rank_X, total_N)
+    df2 = _hlt_one_moment_df2(min_rank_C_U, rank_U, rank_X, total_N)
 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
@@ -219,27 +215,25 @@ def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     power
         a power object
     """
+    min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
-    df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
+    df2 = _pbt_one_moment_df2(rank_C, rank_U, rank_X, total_N)
 
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
-        if min(rank_U, rank_C) == 1:
-            evalt = eval_HINVE * (total_N - rank_X) / total_N
-        else:
-            evalt = eval_HINVE
-
-        v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
-        if (min(rank_C, rank_U) - v) <= tolerance:
-            warnings.warn('Power is missing because because the min(rank_C, rank_U) - v  <= 0.')
+        evalt = _pbt_uncorrected_evalt(eval_HINVE, rank_C, rank_U, rank_X, total_N)
+        v = _pbt_population_value(evalt, min_rank_C_U)
+        if (min_rank_C_U - v) <= tolerance:
+            warnings.warn('Power is missing because because the min_rank_C_U - v  <= 0.')
         else:
             if min(rank_U, rank_C) == 1:
-                omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
+                omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             else:
-                omega = df2 * v / (min(rank_C, rank_U) - v)
+                omega = df2 * v / (min_rank_C_U - v)
             power = _multi_power(alpha, df1, df2, omega)
             return power
     else:
         return undefined_power
+
 
 def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -271,36 +265,25 @@ def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
         power
             a power object
         """
-    mu1 = rank_C * rank_U / (total_N - rank_X + rank_C)
-    factor1 = (total_N - rank_X + rank_C - rank_U) / (total_N - rank_X + rank_C - 1)
-    factor2 = (total_N - rank_X) / (total_N - rank_X + rank_C + 2)
-    variance = 2 * rank_C * rank_U * factor1 * factor2 / (total_N - rank_X + rank_C) ** 2
-    mu2 = variance + mu1 ** 2
-    m1 = mu1 / min(rank_C, rank_U)
-    m2 = mu2 / (min(rank_C, rank_U) * min(rank_C, rank_U))
-    denom = m2 - m1 * m1
-    df1 = 2 * m1 * (m1 - m2) / denom
-    df2 = 2 * (m1 - m2) * (1 - m1) / denom
+    min_rank_C_U = min(rank_C, rank_U)
+    df1, df2 = _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N)
 
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
-        if min(rank_U, rank_C) == 1:
-            evalt = eval_HINVE * (total_N - rank_X) / total_N
-        else:
-            evalt = eval_HINVE
-
-        v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
-        if (min(rank_C, rank_U) - v) <= tolerance:
-            warnings.warn('Power is missing because because the min(rank_C, rank_U) - v  <= 0.')
+        evalt = _pbt_uncorrected_evalt(eval_HINVE, rank_C, rank_U, rank_X, total_N)
+        v = _pbt_population_value(evalt, min_rank_C_U)
+        if (min_rank_C_U - v) <= tolerance:
+            warnings.warn('Power is missing because because the min_rank_C_U - v  <= 0.')
         else:
             if min(rank_U, rank_C) == 1:
-                omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
+                omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             else:
-                omega = df2 * v / (min(rank_C, rank_U) - v)
+                omega = df2 * v / (min_rank_C_U - v)
 
             power = _multi_power(alpha, df1, df2, omega)
             return power
         
     return undefined_power
+
 
 def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -332,17 +315,18 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         power
             a power object
         """
+    min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
-    df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
+    df2 = _pbt_one_moment_df2(rank_C, rank_U, rank_X, total_N)
 
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
-        evalt = eval_HINVE * (total_N - rank_X) / total_N
-        v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
+        evalt = _trace(eval_HINVE, rank_X, total_N)
+        v = _pbt_population_value(evalt, min_rank_C_U)
 
-        if (min(rank_C, rank_U) - v) <= tolerance:
-            warnings.warn('Power is missing because because the min(rank_C, rank_U) - v  <= 0.')
+        if (min_rank_C_U - v) <= tolerance:
+            warnings.warn('Power is missing because because the min_rank_C_U - v  <= 0.')
         else:
-            omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
+            omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             power = _multi_power(alpha, df1, df2, omega)
             return power
     return undefined_power
@@ -377,24 +361,16 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
     power
         a power object
     """
-    mu1 = rank_C * rank_U / (total_N - rank_X + rank_C)
-    factor1 = (total_N - rank_X + rank_C -rank_U) / (total_N - rank_X + rank_C - 1)
-    factor2 = (total_N - rank_X) / (total_N - rank_X + rank_C + 2)
-    variance = 2 * rank_C * rank_U * factor1 * factor2 / (total_N - rank_X + rank_C)**2
-    mu2 = variance + mu1**2
-    m1 = mu1 / min(rank_C, rank_U)
-    m2 = mu2 / (min(rank_C, rank_U) * min(rank_C, rank_U))
-    denom = m2 - m1 * m1
-    df1 = 2 * m1 * (m1 - m2) / denom
-    df2 = 2 * (m1 - m2) * (1 - m1) /denom
+    min_rank_C_U = min(rank_C, rank_U)
+    df1, df2 = _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N)
 
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
-        evalt = eval_HINVE * (total_N - rank_X) / total_N
-        v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
-        if (min(rank_C, rank_U) - v) <= tolerance:
-            warnings.warn('Power is missing because because the min(rank_C, rank_U) - v  <= 0.')
+        evalt = _trace(eval_HINVE, rank_X, total_N)
+        v = _pbt_population_value(evalt, min_rank_C_U)
+        if (min_rank_C_U - v) <= tolerance:
+            warnings.warn('Power is missing because because the min_rank_C_U - v  <= 0.')
         else:
-            omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
+            omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             power = _multi_power(alpha, df1, df2, omega)
     return undefined_power
 
@@ -431,7 +407,6 @@ def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
         omega = df2 * (1 - tempw) / tempw
 
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
-        powerval = float('nan')
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         return _multi_power(alpha, df1, df2, omega)
@@ -562,8 +537,12 @@ def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
     return power
 
 
+def _trace(eval_HINVE, rank_X, total_N):
+    trace = eval_HINVE * (total_N - rank_X) / total_N
+    return trace
+
 def _calc_omega(eval_HINVE: [], min_rank_C_U: float, rank_X: float, total_N: float) -> float:
-    hlt = eval_HINVE * (total_N - rank_X) / total_N
+    hlt = _trace(eval_HINVE, rank_X, total_N)
     omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
     return omega
 
@@ -590,8 +569,42 @@ def _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N):
 
 
 def _valid_df2_eigenvalues(eval_HINVE: [],df2=1, tolerance=1e-12) -> bool:
+    # df2 need to be > 0 and eigenvalues not missing
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
         return False
     else:
         return True
+
+
+def _pbt_one_moment_df2(rank_C, rank_U, rank_X, total_N):
+    min_rank_C_U = min(rank_C, rank_U)
+    df2 = min_rank_C_U * (total_N - rank_X + min_rank_C_U - rank_U)
+    return df2
+
+
+def _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N):
+    min_rank_C_U = min(rank_C, rank_U)
+    mu1 = rank_C * rank_U / (total_N - rank_X + rank_C)
+    factor1 = (total_N - rank_X + rank_C - rank_U) / (total_N - rank_X + rank_C - 1)
+    factor2 = (total_N - rank_X) / (total_N - rank_X + rank_C + 2)
+    variance = 2 * rank_C * rank_U * factor1 * factor2 / (total_N - rank_X + rank_C) ** 2
+    mu2 = variance + mu1 ** 2
+    m1 = mu1 / min_rank_C_U
+    m2 = mu2 / (min_rank_C_U * min_rank_C_U)
+    denom = m2 - m1 * m1
+    df1 = 2 * m1 * (m1 - m2) / denom
+    df2 = 2 * (m1 - m2) * (1 - m1) / denom
+    return df1, df2
+
+def _pbt_population_value(evalt, min_rank_C_U):
+    v = sum(evalt / (np.ones((min_rank_C_U, 1)) + evalt))
+    return v
+
+
+def _pbt_uncorrected_evalt(eval_HINVE, rank_C, rank_U, rank_X, total_N):
+    if min(rank_U, rank_C) == 1:
+        evalt = _trace(eval_HINVE, rank_X, total_N)
+    else:
+        evalt = eval_HINVE
+    return evalt
