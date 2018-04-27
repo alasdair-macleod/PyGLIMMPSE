@@ -40,7 +40,7 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 1  Pillai (1954, 55) 1 moment null approx
-    df1 = rank_C * rank_U
+    df1 = _df1_rank_C_U(rank_C, rank_U)
     df2 = _one_moment_df2(min(rank_C, rank_U), rank_U, rank_X, total_N)
 
     # df2 need to > 0 and eigenvalues not missing
@@ -86,7 +86,7 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         power for Hotelling-Lawley trace & CL if requested
     """
     min_rank_C_U = min(rank_C, rank_U)
-    df1 = rank_C * rank_U
+    df1 = _df1_rank_C_U(rank_C, rank_U)
 
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
@@ -100,12 +100,7 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         powerval = float('nan')
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        if min_rank_C_U == 1:
-            hlt = eval_HINVE * (total_N - rank_X) / total_N
-            omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
-        else:
-            hlt = eval_HINVE
-            omega = df2 * (hlt / min_rank_C_U)
+        hlt, omega = _calc_hlt_omega(min(rank_C, rank_U), eval_HINVE, rank_X, total_N, df2)
         powerval, fmethod = _multi_power(alpha, df1, df2, omega)
     power = Power(powerval, omega, fmethod)
 
@@ -142,7 +137,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         power for Hotelling-Lawley trace & CL if requested
     """
     min_rank_C_U = min(rank_C, rank_U)
-    df1 = rank_C * rank_U
+    df1 = _df1_rank_C_U(rank_C, rank_U)
 
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
@@ -154,8 +149,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         powerval = float('nan')
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        hlt = eval_HINVE * (total_N - rank_X) / total_N
-        omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
+        omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
         powerval, fmethod = _multi_power(alpha, df1, df2, omega)
     power = Power(powerval, omega, fmethod)
 
@@ -192,7 +186,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         power for Hotelling-Lawley trace & CL if requested
     """
     min_rank_C_U = min(rank_C, rank_U)
-    df1 = rank_C * rank_U
+    df1 = _df1_rank_C_U(rank_C, rank_U)
 
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
@@ -206,8 +200,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         powerval = float('nan')
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        hlt = eval_HINVE * (total_N - rank_X) / total_N
-        omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
+        omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
         powerval, fmethod = _multi_power(alpha, df1, df2, omega)
     power = Power(powerval, omega, fmethod)
 
@@ -243,7 +236,7 @@ def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     power
         a power object
     """
-    df1 = rank_C * rank_U
+    df1 = _df1_rank_C_U(rank_C, rank_U)
     df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
 
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
@@ -361,7 +354,7 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         power
             a power object
         """
-    df1 = rank_C * rank_U
+    df1 = _df1_rank_C_U(rank_C, rank_U)
     df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
 
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
@@ -438,7 +431,7 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
 
 def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
-    df1 = rank_C * rank_U
+    df1 = _df1_rank_C_U(rank_C, rank_U)
 
     # MMETHOD default= [4,2,2]
     # MMETHOD[2] Choices for Wilks' Lambda
@@ -510,7 +503,7 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         power for Hotelling-Lawley trace & CL if requested
     """
     min_rank_C_U = min(rank_C, rank_U)
-    df1 = rank_C * rank_U
+    df1 = _df1_rank_C_U(rank_C, rank_U)
 
     # MMETHOD default= [4,2,2]
     # MMETHOD[2] Choices for Wilks' Lambda
@@ -583,7 +576,7 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
     power
         power for Hotelling-Lawley trace & CL if requested
     """
-    df1 = rank_C * rank_U
+    df1 = _df1_rank_C_U(rank_C, rank_U)
     df2 = total_N - rank_X - rank_U + 1
 
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
@@ -597,10 +590,13 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
 
     return power
 
+def _df1_rank_C_U(rank_C: float, rank_U: float) -> float:
+    df1 = rank_C * rank_U
+    return df1
+
 def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
     """ The common part for these four multirep methods
-        Computing power
-        :rtype: object"""
+        Computing power"""
     fcrit = finv(1 - alpha, df1, df2)
     prob, fmethod = probf(fcrit, df1, df2, omega)
     if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
@@ -610,10 +606,14 @@ def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
     power = float(power)
     return power, fmethod
 
+def _calc_omega(eval_HINVE: [], min_rank_C_U: float, rank_X: float, total_N: float) -> float:
+    hlt = eval_HINVE * (total_N - rank_X) / total_N
+    omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
+    return omega
+
 def _calc_hlt_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N: float, df2:float):
     if min_rank_C_U == 1:
-        hlt = eval_HINVE * (total_N - rank_X) / total_N
-        omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
+        omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
     else:
         hlt = eval_HINVE
         omega = df2 * (hlt / min_rank_C_U)
