@@ -44,7 +44,7 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 1  Pillai (1954, 55) 1 moment null approx
     df1 = _df1_rank_c_u(rank_C, rank_U)
-    df2 = _one_moment_df2(min(rank_C, rank_U), rank_U, rank_X, total_N)
+    df2 = _hlt_one_moment_df2(min(rank_C, rank_U), rank_U, rank_X, total_N)
 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
@@ -89,9 +89,7 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 2  McKeon (1974) two moment null approx
-    nu_df2 = (total_N - rank_X)*(total_N - rank_X) - (total_N - rank_X)*(2*rank_U + 3) + rank_U*(rank_U + 3)
-    de_df2 = (total_N - rank_X)*(rank_C + rank_U + 1) - (rank_C + 2*rank_U + rank_U*rank_U - 1)
-    df2 = 4 + (rank_C*rank_U + 2) * (nu_df2/de_df2)
+    df2 = _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N)
 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
@@ -99,6 +97,7 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         return _multi_power(alpha, df1, df2, omega)
     else:
         return undefined_power
+
 
 def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     """
@@ -136,7 +135,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 3  Pillai (1959) one moment null approx+ OS noncen mult
-    df2 = min_rank_C_U * (total_N - rank_X - rank_U - 1) + 2
+    df2 = _hlt_one_moment_df2(min(rank_C, rank_U), rank_U, rank_X, total_N)
 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
@@ -181,9 +180,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 4  McKeon (1974) two moment null approx+ OS noncen mult
-    nu_df2 = (total_N - rank_X)*(total_N - rank_X) - (total_N - rank_X)*(2*rank_U + 3) + rank_U*(rank_U + 3)
-    de_df2 = (total_N - rank_X)*(rank_C + rank_U + 1) - (rank_C + 2*rank_U + rank_U*rank_U - 1)
-    df2 = 4 + (rank_C*rank_U + 2) * (nu_df2/de_df2)
+    df2 = _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N)
 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
@@ -580,8 +577,15 @@ def _calc_hlt_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N:
     return omega
 
 
-def _one_moment_df2(min_rank_C_U: float, rank_U: float, rank_X: float, total_N: float) -> float:
+def _hlt_one_moment_df2(min_rank_C_U: float, rank_U: float, rank_X: float, total_N: float) -> float:
     df2 = min_rank_C_U * (total_N - rank_X - rank_U - 1) + 2
+    return df2
+
+
+def _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N):
+    nu_df2 = (total_N - rank_X) * (total_N - rank_X) - (total_N - rank_X) * (2 * rank_U + 3) + rank_U * (rank_U + 3)
+    de_df2 = (total_N - rank_X) * (rank_C + rank_U + 1) - (rank_C + 2 * rank_U + rank_U * rank_U - 1)
+    df2 = 4 + (rank_C * rank_U + 2) * (nu_df2 / de_df2)
     return df2
 
 
