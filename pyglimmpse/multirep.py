@@ -206,7 +206,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
 
     return power
 
-def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     df1 = rank_C * rank_U
     df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
 
@@ -228,12 +228,12 @@ def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
             else:
                 omega = df2 * v / (min(rank_C, rank_U) - v)
 
-            power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+            powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
     power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est,CL.rank_est, CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
     return power
 
-def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     mu1 = rank_C * rank_U / (total_N - rank_X + rank_C)
     factor1 = (total_N - rank_X + rank_C - rank_U) / (total_N - rank_X + rank_C - 1)
     factor2 = (total_N - rank_X) / (total_N - rank_X + rank_C + 2)
@@ -255,20 +255,20 @@ def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
             evalt = eval_HINVE
 
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
-        if (min(rank_C, rank_U) - v) <= Scalar.tolerance:
-            power = float('nan')
+        if (min(rank_C, rank_U) - v) <= tolerance:
+            powerval = float('nan')
         else:
             if min(rank_U, rank_C) == 1:
                 omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
             else:
                 omega = df2 * v / (min(rank_C, rank_U) - v)
 
-            power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+            powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est, CL.rank_est, CL.alpha_cl, CL.alpha_cu,Scalar.tolerance, power, omega)
+    power = Power(powerval, omega, fmethod)
     return power
 
-def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     df1 = rank_C * rank_U
     df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
 
@@ -283,12 +283,12 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
             power = float('nan')
         else:
             omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
-            power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+            powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est,CL.rank_est,CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+    power = Power(powerval, omega, fmethod)
     return power
 
-def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     """
     This function calculates power for Pillai-Bartlett trace based on the
     F approx. method.  V is the "population value" of PBT,
@@ -308,8 +308,8 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         total N
     eval_HINVE
         eigenvalues for H*INV(E)
-    mmethod
-        multirep method
+    alpha
+        Significance level for target GLUM test
     
     Returns
     -------
@@ -337,13 +337,12 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
             power = float('nan')
         else:
             omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
-            power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+            powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est,CL.rank_est,CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
-
+    power = Power(powerval, omega, fmethod)
     return power
 
-def wlk_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def wlk_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
 
@@ -388,11 +387,12 @@ def wlk_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
-        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est,CL.rank_est,CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+    power = Power(powerval, omega, fmethod)
+    return power
 
-def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
 
@@ -437,11 +437,12 @@ def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
-        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est,CL.rank_est,CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+    power = Power(powerval, omega, fmethod)
+    return power
 
-def wlk_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def wlk_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
 
@@ -486,11 +487,12 @@ def wlk_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
-        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est,CL.rank_est,CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+    power = Power(powerval, omega, fmethod)
+    return power
 
-def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     """
     This function calculates power for Wilk's Lambda based on
     the F approx. method.  W is the "population value" of Wilks` Lambda,
@@ -511,8 +513,8 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         total N
     eval_HINVE
         eigenvalues for H*INV(E)
-    mmethod
-        multirep method
+    alpha
+        Significance level for target GLUM test
     
     Returns
     -------
@@ -563,13 +565,13 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
-        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est,CL.rank_est,CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+    power = Power(powerval, omega, fmethod)
 
-    return {'lower': power_l, 'power': power, 'upper': power_u}
+    return power
 
-def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     """
     This function performs two disparate tasks. For B=1 (UNIVARIATE
     TEST), the powers are calculated more efficiently. For A=1 (SPECIAL
@@ -591,8 +593,8 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
         total N
     eval_HINVE
         eigenvalues for H*INV(E)
-    mmethod
-        multirep method
+    alpha
+        Significance level for target GLUM test
     
     Returns
     -------
@@ -607,13 +609,11 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
         omega = eval_HINVE[0] * (total_N - rank_X)
-        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
-    power_l, power_u, fmethod_l, fmethod_u, noncen_l, noncen_u = glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est,
-                                                                         CL.rank_est,
-                                                                         CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+    power = Power(powerval, omega, fmethod)
 
-    return {'lower': power_l, 'power': power, 'upper': power_u}
+    return power
 
 def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
     """ The common part for these four multirep methods
