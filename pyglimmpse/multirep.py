@@ -8,7 +8,7 @@ from pyglimmpse.input import Scalar
 from pyglimmpse.model.power import Power
 from pyglimmpse.probf import probf
 
-def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha ) -> Power:
+def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -53,7 +53,7 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
 
     return power
 
-def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -93,7 +93,7 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     df2 = 4 + (rank_C*rank_U + 2) * (nu_df2/de_df2)
 
     # df2 need to > 0 and eigenvalues not missing
-    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+    if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         powerval = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
@@ -108,7 +108,7 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
 
     return power
 
-def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha ) -> Power:
+def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -145,7 +145,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     df2 = min_rank_C_U * (total_N - rank_X - rank_U - 1) + 2
 
     # df2 need to > 0 and eigenvalues not missing
-    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+    if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         powerval = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
@@ -156,7 +156,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
 
     return power
 
-def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha ) -> Power:
+def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -195,7 +195,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     df2 = 4 + (rank_C*rank_U + 2) * (nu_df2/de_df2)
 
     # df2 need to > 0 and eigenvalues not missing
-    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+    if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         powerval = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
@@ -206,13 +206,13 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
 
     return power
 
-def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     df1 = rank_C * rank_U
     df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
 
-    if df2 <= 0 or np.isnan(eval_HINVE[0]):
-        power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+    if df2 <= tolerance or np.isnan(eval_HINVE[0]):
+        powerval = float('nan')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         if min(rank_U, rank_C) == 1:
             evalt = eval_HINVE * (total_N - rank_X) / total_N
@@ -220,20 +220,18 @@ def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
             evalt = eval_HINVE
 
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
-        if (min(rank_C, rank_U) - v) <= Scalar.tolerance:
-            power = float('nan')
+        if (min(rank_C, rank_U) - v) <= tolerance:
+            powerval = float('nan')
         else:
             if min(rank_U, rank_C) == 1:
                 omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
             else:
                 omega = df2 * v / (min(rank_C, rank_U) - v)
-
             powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est,CL.rank_est, CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+    power = Power(powerval, omega, fmethod)
     return power
 
-def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     mu1 = rank_C * rank_U / (total_N - rank_X + rank_C)
     factor1 = (total_N - rank_X + rank_C - rank_U) / (total_N - rank_X + rank_C - 1)
     factor2 = (total_N - rank_X) / (total_N - rank_X + rank_C + 2)
@@ -245,7 +243,7 @@ def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     df1 = 2 * m1 * (m1 - m2) / denom
     df2 = 2 * (m1 - m2) * (1 - m1) / denom
 
-    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+    if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
@@ -268,18 +266,18 @@ def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     power = Power(powerval, omega, fmethod)
     return power
 
-def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     df1 = rank_C * rank_U
     df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
 
-    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+    if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
         evalt = eval_HINVE * (total_N - rank_X) / total_N
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
 
-        if (min(rank_C, rank_U) - v) <= Scalar.tolerance:
+        if (min(rank_C, rank_U) - v) <= tolerance:
             power = float('nan')
         else:
             omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
@@ -288,7 +286,7 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
     power = Power(powerval, omega, fmethod)
     return power
 
-def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
     This function calculates power for Pillai-Bartlett trace based on the
     F approx. method.  V is the "population value" of PBT,
@@ -327,13 +325,13 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
     df1 = 2 * m1 * (m1 - m2) / denom
     df2 = 2 * (m1 - m2) * (1 - m1) /denom
 
-    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+    if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
         evalt = eval_HINVE * (total_N - rank_X) / total_N
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
-        if (min(rank_C, rank_U) - v) <= Scalar.tolerance:
+        if (min(rank_C, rank_U) - v) <= tolerance:
             power = float('nan')
         else:
             omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
@@ -342,7 +340,7 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
     power = Power(powerval, omega, fmethod)
     return power
 
-def wlk_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def wlk_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
 
@@ -392,7 +390,7 @@ def wlk_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     power = Power(powerval, omega, fmethod)
     return power
 
-def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
 
@@ -433,7 +431,7 @@ def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
         else:
             omega = df2 * (1 - tempw) / tempw
 
-    if df2 <= 0 or np.isnan(w) or np.isnan(omega):
+    if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
@@ -442,7 +440,7 @@ def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     power = Power(powerval, omega, fmethod)
     return power
 
-def wlk_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def wlk_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
     df1 = rank_C * rank_U
 
@@ -483,7 +481,7 @@ def wlk_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         else:
             omega = df2 * (1 - tempw) / tempw
 
-    if df2 <= 0 or np.isnan(w) or np.isnan(omega):
+    if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
@@ -492,7 +490,7 @@ def wlk_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
     power = Power(powerval, omega, fmethod)
     return power
 
-def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
     This function calculates power for Wilk's Lambda based on
     the F approx. method.  W is the "population value" of Wilks` Lambda,
@@ -561,7 +559,7 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         else:
             omega = df2 * (1 - tempw) / tempw
 
-    if df2 <= 0 or np.isnan(w) or np.isnan(omega):
+    if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
@@ -571,7 +569,7 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
 
     return power
 
-def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
+def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
     This function performs two disparate tasks. For B=1 (UNIVARIATE
     TEST), the powers are calculated more efficiently. For A=1 (SPECIAL
@@ -604,7 +602,7 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
     df1 = rank_C * rank_U
     df2 = total_N - rank_X - rank_U + 1
 
-    if df2 <= 0 or np.isnan(eval_HINVE[0]):
+    if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         power = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
