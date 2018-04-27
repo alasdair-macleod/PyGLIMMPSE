@@ -330,6 +330,7 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
             return power
     return _undefined_power()
 
+
 def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
     This function calculates power for Pillai-Bartlett trace based on the F approx. method.
