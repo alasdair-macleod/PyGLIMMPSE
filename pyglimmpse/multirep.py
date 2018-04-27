@@ -310,7 +310,7 @@ def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
 
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         if min(rank_U, rank_C) == 1:
             evalt = eval_HINVE * (total_N - rank_X) / total_N
@@ -366,7 +366,7 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
 
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         evalt = eval_HINVE * (total_N - rank_X) / total_N
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
@@ -423,7 +423,7 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
 
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         evalt = eval_HINVE * (total_N - rank_X) / total_N
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
@@ -432,56 +432,6 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         else:
             omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
             powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-
-    power = Power(powerval, omega, fmethod)
-    return power
-
-def wlk_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
-    min_rank_C_U = min(rank_C, rank_U)
-    df1 = rank_C * rank_U
-
-    # MMETHOD default= [4,2,2]
-    # MMETHOD[2] Choices for Wilks' Lambda
-    #       = 1  Rao (1951) two moment null approx
-    #       = 2  Rao (1951) two moment null approx
-    #       = 3  Rao (1951) two moment null approx + OS Obrien shieh noncen mult
-    #       = 4  Rao (1951) two moment null approx + OS noncen mult
-    if np.isnan(eval_HINVE[0]):
-        w = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
-    else:
-        if MultiWLK == Constants.MULTI_WLK_RAO or MultiWLK == Constants.MULTI_WLK_RAO_OS or min_rank_C_U == 1:
-            w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE * (total_N - rank_X)/total_N)))
-        else:
-            w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE)))
-
-    if min_rank_C_U == 1:
-        df2 = total_N - rank_X -rank_U + 1
-        rs = 1
-        tempw = w
-    else:
-        rm = total_N - rank_X - (rank_U - rank_C + 1)/2
-        rs = np.sqrt(rank_C*rank_C*rank_U*rank_U - 4) / (rank_C*rank_C + rank_U*rank_U - 5)
-        r1 = (rank_U - rank_C - 2)/4
-        if np.isnan(w):
-            tempw = float('nan')
-        else:
-            tempw = np.power(w, 1/rs)
-        df2 = (rm * rs) - 2 * r1
-
-    if np.isnan(tempw):
-        omega = float('nan')
-    else:
-        if MultiWLK == Constants.MULTI_WLK_RAO or MultiWLK == Constants.MULTI_WLK_RAO_OS or min_rank_C_U == 1:
-            omega = (total_N * rs) * (1 - tempw) /tempw
-        else:
-            omega = df2 * (1 - tempw) / tempw
-
-    if df2 <= 0 or np.isnan(w) or np.isnan(omega):
-        power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
-    else:
-        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
     power = Power(powerval, omega, fmethod)
     return power
@@ -498,12 +448,9 @@ def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     #       = 4  Rao (1951) two moment null approx + OS noncen mult
     if np.isnan(eval_HINVE[0]):
         w = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        if MultiWLK == Constants.MULTI_WLK_RAO or MultiWLK == Constants.MULTI_WLK_RAO_OS or min_rank_C_U == 1:
-            w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE * (total_N - rank_X)/total_N)))
-        else:
-            w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE)))
+        w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE)))
 
     if min_rank_C_U == 1:
         df2 = total_N - rank_X -rank_U + 1
@@ -522,64 +469,11 @@ def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     if np.isnan(tempw):
         omega = float('nan')
     else:
-        if MultiWLK == Constants.MULTI_WLK_RAO or MultiWLK == Constants.MULTI_WLK_RAO_OS or min_rank_C_U == 1:
-            omega = (total_N * rs) * (1 - tempw) /tempw
-        else:
-            omega = df2 * (1 - tempw) / tempw
+        omega = df2 * (1 - tempw) / tempw
 
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
-        power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
-    else:
-        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-
-    power = Power(powerval, omega, fmethod)
-    return power
-
-def wlk_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
-    min_rank_C_U = min(rank_C, rank_U)
-    df1 = rank_C * rank_U
-
-    # MMETHOD default= [4,2,2]
-    # MMETHOD[2] Choices for Wilks' Lambda
-    #       = 1  Rao (1951) two moment null approx
-    #       = 2  Rao (1951) two moment null approx
-    #       = 3  Rao (1951) two moment null approx + OS Obrien shieh noncen mult
-    #       = 4  Rao (1951) two moment null approx + OS noncen mult
-    if np.isnan(eval_HINVE[0]):
-        w = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
-    else:
-        if MultiWLK == Constants.MULTI_WLK_RAO or MultiWLK == Constants.MULTI_WLK_RAO_OS or min_rank_C_U == 1:
-            w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE * (total_N - rank_X)/total_N)))
-        else:
-            w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE)))
-
-    if min_rank_C_U == 1:
-        df2 = total_N - rank_X -rank_U + 1
-        rs = 1
-        tempw = w
-    else:
-        rm = total_N - rank_X - (rank_U - rank_C + 1)/2
-        rs = np.sqrt(rank_C*rank_C*rank_U*rank_U - 4) / (rank_C*rank_C + rank_U*rank_U - 5)
-        r1 = (rank_U - rank_C - 2)/4
-        if np.isnan(w):
-            tempw = float('nan')
-        else:
-            tempw = np.power(w, 1/rs)
-        df2 = (rm * rs) - 2 * r1
-
-    if np.isnan(tempw):
-        omega = float('nan')
-    else:
-        if MultiWLK == Constants.MULTI_WLK_RAO or MultiWLK == Constants.MULTI_WLK_RAO_OS or min_rank_C_U == 1:
-            omega = (total_N * rs) * (1 - tempw) /tempw
-        else:
-            omega = df2 * (1 - tempw) / tempw
-
-    if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
-        power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        powerval = float('nan')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
@@ -626,12 +520,9 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
     #       = 4  Rao (1951) two moment null approx + OS noncen mult
     if np.isnan(eval_HINVE[0]):
         w = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        if MultiWLK == Constants.MULTI_WLK_RAO or MultiWLK == Constants.MULTI_WLK_RAO_OS or min_rank_C_U == 1:
-            w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE * (total_N - rank_X)/total_N)))
-        else:
-            w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE)))
+        w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE * (total_N - rank_X)/total_N)))
 
     if min_rank_C_U == 1:
         df2 = total_N - rank_X -rank_U + 1
@@ -650,14 +541,11 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
     if np.isnan(tempw):
         omega = float('nan')
     else:
-        if MultiWLK == Constants.MULTI_WLK_RAO or MultiWLK == Constants.MULTI_WLK_RAO_OS or min_rank_C_U == 1:
-            omega = (total_N * rs) * (1 - tempw) /tempw
-        else:
-            omega = df2 * (1 - tempw) / tempw
+        omega = (total_N * rs) * (1 - tempw) /tempw
 
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
-        power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        powerval = float('nan')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         powerval, fmethod = _multi_power(alpha, df1, df2, omega)
 
@@ -699,8 +587,8 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
     df2 = total_N - rank_X - rank_U + 1
 
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
-        power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        powerval = float('nan')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         omega = eval_HINVE[0] * (total_N - rank_X)
         powerval, fmethod = _multi_power(alpha, df1, df2, omega)
