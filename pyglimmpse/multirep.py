@@ -7,8 +7,6 @@ from pyglimmpse.finv import finv
 from pyglimmpse.model.power import Power
 from pyglimmpse.probf import probf
 
-undefined_power = Power(float('nan'), float('nan'), Constants.FMETHOD_MISSING)
-
 
 def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -34,7 +32,7 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         Significance level for target GLUM test
     tolerance
         value below which a number is considered zero. defaults to 1e-12
-    
+
     Returns
     -------
     power
@@ -49,7 +47,7 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_hlt_omega(min_rank_C_U, eval_HINVE, rank_X, total_N, df2)
         return _multi_power(alpha, df1, df2, omega)
-    return undefined_power
+    return _undefined_power()
 
 def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -92,7 +90,7 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         omega = _calc_hlt_omega(min_rank_C_U, eval_HINVE, rank_X, total_N, df2)
         return _multi_power(alpha, df1, df2, omega)
     else:
-        return undefined_power
+        return _undefined_power()
 
 
 def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
@@ -119,7 +117,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         Significance level for target GLUM test
     tolerance
         value below which a number is considered zero. defaults to 1e-12
-    
+
     Returns
     -------
     power
@@ -138,7 +136,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
         return _multi_power(alpha, df1, df2, omega)
     else:
-        return undefined_power
+        return _undefined_power()
 
 def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     """
@@ -164,7 +162,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         Significance level for target GLUM test
     tolerance
         value below which a number is considered zero. defaults to 1e-12
-    
+
     Returns
     -------
     power
@@ -183,7 +181,8 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
         return _multi_power(alpha, df1, df2, omega)
     else:
-        return undefined_power
+        return _undefined_power()
+
 
 def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     """
@@ -232,7 +231,7 @@ def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
             power = _multi_power(alpha, df1, df2, omega)
             return power
     else:
-        return undefined_power
+        return _undefined_power()
 
 
 def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
@@ -281,8 +280,8 @@ def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
 
             power = _multi_power(alpha, df1, df2, omega)
             return power
-        
-    return undefined_power
+
+    return _undefined_power()
 
 
 def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
@@ -329,7 +328,7 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
             omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             power = _multi_power(alpha, df1, df2, omega)
             return power
-    return undefined_power
+    return _undefined_power()
 
 def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -372,7 +371,7 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         else:
             omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             power = _multi_power(alpha, df1, df2, omega)
-    return undefined_power
+    return _undefined_power()
 
 def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
@@ -410,7 +409,7 @@ def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         return _multi_power(alpha, df1, df2, omega)
-    return undefined_power
+    return _undefined_power()
 
 def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -435,7 +434,7 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         eigenvalues for H*INV(E)
     alpha
         Significance level for target GLUM test
-    
+
     Returns
     -------
     power
@@ -476,7 +475,7 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         return _multi_power(alpha, df1, df2, omega)
-    return undefined_power
+    return _undefined_power()
 
 
 def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
@@ -503,7 +502,7 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
         eigenvalues for H*INV(E)
     alpha
         Significance level for target GLUM test
-    
+
     Returns
     -------
     power
@@ -515,7 +514,7 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = eval_HINVE[0] * (total_N - rank_X)
         return _multi_power(alpha, df1, df2, omega)
-    return undefined_power
+    return _undefined_power()
 
 
 def _df1_rank_c_u(rank_C: float, rank_U: float) -> float:
@@ -608,3 +607,7 @@ def _pbt_uncorrected_evalt(eval_HINVE, rank_C, rank_U, rank_X, total_N):
     else:
         evalt = eval_HINVE
     return evalt
+
+
+def _undefined_power():
+    return Power(float('nan'), float('nan'), Constants.FMETHOD_MISSING)
