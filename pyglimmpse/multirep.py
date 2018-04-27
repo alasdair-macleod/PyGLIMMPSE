@@ -7,6 +7,9 @@ from pyglimmpse.finv import finv
 from pyglimmpse.model.power import Power
 from pyglimmpse.probf import probf
 
+undefined_power = Power(float('nan'), float('nan'), Constants.FMETHOD_MISSING)
+
+
 def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
@@ -45,11 +48,9 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
-        hlt, omega = _calc_hlt_omega(min(rank_C, rank_U), eval_HINVE, rank_X, total_N, df2)
-        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-    power = Power(powerval, omega, fmethod)
-
-    return power
+        omega = _calc_hlt_omega(min(rank_C, rank_U), eval_HINVE, rank_X, total_N, df2)
+        return _multi_power(alpha, df1, df2, omega)
+    return undefined_power
 
 def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -94,11 +95,10 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
-        hlt, omega = _calc_hlt_omega(min(rank_C, rank_U), eval_HINVE, rank_X, total_N, df2)
-        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-    power = Power(powerval, omega, fmethod)
-
-    return power
+        omega = _calc_hlt_omega(min_rank_C_U, eval_HINVE, rank_X, total_N, df2)
+        return _multi_power(alpha, df1, df2, omega)
+    else:
+        return undefined_power
 
 def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     """
@@ -141,10 +141,9 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
-        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-    power = Power(powerval, omega, fmethod)
-
-    return power
+        return _multi_power(alpha, df1, df2, omega)
+    else:
+        return undefined_power
 
 def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     """
@@ -189,10 +188,9 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
-        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-    power = Power(powerval, omega, fmethod)
-
-    return power
+        return _multi_power(alpha, df1, df2, omega)
+    else:
+        return undefined_power
 
 def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     """
@@ -235,15 +233,16 @@ def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
 
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
         if (min(rank_C, rank_U) - v) <= tolerance:
-            powerval = float('nan')
+            warnings.warn('Power is missing because because the min(rank_C, rank_U) - v  <= 0.')
         else:
             if min(rank_U, rank_C) == 1:
                 omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
             else:
                 omega = df2 * v / (min(rank_C, rank_U) - v)
-            powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-    power = Power(powerval, omega, fmethod)
-    return power
+            power = _multi_power(alpha, df1, df2, omega)
+            return power
+    else:
+        return undefined_power
 
 def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -294,17 +293,17 @@ def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
 
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
         if (min(rank_C, rank_U) - v) <= tolerance:
-            powerval = float('nan')
+            warnings.warn('Power is missing because because the min(rank_C, rank_U) - v  <= 0.')
         else:
             if min(rank_U, rank_C) == 1:
                 omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
             else:
                 omega = df2 * v / (min(rank_C, rank_U) - v)
 
-            powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-
-    power = Power(powerval, omega, fmethod)
-    return power
+            power = _multi_power(alpha, df1, df2, omega)
+            return power
+        
+    return undefined_power
 
 def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -344,13 +343,12 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
 
         if (min(rank_C, rank_U) - v) <= tolerance:
-            power = float('nan')
+            warnings.warn('Power is missing because because the min(rank_C, rank_U) - v  <= 0.')
         else:
             omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
-            powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-
-    power = Power(powerval, omega, fmethod)
-    return power
+            power = _multi_power(alpha, df1, df2, omega)
+            return power
+    return undefined_power
 
 def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -397,13 +395,11 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         evalt = eval_HINVE * (total_N - rank_X) / total_N
         v = sum(evalt / (np.ones((min(rank_C, rank_U), 1)) + evalt))
         if (min(rank_C, rank_U) - v) <= tolerance:
-            power = float('nan')
+            warnings.warn('Power is missing because because the min(rank_C, rank_U) - v  <= 0.')
         else:
             omega = total_N * min(rank_C, rank_U) * v / (min(rank_C, rank_U) - v)
-            powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-
-    power = Power(powerval, omega, fmethod)
-    return power
+            power = _multi_power(alpha, df1, df2, omega)
+    return undefined_power
 
 def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
@@ -441,10 +437,8 @@ def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
         powerval = float('nan')
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-
-    power = Power(powerval, omega, fmethod)
-    return power
+        return _multi_power(alpha, df1, df2, omega)
+    return undefined_power
 
 def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -507,14 +501,11 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         omega = (total_N * rs) * (1 - tempw) /tempw
 
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
-        powerval = float('nan')
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega)
+    return undefined_power
 
-    power = Power(powerval, omega, fmethod)
-
-    return power
 
 def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -551,11 +542,8 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
 
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = eval_HINVE[0] * (total_N - rank_X)
-        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
-
-    power = Power(powerval, omega, fmethod)
-
-    return power
+        return _multi_power(alpha, df1, df2, omega)
+    return undefined_power
 
 
 def _df1_rank_c_u(rank_C: float, rank_U: float) -> float:
@@ -569,11 +557,12 @@ def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
     fcrit = finv(1 - alpha, df1, df2)
     prob, fmethod = probf(fcrit, df1, df2, omega)
     if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
-        power = alpha
+        powerval = alpha
     else:
-        power = 1 - prob
-    power = float(power)
-    return power, fmethod
+        powerval = 1 - prob
+    powerval = float(powerval)
+    power = Power(powerval, omega, fmethod)
+    return power
 
 
 def _calc_omega(eval_HINVE: [], min_rank_C_U: float, rank_X: float, total_N: float) -> float:
@@ -588,7 +577,7 @@ def _calc_hlt_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N:
     else:
         hlt = eval_HINVE
         omega = df2 * (hlt / min_rank_C_U)
-    return hlt, omega
+    return omega
 
 
 def _one_moment_df2(min_rank_C_U: float, rank_U: float, rank_X: float, total_N: float) -> float:
@@ -598,7 +587,6 @@ def _one_moment_df2(min_rank_C_U: float, rank_U: float, rank_X: float, total_N: 
 
 def _valid_df2_eigenvalues(eval_HINVE: [],df2=1, tolerance=1e-12) -> bool:
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
-        powerval = float('nan')
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
         return False
     else:
