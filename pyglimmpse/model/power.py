@@ -107,6 +107,8 @@ class Power:
             Upper tail probability for confidence interval
         :param tolerance:
             value below which numbes are declared zero
+        :param omega:
+            noncentrality parameter
 
         """
         if cl_type == Constants.CLTYPE_DESIRED_KNOWN or cl_type == Constants.CLTYPE_DESIRED_ESTIMATE:

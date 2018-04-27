@@ -8,7 +8,7 @@ from pyglimmpse.input import Scalar
 from pyglimmpse.model.power import Power
 from pyglimmpse.probf import probf
 
-def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha ) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -28,8 +28,8 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         total N
     eval_HINVE
         eigenvalues for H*INV(E)
-    mmethod
-        multirep method
+    alpha
+        Significance level for target GLUM test
     
     Returns
     -------
@@ -39,23 +39,21 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 1  Pillai (1954, 55) 1 moment null approx
-
-
-    df2Method = _one_moment_df2(rank_U, rank_X, total_N)
+    df1 = rank_C * rank_U
+    df2 = _one_moment_df2(min(rank_C, rank_U), rank_U, rank_X, total_N)
 
     # df2 need to > 0 and eigenvalues not missing
     if df2 <= 0 or np.isnan(eval_HINVE[0]):
-        power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        powerval = float('nan')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        hlt, omega = _calc_hlt_omega(eval_HINVE, rank_X, total_N)
-
-        power, fmethod = _multi_power(Scalar.alpha, df1, df2, omega)
-
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est, CL.rank_est,CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+        hlt, omega = _calc_hlt_omega(min(rank_C, rank_U), eval_HINVE, rank_X, total_N, df2)
+        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
+    power = Power(powerval, omega, fmethod)
 
     return power
-def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+
+def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float ) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -76,8 +74,8 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         total N
     eval_HINVE
         eigenvalues for H*INV(E)
-    mmethod
-        multirep method
+    alpha
+        Significance level for target GLUM test
     
     Returns
     -------
@@ -96,7 +94,7 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
 
     # df2 need to > 0 and eigenvalues not missing
     if df2 <= 0 or np.isnan(eval_HINVE[0]):
-        power = float('nan')
+        powerval = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
         if min_rank_C_U == 1:
@@ -105,14 +103,12 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         else:
             hlt = eval_HINVE
             omega = df2 * (hlt / min_rank_C_U)
-
-        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
-
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est, CL.rank_est,
-                                                                         CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
+    power = Power(powerval, omega, fmethod)
 
     return power
-def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+
+def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha ) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -132,8 +128,8 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         total N
     eval_HINVE
         eigenvalues for H*INV(E)
-    mmethod
-        multirep method
+    alpha
+        Significance level for target GLUM test
     
     Returns
     -------
@@ -150,18 +146,17 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
 
     # df2 need to > 0 and eigenvalues not missing
     if df2 <= 0 or np.isnan(eval_HINVE[0]):
-        power = float('nan')
+        powerval = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
         hlt = eval_HINVE * (total_N - rank_X) / total_N
         omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
+        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
+    power = Power(powerval, omega, fmethod)
 
-        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
+    return power
 
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est, CL.rank_est, CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
-
-    return {'lower': power_l, 'power': power, 'upper': power_u}
-def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [] ) -> Power:
+def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha ) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -181,8 +176,8 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         total N
     eval_HINVE
         eigenvalues for H*INV(E)
-    mmethod
-        multirep method
+    alpha
+        Significance level for target GLUM test
     
     Returns
     -------
@@ -201,15 +196,13 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
 
     # df2 need to > 0 and eigenvalues not missing
     if df2 <= 0 or np.isnan(eval_HINVE[0]):
-        power = float('nan')
+        powerval = float('nan')
         warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
     else:
         hlt = eval_HINVE * (total_N - rank_X) / total_N
         omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
-
-        power, fmethod = multi_power(Scalar.alpha, df1, df2, omega)
-
-    power.glmmpcl(Scalar.alpha, df1, total_N, df2, CL.cl_type, CL.n_est, CL.rank_est,CL.alpha_cl, CL.alpha_cu, Scalar.tolerance, power, omega)
+        powerval, fmethod = _multi_power(alpha, df1, df2, omega)
+    power = Power(powerval, omega, fmethod)
 
     return power
 
@@ -634,45 +627,8 @@ def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
         power = 1 - prob
     power = float(power)
     return power, fmethod
-def _hlt(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], df2Method: str) -> Power:
-    """
-    shell function for hotelling lawley traces.
 
-    Parameters
-    ----------
-    rank_C
-        rank of C matrix
-    rank_U
-        rank of U matrix
-    rank_X
-        rank of X matrix
-    total_N
-        total N
-    eval_HINVE
-        eigenvalues for H*INV(E)
-    mmethod
-        multirep method
-
-    Returns
-    -------
-    some
-        return value
-    """
-    min_rank_C_U = min(rank_C, rank_U)
-    df1 = rank_C * rank_U
-    df2 = df2Method()
-
-    if df2 <= 0 or np.isnan(eval_HINVE[0]):
-        power = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
-    else:
-        power, fmethod = _multi_power(Scalar.alpha, df1, df2, omega)
-    power_l, power_u, fmethod_l, fmethod_u, noncen_l, noncen_u = glmmpcl(Scalar.alpha, df1, total_N, df2,
-                                                                         CL.cl_type, CL.n_est, CL.rank_est,
-                                                                         CL.alpha_cl, CL.alpha_cu, Scalar.tolerance,
-                                                                         power, omega)
-    return {'lower': power_l, 'power': power, 'upper': power_u}
-def _calc_hlt_omega(eval_HINVE: [], rank_X: float, total_N: float):
+def _calc_hlt_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N: float, df2:float):
     if min_rank_C_U == 1:
         hlt = eval_HINVE * (total_N - rank_X) / total_N
         omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
@@ -680,7 +636,8 @@ def _calc_hlt_omega(eval_HINVE: [], rank_X: float, total_N: float):
         hlt = eval_HINVE
         omega = df2 * (hlt / min_rank_C_U)
     return hlt, omega
-def _one_moment_df2(rank_U: float, rank_X: float, total_N: float):
+
+def _one_moment_df2(min_rank_C_U: float, rank_U: float, rank_X: float, total_N: float) -> float:
     df2 = min_rank_C_U * (total_N - rank_X - rank_U - 1) + 2
     return df2
 
