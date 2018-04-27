@@ -4,7 +4,6 @@ import numpy as np
 
 from pyglimmpse.constants import Constants
 from pyglimmpse.finv import finv
-from pyglimmpse.input import Scalar
 from pyglimmpse.model.power import Power
 from pyglimmpse.probf import probf
 
@@ -30,6 +29,8 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         eigenvalues for H*INV(E)
     alpha
         Significance level for target GLUM test
+    tolerance
+        value below which a number is considered zero. defaults to 1e-12
     
     Returns
     -------
@@ -76,6 +77,8 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         eigenvalues for H*INV(E)
     alpha
         Significance level for target GLUM test
+    tolerance
+        value below which a number is considered zero. defaults to 1e-12
     
     Returns
     -------
@@ -95,7 +98,7 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
     # df2 need to > 0 and eigenvalues not missing
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         powerval = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         if min_rank_C_U == 1:
             hlt = eval_HINVE * (total_N - rank_X) / total_N
@@ -130,6 +133,8 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         eigenvalues for H*INV(E)
     alpha
         Significance level for target GLUM test
+    tolerance
+        value below which a number is considered zero. defaults to 1e-12
     
     Returns
     -------
@@ -147,7 +152,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     # df2 need to > 0 and eigenvalues not missing
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         powerval = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         hlt = eval_HINVE * (total_N - rank_X) / total_N
         omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
@@ -178,6 +183,8 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         eigenvalues for H*INV(E)
     alpha
         Significance level for target GLUM test
+    tolerance
+        value below which a number is considered zero. defaults to 1e-12
     
     Returns
     -------
@@ -197,7 +204,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     # df2 need to > 0 and eigenvalues not missing
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         powerval = float('nan')
-        warnings.warn('PowerWarn15: Power is missing because because the noncentrality could not be computed.')
+        warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
         hlt = eval_HINVE * (total_N - rank_X) / total_N
         omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
@@ -207,6 +214,35 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
     return power
 
 def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
+    """
+    This function calculates power for Pillai-Bartlett trace based on the F approx. method.
+    V is the "population value" of PBT.
+    DF1 and DF2 are the hypothesis and error degrees of freedom.
+    OMEGA is the noncentrality parameter.
+    FCRIT is the critical value from the F distribution.
+
+    Parameters
+    ----------
+    rank_C
+        rank of C matrix
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    eval_HINVE
+        eigenvalues for H*INV(E)
+    alpha
+        Significance level for target GLUM test
+    tolerance
+        value below which a number is considered zero. defaults to 1e-12
+
+    Returns
+    -------
+    power
+        a power object
+    """
     df1 = rank_C * rank_U
     df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
 
@@ -232,6 +268,35 @@ def pbt_one_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     return power
 
 def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
+    """
+        This function calculates power for Pillai-Bartlett trace based on the F approx. method.
+        V is the "population value" of PBT.
+        DF1 and DF2 are the hypothesis and error degrees of freedom.
+        OMEGA is the noncentrality parameter.
+        FCRIT is the critical value from the F distribution.
+
+        Parameters
+        ----------
+        rank_C
+            rank of C matrix
+        rank_U
+            rank of U matrix
+        rank_X
+            rank of X matrix
+        total_N
+            total N
+        eval_HINVE
+            eigenvalues for H*INV(E)
+        alpha
+            Significance level for target GLUM test
+        tolerance
+            value below which a number is considered zero. defaults to 1e-12
+
+        Returns
+        -------
+        power
+            a power object
+        """
     mu1 = rank_C * rank_U / (total_N - rank_X + rank_C)
     factor1 = (total_N - rank_X + rank_C - rank_U) / (total_N - rank_X + rank_C - 1)
     factor2 = (total_N - rank_X) / (total_N - rank_X + rank_C + 2)
@@ -267,6 +332,35 @@ def pbt_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     return power
 
 def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
+    """
+        This function calculates power for Pillai-Bartlett trace based on the F approx. method.
+        V is the "population value" of PBT.
+        DF1 and DF2 are the hypothesis and error degrees of freedom.
+        OMEGA is the noncentrality parameter.
+        FCRIT is the critical value from the F distribution.
+
+        Parameters
+        ----------
+        rank_C
+            rank of C matrix
+        rank_U
+            rank of U matrix
+        rank_X
+            rank of X matrix
+        total_N
+            total N
+        eval_HINVE
+            eigenvalues for H*INV(E)
+        alpha
+            Significance level for target GLUM test
+        tolerance
+            value below which a number is considered zero. defaults to 1e-12
+
+        Returns
+        -------
+        power
+            a power object
+        """
     df1 = rank_C * rank_U
     df2 = min(rank_C, rank_U) * (total_N - rank_X + min(rank_C, rank_U) - rank_U)
 
@@ -288,11 +382,11 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
 
 def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
-    This function calculates power for Pillai-Bartlett trace based on the
-    F approx. method.  V is the "population value" of PBT,
-    DF1 and DF2 are the hypothesis and error degrees of freedom,
-    OMEGA is the noncentrality parameter, and FCRIT is the
-    critical value from the F distribution.
+    This function calculates power for Pillai-Bartlett trace based on the F approx. method.
+    V is the "population value" of PBT.
+    DF1 and DF2 are the hypothesis and error degrees of freedom.
+    OMEGA is the noncentrality parameter.
+    FCRIT is the critical value from the F distribution.
 
     Parameters
     ----------
@@ -308,11 +402,13 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
         eigenvalues for H*INV(E)
     alpha
         Significance level for target GLUM test
-    
+    tolerance
+        value below which a number is considered zero. defaults to 1e-12
+
     Returns
     -------
     power
-        power for Pillai-Bartlett trace & CL if requested
+        a power object
     """
     mu1 = rank_C * rank_U / (total_N - rank_X + rank_C)
     factor1 = (total_N - rank_X + rank_C -rank_U) / (total_N - rank_X + rank_C - 1)
