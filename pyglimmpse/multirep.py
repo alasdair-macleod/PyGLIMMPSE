@@ -133,7 +133,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
-        omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
+        omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
         return _multi_power(alpha, df1, df2, omega)
     else:
         return _undefined_power()
@@ -178,7 +178,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
 
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
-        omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
+        omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
         return _multi_power(alpha, df1, df2, omega)
     else:
         return _undefined_power()
@@ -519,13 +519,13 @@ def special(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HI
 
 
 def _df1_rank_c_u(rank_C: float, rank_U: float) -> float:
+    """Calculate df1 from the rank of the C and U matrices"""
     df1 = rank_C * rank_U
     return df1
 
 
 def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
-    """ The common part for these four multirep methods
-        Computing power"""
+    """ The common part for these four multirep methods computing power"""
     fcrit = finv(1 - alpha, df1, df2)
     prob, fmethod = probf(fcrit, df1, df2, omega)
     if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
@@ -538,18 +538,21 @@ def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
 
 
 def _trace(eval_HINVE, rank_X, total_N):
+    """Calculate the value \'trace\'"""
     trace = eval_HINVE * (total_N - rank_X) / total_N
     return trace
 
-def _calc_omega(eval_HINVE: [], min_rank_C_U: float, rank_X: float, total_N: float) -> float:
+def _calc_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N: float) -> float:
+    """calculate the noncentrality parameter, omega"""
     hlt = _trace(eval_HINVE, rank_X, total_N)
     omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
     return omega
 
 
 def _calc_hlt_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N: float, df2:float):
+    """calculate the noncentrality parameter, omega, for a hotelling lawley trace."""
     if min_rank_C_U == 1:
-        omega = _calc_omega(eval_HINVE, min_rank_C_U, rank_X, total_N)
+        omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
     else:
         hlt = eval_HINVE
         omega = df2 * (hlt / min_rank_C_U)
@@ -557,11 +560,13 @@ def _calc_hlt_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N:
 
 
 def _hlt_one_moment_df2(min_rank_C_U: float, rank_U: float, rank_X: float, total_N: float) -> float:
+    """Calculate df2 for a hlt which is using an approximator which matches one moment"""
     df2 = min_rank_C_U * (total_N - rank_X - rank_U - 1) + 2
     return df2
 
 
 def _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N):
+    """Calculate df2 for a hlt which is using an approximator which matches two moments"""
     nu_df2 = (total_N - rank_X) * (total_N - rank_X) - (total_N - rank_X) * (2 * rank_U + 3) + rank_U * (rank_U + 3)
     de_df2 = (total_N - rank_X) * (rank_C + rank_U + 1) - (rank_C + 2 * rank_U + rank_U * rank_U - 1)
     df2 = 4 + (rank_C * rank_U + 2) * (nu_df2 / de_df2)
@@ -569,6 +574,7 @@ def _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N):
 
 
 def _valid_df2_eigenvalues(eval_HINVE: [],df2=1, tolerance=1e-12) -> bool:
+    """check that df2 is positive and thath the eigenvalues have been calculates"""
     # df2 need to be > 0 and eigenvalues not missing
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
@@ -578,12 +584,14 @@ def _valid_df2_eigenvalues(eval_HINVE: [],df2=1, tolerance=1e-12) -> bool:
 
 
 def _pbt_one_moment_df2(rank_C, rank_U, rank_X, total_N):
+    """Calculate df2 for a pbt which is using an approximator which matches one moment"""
     min_rank_C_U = min(rank_C, rank_U)
     df2 = min_rank_C_U * (total_N - rank_X + min_rank_C_U - rank_U)
     return df2
 
 
 def _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N):
+    """ calculate the degrees of freedom df1, df2 for a pbt which is using an approximator which matches two moments"""
     min_rank_C_U = min(rank_C, rank_U)
     mu1 = rank_C * rank_U / (total_N - rank_X + rank_C)
     factor1 = (total_N - rank_X + rank_C - rank_U) / (total_N - rank_X + rank_C - 1)
@@ -598,11 +606,13 @@ def _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N):
     return df1, df2
 
 def _pbt_population_value(evalt, min_rank_C_U):
+    """ calculate the populations value for a pbt"""
     v = sum(evalt / (np.ones((min_rank_C_U, 1)) + evalt))
     return v
 
 
 def _pbt_uncorrected_evalt(eval_HINVE, rank_C, rank_U, rank_X, total_N):
+    """ calculate evalt for pbt"""
     if min(rank_U, rank_C) == 1:
         evalt = _trace(eval_HINVE, rank_X, total_N)
     else:
@@ -611,4 +621,5 @@ def _pbt_uncorrected_evalt(eval_HINVE, rank_C, rank_U, rank_X, total_N):
 
 
 def _undefined_power():
+    """ Returns a Power object with NaN power and noncentralith and missing fmethod"""
     return Power(float('nan'), float('nan'), Constants.FMETHOD_MISSING)
