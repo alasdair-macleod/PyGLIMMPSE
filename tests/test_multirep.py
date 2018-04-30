@@ -13,12 +13,12 @@ class TestMultirep(TestCase):
         """
 
         rank_C = 1
-        rank_U = 2
-        rank_X = 1
-        total_N = 3
-        eval_HINVE = np.array([35])
+        rank_U = 3
+        rank_X = 2
+        total_N = 8
+        eval_HINVE = np.array([0.5])
         alpha = 0.05
-        expected = 0.326
+        expected = 0.138179071626
         actual = multirep.hlt_one_moment_null_approximator(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
         self.assertEqual(expected, actual.power)
 
@@ -88,12 +88,12 @@ class TestMultirep(TestCase):
         """
 
         rank_C = 1
-        rank_U = 2
-        rank_X = 1
-        total_N = 3
-        eval_HINVE = np.array([35])
+        rank_U = 3
+        rank_X = 2
+        total_N = 8
+        eval_HINVE = np.array([0.5])
         alpha = 0.05
-        expected = 0.326
+        expected = 0.138179071626
         actual = multirep.pbt_two_moment_null_approx(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
         self.assertEqual(expected, actual.power)
 
@@ -118,12 +118,12 @@ class TestMultirep(TestCase):
         """
 
         rank_C = 1
-        rank_U = 2
-        rank_X = 1
-        total_N = 3
-        eval_HINVE = np.array([35])
+        rank_U = 3
+        rank_X = 2
+        total_N = 8
+        eval_HINVE = np.array([0.05])
         alpha = 0.05
-        expected = 0.326
+        expected = 0.138179071626
         actual = multirep.pbt_two_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
         self.assertEqual(expected, actual.power)
 
@@ -183,11 +183,11 @@ class TestMultirep(TestCase):
 
     def test_multi_power(self):
         alpha = 0.05
-        df1 = 2
-        df2 = 1
-        omega = 2.5
+        df1 = 3
+        df2 = 4
+        omega = 3
 
-        expected = Power(1, 0.05, Constants.FMETHOD_NORMAL_LR)
+        expected = Power(0.138179071626, 0.05, Constants.FMETHOD_NORMAL_LR)
         actual = multirep._multi_power(alpha, df1, df2, omega)
         self.assertEqual(expected.power, actual.power)
         self.assertEqual(expected.noncentrality_parameter, actual.noncentrality_parameter)
@@ -197,7 +197,7 @@ class TestMultirep(TestCase):
         eval_HINVE = np.array([0.5])
         rank_X = 5
         total_N = 10
-        expected = [0.025]
+        expected = np.array([0.25])
         actual = multirep._trace(eval_HINVE, rank_X, total_N)
         self.assertEqual(expected, actual)
 
@@ -260,10 +260,10 @@ class TestMultirep(TestCase):
 
     def test_pbt_two_moment_df1_df2(self):
         rank_C = 1
-        rank_U = 2
-        rank_X = 1
-        total_N = 3
-        exp_df1, exp_df2 = 2, 1
+        rank_U = 3
+        rank_X = 2
+        total_N = 8
+        exp_df1, exp_df2 = 3, 4
         actual_df1, actual_df2 = multirep._pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N)
         self.assertEqual(exp_df1, actual_df1)
         self.assertEqual(exp_df2, actual_df2)
@@ -276,21 +276,18 @@ class TestMultirep(TestCase):
         self.assertEqual(expected, actual)
 
     def test_pbt_uncorrected_evalt(self):
-        eval_HINVE =[35]
-        rank_C = 1
+        eval_HINVE =np.array([35])
+        rank_C = 2
         rank_U = 2
         rank_X = 1
         total_N = 3
-        expected = ()
+        expected = np.array([35])
         actual = multirep._pbt_uncorrected_evalt(eval_HINVE, rank_C, rank_U, rank_X, total_N)
         self.assertEqual(expected, actual)
 
     def test_undefined_power(self):
-        expected = Power(float('nan'), float('nan'), Constants.FMETHOD_MISSING)
         actual = multirep._undefined_power()
-        self.assertTrue(np.math.isnan(actual.power))
-        self.assertEqual(expected.noncentrality_parameter, actual.noncentrality_parameter)
-        self.assertEqual(expected.fmethod, actual.fmethod)
+        self.assertTrue(np.isnan(actual.power))
 
 
 
