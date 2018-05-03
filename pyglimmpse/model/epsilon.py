@@ -44,4 +44,8 @@ class Epsilon: #dfFactors
         self.d = len(deigval_array)
         self.deigval = np.matrix(deigval_array).T
         self.mtp = np.matrix(mtp_array).T
-        #todo  what is .T???? <- transpose
+
+    def nameME(self):
+        seval = np.matrix(np.linalg.eigvals(self.esig)).T
+        nameME = np.sum(seval * seval.T)
+        return nameME
