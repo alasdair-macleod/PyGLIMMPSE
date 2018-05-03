@@ -11,7 +11,7 @@ def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: fl
 
 def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
     epsilon = _calc_epsilon(sigma_star, rank_U)
-    f_i, f_ii = calc_gg_derivs_functions_eigenvalues(epsilon, rank_U)
+    f_i, f_ii = _gg_derivs_functions_eigenvalues(epsilon, rank_U)
     g_1 = _calc_g_1(epsilon, f_i, f_ii)
     exeps = epsilon.eps + g_1 / (total_N - rank_X)
     return exeps
@@ -171,25 +171,92 @@ def _calc_g_1(epsilon, fk, fkk):
     return g_1
 
 
-def _calc_hf_derivs_functions_eigenvalues(rank_U, rank_X, total_N, epsilon):
+def hf_derivs_functions_eigenvalues(rank_U: float, rank_X: float, total_N: float, epsilon: Epsilon):
+    """
+    This function computes the derivatives of the functions of eigenvalues for the Huyhn_Feldt test.
+
+    For Huyhn-Feldt:
+
+    .. math::
+
+        h(\lambda) = \dfrac{(Nb_\epsilon - 2)}{b(N - r -b_\epsilon)}  = \dfrac{h_1(\lambda)}{h_2(\lambda)b}
+
+    with:
+
+    .. math::
+        h_1 = N(\Sigma\lambda_k)^2 - 2\Sigma\lambda_k^2
+
+        h_2 = (N - r)\Sigma\lambda_k^2 - (\Sigma\lambda_k)^2
+
+    In turn:
+
+    .. math::
+        \partial h_1 = 2N(\Sigma\lambda_k) - 4\lambda_i
+
+        \partial h_2 = 2(N - r)\lambda_i - 2\Sigma\lambda_k
+
+    and:
+
+    .. math::
+
+        \partial h_1^{(2)} = 2N - 4
+
+        \partial h_2^{(2)} = 2(N - r) - 2
+
+    The necessary derivatives are:
+
+    .. math::
+
+        bh_i = \dfrac{\partial h_1}{h_2} - \dfrac{h_1 \partial h_2}{h_2^2}
+
+    and:
+
+    .. math::
+
+        bh_{ii} = \dfrac{\partial h_1^{(2)}}{h_2} -  \dfrac{ 2 \partial h_1\partial h_2}{h_2^2} + \dfrac{ 2h_1(\partial h_2)^2}{h_2^3} - \dfrac{h_1\partial h_2^{2}}{h_2^2}
+
+
+    Parameters
+    ----------
+    rank_U
+        rank of U matrix
+    rank_X
+        rank of X matrix
+    total_N
+        total N
+    epsilon
+        The :class:`.Epsilon` object calculated for this test
+
+    Returns
+    -------
+    bh_i
+        the value of the first derivative of the function of the eigenvalues wrt :math:`\lambda`
+    bh_ii
+        the value of the second derivative of the function of the eigenvalues wrt :math:`\lambda`
+    h_1
+        the value of h_1 as defined above
+    h_2
+        the value of h_2 as defined above
+
+    """
     h1 = total_N * epsilon.slam1 - 2 * epsilon.slam2
     h2 = (total_N - rank_X) * epsilon.slam2 - epsilon.slam1
     derh1 = np.full((epsilon.d, 1), 2 * total_N * epsilon.slam3) - 4 * epsilon.deigval
     derh2 = 2 * (total_N - rank_X) * epsilon.deigval - np.full((epsilon.d, 1), 2 * np.sqrt(epsilon.slam1))
-    fk = (derh1 - h1 * derh2 / h2) / (rank_U * h2)
+    bh_i = (derh1 - h1 * derh2 / h2) / (rank_U * h2)
     der2h1 = np.full((epsilon.d, 1), 2 * total_N - 4)
     der2h2 = np.full((epsilon.d, 1), 2 * (total_N - rank_X) - 2)
-    fkk = (
+    bh_ii = (
            (np.multiply(-derh1, derh2) / h2 + der2h1 - np.multiply(derh1, derh2) / h2 + 2 * h1 * np.power(derh2, 2) / h2 ** 2 - h1 * der2h2 / h2)
            / (h2 * rank_U))
-    return fk, fkk, h1, h2
+    return bh_i, bh_ii, h1, h2
 
 
-def calc_gg_derivs_functions_eigenvalues(epsilon: Epsilon, rank_U: float):
+def gg_derivs_functions_eigenvalues(epsilon: Epsilon, rank_U: float):
     """
     This function computes the derivatives of the functions of eigenvalues for the Geisser-Greenhouse test.
 
-    For geisser greenhouse test :math:`f( \lambda) = \epsilon` so :math:`f_i` the first derivative, with respect to :math:`\lambda` is:
+    For Geisser-Greenhouse test :math:`f( \lambda) = \epsilon` so :math:`f_i` the first derivative, with respect to :math:`\lambda` is:
 
     .. math::
 
@@ -214,7 +281,6 @@ def calc_gg_derivs_functions_eigenvalues(epsilon: Epsilon, rank_U: float):
         the value of the first derivative of the function of the eigenvalues wrt :math:`\lambda`
     f_ii
         the value of the second derivative of the function of the eigenvalues wrt :math:`\lambda`
-
 
     """
     f_i = np.full((epsilon.d, 1), 1) * 2 * epsilon.slam3 / (epsilon.slam2 * rank_U) \
