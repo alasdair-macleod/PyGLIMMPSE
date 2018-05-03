@@ -10,7 +10,7 @@ def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: fl
 
 
 def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
-    epsilon = _first_uni(sigma_star, rank_U)
+    epsilon = _calc_epsilon(sigma_star, rank_U)
     fk, fkk = _calc_gg_fk_fkk(epsilon, rank_U)
     sum1, sum2, t1, t2 = _calc_sum1_sum2(epsilon, fk, fkk)
     exeps = epsilon.eps + (sum1 + sum2) / (total_N - rank_X)
@@ -18,7 +18,7 @@ def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, 
 
 
 def geisser_greenhouse_muller_edwards_simpson_taylor_2004(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
-    epsilon = _first_uni(sigma_star, rank_U)
+    epsilon = _calc_epsilon(sigma_star, rank_U)
 
     nu = total_N - rank_X
     expt1 = 2 * nu * epsilon.slam2 + nu ** 2 * epsilon.slam1
@@ -94,7 +94,7 @@ def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N
         :param UnirepUncorrected:
         :return:
         """
-    epsilon = _first_uni(sigma_star, rank_U)
+    epsilon = _calc_epsilon(sigma_star, rank_U)
 
     # Compute approximate expected value of Huynh-Feldt estimate
     fk, fkk, h1, h2 = _calc_hf_fk_fkk(rank_U, rank_X, total_N, epsilon)
@@ -106,7 +106,7 @@ def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N
 
 
 def hyuhn_feldt_muller_edwards_simpson_taylor_2004(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
-    epsilon = _first_uni(sigma_star, rank_U)
+    epsilon = _calc_epsilon(sigma_star, rank_U)
     # Computation of EXP(T1) and EXP(T2)
     nu = total_N - rank_X
     expt1 = 2 * nu * epsilon.slam2 + nu ** 2 * epsilon.slam1
@@ -119,7 +119,7 @@ def hyuhn_feldt_muller_edwards_simpson_taylor_2004(sigma_star: np.matrix, rank_U
 
 def box(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
     pass
-def _first_uni(sigma_star: np.matrix, rank_U: float) -> Epsilon:
+def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
     """
     This module produces matrices required for Geisser-Greenhouse,
     Huynh-Feldt or uncorrected repeated measures power calculations. It

@@ -34,8 +34,8 @@ class Epsilon: #dfFactors
         # Get eigenvalues of covariance matrix associated with E. This is NOT
         # the USUAL sigma. This cov matrix is that of (Y-YHAT)*U, not of (Y-YHAT).
         # The covariance matrix is normalized to minimize numerical problems
-        esig = sigma_star / np.trace(sigma_star)
-        seigval = np.linalg.eigvals(esig)
+        self.esig = sigma_star / np.trace(sigma_star)
+        seigval = np.linalg.eigvals(self.esig)
         deigval_array, mtp_array = np.unique(seigval, return_counts=True)
         self.slam1 = np.sum(seigval) ** 2
         self.slam2 = np.sum(np.square(seigval))

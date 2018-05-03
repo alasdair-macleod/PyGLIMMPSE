@@ -2,7 +2,6 @@ from unittest import TestCase
 import numpy as np
 import pyglimmpse.multirep as multirep
 from pyglimmpse.constants import Constants
-from pyglimmpse.input import Scalar, CL
 from pyglimmpse.model.power import Power
 
 
