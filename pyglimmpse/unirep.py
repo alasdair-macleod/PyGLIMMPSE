@@ -12,7 +12,7 @@ def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: fl
 def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
     epsilon = _calc_epsilon(sigma_star, rank_U)
     f_i, f_ii = _gg_derivs_functions_eigenvalues(epsilon, rank_U)
-    g_1 = _calc_g_1(epsilon, f_i, f_ii)
+    g_1 = calc_g_1(epsilon, f_i, f_ii)
     exeps = epsilon.eps + g_1 / (total_N - rank_X)
     return exeps
 
@@ -97,8 +97,8 @@ def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N
     epsilon = _calc_epsilon(sigma_star, rank_U)
 
     # Compute approximate expected value of Huynh-Feldt estimate
-    fk, fkk, h1, h2 = _calc_hf_derivs_functions_eigenvalues(rank_U, rank_X, total_N, epsilon)
-    g_1 = _calc_g_1(epsilon, fk, fkk)
+    bh_i, bh_ii, h1, h2 = hf_derivs_functions_eigenvalues(rank_U, rank_X, total_N, epsilon)
+    g_1 = calc_g_1(epsilon, bh_i, bh_ii)
     # Define HF Approx E(.) for Method 0
     exeps = h1 / (rank_U * h2) + g_1 / (total_N - rank_X)
 
@@ -152,13 +152,40 @@ def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
     return epsilon
 
 
-def _calc_g_1(epsilon, fk, fkk):
-    t1 = np.multiply(np.multiply(fkk, np.power(epsilon.deigval, 2)), epsilon.mtp)
+def calc_g_1(epsilon, f_i, f_ii):
+    """
+    This calculates :math:`g_1` as defined in Muller and Barton 1989
+
+    .. math::
+        g_1 = \sum_{i=1}^{d}f_ii\lambda_i^2m_i + \mathop{\sum \sum}_{i \\neq j} \dfrac {f_i\lambda_i \lambda_jm_im_j}{\lambda_i - \lambda_j}
+
+
+    :math:`m_i, m_j` are the the multiplicities if the :math:`i^{th}, j^{th}` distinct eigenvalues.
+
+    :math:`f_i` is :math:`\dfrac{\partial f}{\partial \lambda}` and :math:`f_{ii}` is :math:`\dfrac{\partial f^{(2)}}{\partial \lambda^{(2)}}`
+
+    Parameters
+    ----------
+    epsilon
+        The :class:`.Epsilon` object calculated for this test
+    f_i
+        the value of the first derivative of the function of the eigenvalues wrt :math:`\lambda`
+    f_ii
+        the value of the second derivative of the function of the eigenvalues wrt :math:`\lambda`
+
+    Returns
+    -------
+    g_i: float
+        the value of :math:`g_i` as defined above
+
+    """
+
+    t1 = np.multiply(np.multiply(f_ii, np.power(epsilon.deigval, 2)), epsilon.mtp)
     sum1 = np.sum(t1)
     if epsilon.d == 1:
         sum2 = 0
     else:
-        t2 = np.multiply(np.multiply(fk, epsilon.deigval), epsilon.mtp)
+        t2 = np.multiply(np.multiply(f_i, epsilon.deigval), epsilon.mtp)
         t3 = np.multiply(epsilon.deigval, epsilon.mtp)
         tm1 = t2 * t3.T
         t4 = epsilon.deigval * np.full((1, epsilon.d), 1)
