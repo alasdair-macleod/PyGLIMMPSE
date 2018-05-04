@@ -12,9 +12,9 @@ def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: fl
 def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
     epsilon = _calc_epsilon(sigma_star, rank_U)
     f_i, f_ii = _gg_derivs_functions_eigenvalues(epsilon, rank_U)
-    g_1 = calc_g_1(epsilon, f_i, f_ii)
-    exeps = epsilon.eps + g_1 / (total_N - rank_X)
-    return exeps
+    g_1 = _calc_g_1(epsilon, f_i, f_ii)
+    expected_epsilon = epsilon.eps + g_1 / (total_N - rank_X)
+    return expected_epsilon
 
 
 def geisser_greenhouse_muller_edwards_simpson_taylor_2004(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
@@ -25,8 +25,8 @@ def geisser_greenhouse_muller_edwards_simpson_taylor_2004(sigma_star: np.matrix,
     expt2 = nu * (nu + 1) * epsilon.slam2 + nu * epsilon.nameME()
 
     # Define GG Approx E(.) for Method 1
-    exeps = (1 / rank_U) * (expt1 / expt2)
-    return exeps
+    expected_epsilon = (1 / rank_U) * (expt1 / expt2)
+    return expected_epsilon
 
 
 def chi_muller_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
@@ -41,16 +41,16 @@ def chi_muller_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N:
     :param rank_X:
     :return:
     """
-    exeps = hyuhn_feldt_muller_barton_1989(
+    expected_epsilon_hf = hyuhn_feldt_muller_barton_1989(
                     sigma_star=sigma_star,
                     rank_U=rank_U,
                     total_N=total_N,
                     rank_X=rank_X
     )
 
-    exeps = _calc_cm_exeps(exeps, rank_X, total_N)
+    expected_epsilon_cm = _calc_cm_expected_epsilon_estimator(expected_epsilon_hf, rank_X, total_N)
 
-    return exeps
+    return expected_epsilon_cm
 
 
 def chi_muller_muller_edwards_simpson_taylor_2004(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
@@ -65,16 +65,16 @@ def chi_muller_muller_edwards_simpson_taylor_2004(sigma_star: np.matrix, rank_U:
     :param rank_X:
     :return:
     """
-    exeps = hyuhn_feldt_muller_edwards_simpson_taylor_2004(
+    expected_epsilon = hyuhn_feldt_muller_edwards_simpson_taylor_2004(
         sigma_star=sigma_star,
         rank_U=rank_U,
         total_N=total_N,
         rank_X=rank_X
     )
 
-    exeps = _calc_cm_exeps(exeps, rank_X, total_N)
+    expected_epsilon = _calc_cm_expected_epsilon_estimator(expected_epsilon, rank_X, total_N)
 
-    return exeps
+    return expected_epsilon
 
 def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
     """
@@ -97,12 +97,12 @@ def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N
     epsilon = _calc_epsilon(sigma_star, rank_U)
 
     # Compute approximate expected value of Huynh-Feldt estimate
-    bh_i, bh_ii, h1, h2 = hf_derivs_functions_eigenvalues(rank_U, rank_X, total_N, epsilon)
-    g_1 = calc_g_1(epsilon, bh_i, bh_ii)
+    bh_i, bh_ii, h1, h2 = _hf_derivs_functions_eigenvalues(rank_U, rank_X, total_N, epsilon)
+    g_1 = _calc_g_1(epsilon, bh_i, bh_ii)
     # Define HF Approx E(.) for Method 0
-    exeps = h1 / (rank_U * h2) + g_1 / (total_N - rank_X)
+    expected_epsilon = h1 / (rank_U * h2) + g_1 / (total_N - rank_X)
 
-    return exeps
+    return expected_epsilon
 
 
 def hyuhn_feldt_muller_edwards_simpson_taylor_2004(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
@@ -113,12 +113,13 @@ def hyuhn_feldt_muller_edwards_simpson_taylor_2004(sigma_star: np.matrix, rank_U
     expt2 = nu * (nu + 1) * epsilon.slam2 + nu * epsilon.nameME()
     num01 = (1 / rank_U) * ((nu + 1) * expt1 - 2 * expt2)
     den01 = nu * expt2 - expt1
-    exeps = num01 / den01
-    return exeps
+    expected_epsilon = num01 / den01
+    return expected_epsilon
 
 
 def box(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
     pass
+
 def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
     """
     This module produces matrices required for Geisser-Greenhouse,
@@ -128,10 +129,18 @@ def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
     (1978). Program requires that U be orthonormal and orthogonal to a
     columns of 1's.
 
-    :param sigma_star: U` * (SIGMA # SIGSCALTEMP) * U
-    :param rank_U: rank of U matrix
+    Parameters
+    ----------
+    sigma_star: np.matrix
+        The covariance matrix, :math:`\Sigma_*`,  defined as: :math:`\Sigma_* = U\'\Sigma U`
+        This should be scaled in advance by multiplying :math:`\Sigma` by a constant SIGMASCALARTEMP
+    rank_U: float
+        rank of U matrix
 
-    :return:
+    Returns
+    -------
+    epsilon
+        :class:`.Epsilon` object containing the following
         d, number of distinct eigenvalues
         mtp, multiplicities of eigenvalues
         eps, epsilon calculated from U`*SIGMA*U
@@ -152,7 +161,7 @@ def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
     return epsilon
 
 
-def calc_g_1(epsilon, f_i, f_ii):
+def _calc_g_1(epsilon, f_i, f_ii):
     """
     This calculates :math:`g_1` as defined in Muller and Barton 1989
 
@@ -166,11 +175,11 @@ def calc_g_1(epsilon, f_i, f_ii):
 
     Parameters
     ----------
-    epsilon
+    epsilon: :class:`.Epsilon`
         The :class:`.Epsilon` object calculated for this test
-    f_i
+    f_i: float
         the value of the first derivative of the function of the eigenvalues wrt :math:`\lambda`
-    f_ii
+    f_ii: float
         the value of the second derivative of the function of the eigenvalues wrt :math:`\lambda`
 
     Returns
@@ -198,7 +207,7 @@ def calc_g_1(epsilon, f_i, f_ii):
     return g_1
 
 
-def hf_derivs_functions_eigenvalues(rank_U: float, rank_X: float, total_N: float, epsilon: Epsilon):
+def _hf_derivs_functions_eigenvalues(rank_U: float, rank_X: float, total_N: float, epsilon: Epsilon):
     """
     This function computes the derivatives of the functions of eigenvalues for the Huyhn_Feldt test.
 
@@ -206,7 +215,7 @@ def hf_derivs_functions_eigenvalues(rank_U: float, rank_X: float, total_N: float
 
     .. math::
 
-        h(\lambda) = \dfrac{(Nb_\epsilon - 2)}{b(N - r -b_\epsilon)}  = \dfrac{h_1(\lambda)}{h_2(\lambda)b}
+        h(\lambda) = \dfrac{(Nb_\\varepsilon - 2)}{b(N - r -b_\\varepsilon)}  = \dfrac{h_1(\lambda)}{h_2(\lambda)b}
 
     with:
 
@@ -245,24 +254,24 @@ def hf_derivs_functions_eigenvalues(rank_U: float, rank_X: float, total_N: float
 
     Parameters
     ----------
-    rank_U
+    rank_U: float
         rank of U matrix
-    rank_X
+    rank_X: float
         rank of X matrix
-    total_N
+    total_N: float
         total N
-    epsilon
+    epsilon: :class:`.Epsilon`
         The :class:`.Epsilon` object calculated for this test
 
     Returns
     -------
-    bh_i
+    bh_i: float
         the value of the first derivative of the function of the eigenvalues wrt :math:`\lambda`
-    bh_ii
+    bh_ii: float
         the value of the second derivative of the function of the eigenvalues wrt :math:`\lambda`
-    h_1
+    h_1: float
         the value of h_1 as defined above
-    h_2
+    h_2: float
         the value of h_2 as defined above
 
     """
@@ -279,11 +288,11 @@ def hf_derivs_functions_eigenvalues(rank_U: float, rank_X: float, total_N: float
     return bh_i, bh_ii, h1, h2
 
 
-def gg_derivs_functions_eigenvalues(epsilon: Epsilon, rank_U: float):
+def _gg_derivs_functions_eigenvalues(epsilon: Epsilon, rank_U: float):
     """
     This function computes the derivatives of the functions of eigenvalues for the Geisser-Greenhouse test.
 
-    For Geisser-Greenhouse test :math:`f( \lambda) = \epsilon` so :math:`f_i` the first derivative, with respect to :math:`\lambda` is:
+    For Geisser-Greenhouse test :math:`f( \lambda) = \\varepsilon` so :math:`f_i` the first derivative, with respect to :math:`\lambda` is:
 
     .. math::
 
@@ -297,16 +306,16 @@ def gg_derivs_functions_eigenvalues(epsilon: Epsilon, rank_U: float):
 
     Parameters
     ----------
-    epsilon
+    epsilon:class:`.Epsilon`
         The :class:`.Epsilon` object calculated for this test
-    rank_U
+    rank_U: float
         rank of U matrix
 
     Returns
     -------
-    f_i
+    f_i: float
         the value of the first derivative of the function of the eigenvalues wrt :math:`\lambda`
-    f_ii
+    f_ii: float
         the value of the second derivative of the function of the eigenvalues wrt :math:`\lambda`
 
     """
@@ -321,7 +330,25 @@ def gg_derivs_functions_eigenvalues(epsilon: Epsilon, rank_U: float):
     return f_i, f_ii
 
 
-def _calc_cm_exeps(exeps, rank_X, total_N):
+def _calc_cm_expected_epsilon_estimator(exeps, rank_X, total_N):
+    """
+    This function computes the approximate expected value of the Chi-Muller estimate.
+
+    Parameters
+    ----------
+    exeps: float
+        the expected value of the epsilon estimator calculated using the approximate expected value of
+        the Huynh-Feldt estimate
+    rank_X: float
+        rank of X matrix
+    total_N: float
+        total N
+
+    Return
+    ------
+    epsilon:class:`pyglimmpse.model.Epsilon`
+        The :class:`.Epsilon` object calculated for this test
+    """
     if total_N - rank_X == 1:
         uefactor = 1
     else:

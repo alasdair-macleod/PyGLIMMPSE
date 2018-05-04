@@ -5,6 +5,7 @@ Welcome to pyglimmpse's documentation!
 
 .. automodule:: pyglimmpse.unirep
     :members:
+    :private-members:
 
 .. automodule:: pyglimmpse.model.power
     :members:
