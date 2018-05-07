@@ -1,4 +1,5 @@
 class Constants:
+    # zotero
     # UNIREP test statistic CDF calculation Methods
     UCDF_MULLER1989_APPROXIMATION = 'Muller and Barton (1989) approximation'
     UCDF_MULLER2004_APPROXIMATION = 'Muller, Edwards and Taylor (2004) approximation'
