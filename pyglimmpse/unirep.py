@@ -1,8 +1,11 @@
 import warnings
 import numpy as np
 
+from pyglimmpse.constants import Constants
 from pyglimmpse.model.epsilon import Epsilon
 from pyglimmpse.model.power import Power
+from pyglimmpse.probf import probf
+
 
 def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
     pass
@@ -303,7 +306,7 @@ def _hf_derivs_functions_eigenvalues(rank_U: float, rank_X: float, total_N: floa
 
     .. math::
 
-        h(\lambda) = \dfrac{(Nb_\\varepsilon - 2)}{b(N - r -b_\\varepsilon)}  = \dfrac{h_1(\lambda)}{h_2(\lambda)b}
+        h(\lambda) = \dfrac{(Nb_\epsilon - 2)}{b(N - r -b_\epsilon)}  = \dfrac{h_1(\lambda)}{h_2(\lambda)b}
 
     with:
 
@@ -380,7 +383,7 @@ def _gg_derivs_functions_eigenvalues(epsilon: Epsilon, rank_U: float):
     """
     This function computes the derivatives of the functions of eigenvalues for the Geisser-Greenhouse test.
 
-    For Geisser-Greenhouse test :math:`f( \lambda) = \\varepsilon` so :math:`f_i` the first derivative, with respect to :math:`\lambda` is:
+    For Geisser-Greenhouse test :math:`f( \lambda) = \epsilon` so :math:`f_i` the first derivative, with respect to :math:`\lambda` is:
 
     .. math::
 
@@ -484,7 +487,7 @@ def lastuni(rank_C, rank_U, total_N, rank_X,
     nue = total_N - rank_X
 
     if rank_U > nue and (Option.opt_calc_un or Option.opt_calc_gg or Option.opt_calc_box):
-        warnings.warn('PowerWarn23: Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are '
+        warnings.warn('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are '
                       'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
         raise Exception("#TODO what kind of exception")
 
@@ -655,11 +658,7 @@ def lastuni(rank_C, rank_U, total_N, rank_X,
         else:
             power = 1 - prob
 
-    # Compute CL for power, if requested by user
-    #if cl_type == Constants.CLTYPE_DESIRED_ESTIMATE:
-        # change from chi sq to F, and only change:)
-        #raise Exception("CLTYPE=2 for UNIREP awaiting implementation")
-
+    # TODO: is this the same as glmmpcl???? looks like it is.
     if CL.cl_type == Constants.CLTYPE_DESIRED_KNOWN:
         if unirepmethod == Constants.UCDF_EXACT_DAVIES or \
                 unirepmethod == Constants.UCDF_EXACT_DAVIES_FAIL:
