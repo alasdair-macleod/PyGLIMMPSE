@@ -290,7 +290,7 @@ def _calc_g_1(epsilon, f_i, f_ii):
         tm1 = t2 * t3.T
         t4 = epsilon.deigval * np.full((1, epsilon.d), 1)
         tm2 = t4 - t4.T
-        tm2inv = 1 / (tm2 + np.identity(d)) - np.identity(d)
+        tm2inv = 1 / (tm2 + np.identity(epsilon.d)) - np.identity(epsilon.d)
         tm3 = np.multiply(tm1, tm2inv)
         sum2 = np.sum(tm3)
     g_1 = sum1 + sum2
@@ -448,6 +448,7 @@ def _calc_cm_expected_epsilon_estimator(exeps, rank_X, total_N):
         uefactor = (nu_a - 2) * (nu_a - 4) / (nu_a ** 2)
     exeps = uefactor * exeps
     return exeps
+
 
 def lastuni(rank_C, rank_U, total_N, rank_X,
             error_sum_square, hypo_sum_square, sigmastareval, sigmastarevec,
