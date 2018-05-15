@@ -453,8 +453,8 @@ def _calc_cm_expected_epsilon_estimator(exeps, rank_X, total_N):
     exeps = uefactor * exeps
     return exeps
 
-def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps,
-                             eps,unirepmethod, alpha, Option):
+def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                             approximation, unirepmethod):
     """
     This function calculates power for univariate repeated measures power calculations.
 
@@ -488,7 +488,7 @@ def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, 
     """
 
     nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(Option, exeps, nue, rank_C, rank_U)
+    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
     sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
@@ -501,14 +501,13 @@ def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, 
     # 2. Muller, Edwards & Taylor 2002 and Muller Barton 1989 CDF approx
     # UCDFTEMP[]=4 reverts to UCDFTEMP[]=2 if exact CDF fails
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
-    power_l, power_u = None, None
 
-    power = float(power)
+    power = Power(power, omega, unirepmethod)
 
-    return {'lower': power_l, 'power': power, 'upper': power_u}
+    return power
 
-def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square,
-                                 exeps, eps, unirepmethod, alpha, Option, CL):
+def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                                 approximation, unirepmethod, n_est, rank_est,alpha_cl, alpha_cu, tolerance):
     """
     This function calculates power for univariate repeated measures power calculations.
 
@@ -542,35 +541,33 @@ def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_squa
     """
     # E = SIGMASTAR # (N - rX)
     nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(Option, exeps, nue, rank_C, rank_U)
+    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
     sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(CL, Option, eps, hypothesis_error, nue, rank_C, rank_U, unirepmethod)
+    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_C, rank_U, unirepmethod, n_est, rank_est)
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
     omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
-    if Option.opt_calc_cm:
+    if approximation.opt_calc_cm:
         omega = omegaua
     fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
 
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
+    power = Power(power, omega, unirepmethod)
+    power.glmmpcl_variant(alpha_cl, alpha_cu, alpha, tolerance, df1, df2, cl1df, fcrit, omega)
 
-    # TODO: is this the same as glmmpcl???? looks like it is.
-    power_l, power_u = _glmmpcl_variant(CL, alpha, df1, df2, cl1df, fcrit, omega, unirepmethod)
-    power = float(power)
+    return power
 
-    return {'lower': power_l, 'power': power, 'upper': power_u}
-
-def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square,
-                                            exeps, eps, alpha, Option, sigmastareval, IP):
+def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                                            approximation, sigmastareval, n_ip, rank_ip):
     # E = SIGMASTAR # (N - rX)
     nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(Option, exeps, nue, rank_C, rank_U)
+    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
     sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(Option, exeps, eps, hypothesis_error, sigmastareval, rank_C, rank_U, IP)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(approximation, exeps, eps, hypothesis_error, sigmastareval, rank_C, rank_U, n_ip, rank_ip)
 
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
@@ -579,10 +576,9 @@ def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, err
 
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
 
-    power_l, power_u = None, None
-    power = float(power)
+    power = Power(power, omega, approximation.opt_calc_box)
 
-    return {'lower': power_l, 'power': power, 'upper': power_u}
+    return power
 
 def _calc_multipliers_known_sigma(eps, exeps, hypothesis_error, rank_C, rank_U, unirepmethod):
 
@@ -599,10 +595,10 @@ def _calc_multipliers_known_sigma(eps, exeps, hypothesis_error, rank_C, rank_U, 
     # Obtain noncentrality and critical value for power point estimate
     return e_1_2, e_3_5, e_4
 
-def _calc_multipliers_est_sigma(CL, Option, eps, hypothesis_error, nue, rank_C, rank_U, unirepmethod):
+def _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_C, rank_U, unirepmethod, n_est, rank_est):
     # Case 2
     # Enter loop to compute E1-E5 based on estimated SIGMA
-    nu_est = CL.n_est - CL.rank_est
+    nu_est = n_est - rank_est
     if nu_est <= 1:
         raise Exception("ERROR 81: Too few estimation df in LASTUNI. df = N_EST - RANK_EST <= 1.")
     # For POWERCALC =6=HF, =7=CM, =8=GG critical values
@@ -621,22 +617,22 @@ def _calc_multipliers_est_sigma(CL, Option, eps, hypothesis_error, nue, rank_C, 
     omegaua = hypothesis_error.q2 * epsna * (rank_U / hypothesis_error.q1)
     # Set E_1_2 for all tests
     # for UN or Box critical values
-    if Option.opt_calc_un or Option.opt_calc_box:
+    if approximation == Constants.UN or approximation == Constants.BOX:
         e_1_2 = epsda
 
     # for HF crit val
-    if Option.opt_calc_hf:
+    if approximation == Constants.HF:
         if rank_U <= nue:
             e_1_2 = epstilde_r_min
         else:
             e_1_2 = epsda
 
     # for CM crit val
-    if Option.opt_calc_cm:
+    if approximation == Constants.CM:
         e_1_2 = epsda
 
     # for GG crit val
-    if Option.opt_calc_gg:
+    if approximation == Constants.GG:
         e_1_2 = eps
 
     # Set E_3_5 for all tests
@@ -646,7 +642,7 @@ def _calc_multipliers_est_sigma(CL, Option, eps, hypothesis_error, nue, rank_C, 
         e_3_5 = epsnhat
 
     # Set E_4 for all tests
-    if Option.opt_calc_cm:
+    if approximation == Constants.CM:
         e_4 = epsda
     else:
         e_4 = eps
@@ -655,12 +651,12 @@ def _calc_multipliers_est_sigma(CL, Option, eps, hypothesis_error, nue, rank_C, 
     cl1df = rank_U * nu_est * e_4 / e_3_5
     return cl1df, e_1_2, e_3_5, e_4, omegaua
 
-def _calc_multipliers_internal_pilot(Option, exeps, eps, hypothesis_error, sigmastareval, rank_C, rank_U, IP):
-    nu_ip = IP.n_ip - IP.rank_ip
+def _calc_multipliers_internal_pilot(approximation, exeps, eps, hypothesis_error, sigmastareval, rank_C, rank_U, n_ip, rank_ip):
+    nu_ip = n_ip - rank_ip
     e_1_2 = exeps
     e_4 = eps
 
-    if Option.opt_calc_hf or Option.opt_calc_cm or Option.opt_calc_gg:
+    if approximation == Constants.HF or approximation == Constants.CM or approximation == Constants.GG:
         lambdap = np.concatenate((sigmastareval,
                                   np.power(sigmastareval, 2),
                                   np.power(sigmastareval, 3),
@@ -685,42 +681,6 @@ def _calc_multipliers_internal_pilot(Option, exeps, eps, hypothesis_error, sigma
     return e_1_2, e_3_5, e_4
 
 
-def _glmmpcl_variant(CL, Scalar, df1, df2, cl1df, fcrit, omega):
-    # Calculate lower bound for power
-    if CL.alpha_cl <= Scalar.tolerance:
-        prob_l = 1 - Scalar.alpha
-        fmethod_l = Constants.FMETHOD_MISSING
-        noncen_l = float('nan')
-    else:
-        chi_l = chi2.ppf(CL.alpha_cl, cl1df)
-        noncen_l = omega * (chi_l / cl1df)
-        prob_l, fmethod_l = probf(fcrit, df1, df2, noncen_l)
-
-    if fmethod_l == Constants.FMETHOD_NORMAL_LR and prob_l == 1:
-        power_l = Scalar.alpha
-    else:
-        power_l = 1 - prob_l
-
-    # Calculate upper bound for power
-    if CL.alpha_cu <= Scalar.tolerance:
-        prob_u = 0
-        fmethod_u = Constants.FMETHOD_MISSING
-        noncen_u = float('nan')
-    else:
-        chi_u = chi2.ppf(1 - CL.alpha_cu, cl1df)
-        noncen_u = omega * (chi_u / cl1df)
-        prob_u, fmethod_u = probf(fcrit, df1, df2, noncen_u)
-
-    if fmethod_u == Constants.FMETHOD_NORMAL_LR and prob_u == 1:
-        power_u = Scalar.alpha
-    else:
-        power_u = 1 - prob_u
-
-    power_l = float(power_l)
-    power_u = float(power_u)
-    return power_l, power_u
-
-
 def _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit):
     df1 = undf1 * e_3_5
     df2 = undf2 * e_4
@@ -733,8 +693,8 @@ def _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit):
     return df1, df2, power
 
 
-def _calc_undf1_undf2(Option, exeps, nue, rank_C, rank_U):
-    if rank_U > nue and (Option.opt_calc_un or Option.opt_calc_gg or Option.opt_calc_box):
+def _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U):
+    if rank_U > nue and (approximation == Constants.UN or approximation == Constants.GG or approximation == Constants.BOX):
         warnings.warn('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are '
                       'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
         raise Exception("#TODO what kind of exception")

@@ -125,6 +125,41 @@ class Power:
             self.lower_bound = None
             self.upper_bound = None
 
+    def glmmpcl_variant(self, alpha_cl, alpha_cu, alpha, tolerance, df1, df2, cl1df, fcrit, omega):
+        # Calculate lower bound for power
+        if alpha_cl <= tolerance:
+            prob_l = 1 - alpha
+            fmethod_l = Constants.FMETHOD_MISSING
+            noncen_l = float('nan')
+        else:
+            chi_l = chi2.ppf(alpha_cl, cl1df)
+            noncen_l = omega * (chi_l / cl1df)
+            prob_l, fmethod_l = probf(fcrit, df1, df2, noncen_l)
+
+        if fmethod_l == Constants.FMETHOD_NORMAL_LR and prob_l == 1:
+            power_l = alpha
+        else:
+            power_l = 1 - prob_l
+
+        # Calculate upper bound for power
+        if alpha_cu <= tolerance:
+            prob_u = 0
+            fmethod_u = Constants.FMETHOD_MISSING
+            noncen_u = float('nan')
+        else:
+            chi_u = chi2.ppf(1 - alpha_cu, cl1df)
+            noncen_u = omega * (chi_u / cl1df)
+            prob_u, fmethod_u = probf(fcrit, df1, df2, noncen_u)
+
+        if fmethod_u == Constants.FMETHOD_NORMAL_LR and prob_u == 1:
+            power_u = alpha
+        else:
+            power_u = 1 - prob_u
+
+        power_l = float(power_l)
+        power_u = float(power_u)
+        return power_l, power_u
+
     def _warn_conservative_ci(self, alpha_cl, cl_type, n2, n_est):
         """warning for conservative confidence interval"""
         if (cl_type == Constants.CLTYPE_DESIRED_KNOWN or
