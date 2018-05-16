@@ -140,8 +140,9 @@ def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, err
     return power
 
 
-def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
-    pass
+def uncorrected():
+    expected_epsilon = 1
+    return expected_epsilon
 
 
 def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
@@ -342,8 +343,9 @@ def hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U
     return expected_epsilon
 
 
-def box(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
-    pass
+def box(rank_U: float):
+    expected_epsilon = (1 / rank_U)
+    return expected_epsilon
 
 
 def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:

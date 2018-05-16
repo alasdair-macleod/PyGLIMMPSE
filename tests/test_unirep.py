@@ -7,7 +7,7 @@ from pyglimmpse.constants import Constants
 from pyglimmpse.input import Option
 from pyglimmpse.model.epsilon import Epsilon
 from pyglimmpse.unirep import _err_checking, _calc_multipliers_est_sigma, _calc_undf1_undf2, \
-    geisser_greenhouse_muller_edwards_simpson_taylor_2007
+    geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon
 
 
 class TestUnirep(TestCase):
@@ -105,6 +105,11 @@ class TestUnirep(TestCase):
                                    [2.776e-17, 1, -3.33e-16, -2.39e-16],
                                    [-2.74e-16, 2.632e-16, 1, 2.001e-16],
                                    [-4.61e-18, 2.387e-16, -2e-16, 1]])
+
+        sigma_star = np.multiply(sigmastareval, sigmastarevec)
+        e = geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star, rank_U, total_N, rank_X)
+        ep = _calc_epsilon(sigma_star, rank_U)
+
         exeps = 0.7203684
         eps = 0.7203684
         result = unirep.unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
