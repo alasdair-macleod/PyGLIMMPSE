@@ -555,7 +555,7 @@ def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_squa
 
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
     power = Power(power, omega, unirepmethod)
-    power.glmmpcl_variant(alpha_cl, alpha_cu, alpha, tolerance, df1, df2, cl1df, fcrit, omega)
+    power.glmmpcl_variant(alpha, df1, total_N, df2, Constants.CLTYPE_DESIRED_KNOWN, n_est, alpha_cl, alpha_cu, cl1df, fcrit, tolerance, omega)
 
     return power
 
