@@ -12,13 +12,14 @@ class TestGlmmpcl(TestCase):
         """
         #todo where is this example from? whay are we rounding?
         expected = Power(0.9, 0.05, Constants.FMETHOD_NOAPPROXIMATION)
+        dfe1 = 20 - 1
         actual = expected.glmmpcl(alphatest=0.05,
                                   dfh=20,   # df1
                                   n2=30,    # total_N ??? what is this
+                                  dfe1 = dfe1,
                                   dfe2=28,  # df2
                                   cl_type=Constants.CLTYPE_DESIRED_KNOWN,
                                   n_est=20,
-                                  rank_est=1,
                                   alpha_cl=0.048,
                                   alpha_cu=0.052,
                                   tolerance=0.01,
