@@ -346,6 +346,7 @@ def hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U
 def box(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     pass
 
+
 def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
     """
     This module produces matrices required for Geisser-Greenhouse,
