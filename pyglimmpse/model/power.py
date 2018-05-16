@@ -68,6 +68,7 @@ class Power:
                 n_est,
                 alpha_cl,
                 alpha_cu,
+                fcrit,
                 tolerance,
                 omega):
         """
@@ -107,6 +108,8 @@ class Power:
             Lower tail probability for confidence interval
         :param alpha_cu:
             Upper tail probability for confidence interval
+        :param fcrit:
+            critical valuse for prob F.
         :param tolerance:
             value below which numbes are declared zero
         :param omega:
@@ -117,8 +120,6 @@ class Power:
             if np.isnan(self.power):
                 warnings.warn('Powerwarn16: Confidence limits are missing because power is missing.')
             else:
-                fcrit = finv(1 - alphatest, dfh, dfe2)
-
                 self.lower_bound = self._calc_lower_bound(alphatest, alpha_cl, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance)
                 self.upper_bound = self._calc_upper_bound(alphatest, alpha_cu, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance)
                 self._warn_conservative_ci(alpha_cl, cl_type, n2, n_est)
