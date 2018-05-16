@@ -1,6 +1,5 @@
 import warnings
 import numpy as np
-from scipy.stats import chi2
 
 from pyglimmpse.finv import finv
 
