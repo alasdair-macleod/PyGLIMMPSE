@@ -107,13 +107,13 @@ def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_squa
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
     omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
-    if approximation.opt_calc_cm:
+    if approximation == Constants.CM:
         omega = omegaua
     fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
 
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
     power = Power(power, omega, unirepmethod)
-    power.glmmpcl_variant(alpha, df1, total_N, df2, Constants.CLTYPE_DESIRED_KNOWN, n_est, alpha_cl, alpha_cu, cl1df, fcrit, tolerance, omega)
+    power.glmmpcl(alpha, df1, total_N, df2, Constants.CLTYPE_DESIRED_KNOWN, n_est, alpha_cl, alpha_cu, cl1df, fcrit, tolerance, omega)
 
     return power
 
