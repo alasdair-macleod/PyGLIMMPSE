@@ -13,7 +13,7 @@ from pyglimmpse.probf import probf
 def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
                              approximation, unirepmethod):
     """
-    This function calculates power for univariate repeated measures power calculations.
+    This function calculates power for univariate repeated measures power calculations with known Sigma.
 
     Parameters
     ----------
@@ -29,14 +29,33 @@ def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, 
         error sum of squares
     hypo_sum_square: float
         hypothesis sum of squares
-    sigmastareval:
-        eigenvalues  of SIGMASTAR=U`*SIGMA*U
-    sigmastarevec:
-        eigenvectors of SIGMASTAR=U`*SIGMA*U
     exeps: float
         expected value epsilon estimator
     eps:
         epsilon calculated from U`*SIGMA*U
+    alpha:
+        Significance level for target GLUM test
+    approximation:
+        Which method was used to find the expected value of epsilon.
+
+        One of:
+
+        * Uncorrected
+
+        * geisser_greenhouse
+
+        * chi_muller
+
+        * hyuhn_feldt
+
+        * box
+    unirepmethod:
+        approximation used for cdf:
+
+        * Muller and Barton (1989) approximation
+
+        * Muller, Edwards and Taylor (2004) approximation
+
 
     Returns
     -------
@@ -120,6 +139,28 @@ def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_squa
 
 def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
                                             approximation, sigmastareval, n_ip, rank_ip):
+    """
+
+    sigmastareval:
+        eigenvalues  of SIGMASTAR=U`*SIGMA*U
+    sigmastarevec:
+        eigenvectors of SIGMASTAR=U`*SIGMA*U
+
+    :param rank_C:
+    :param rank_U:
+    :param total_N:
+    :param rank_X:
+    :param error_sum_square:
+    :param hypo_sum_square:
+    :param exeps:
+    :param eps:
+    :param alpha:
+    :param approximation:
+    :param sigmastareval:
+    :param n_ip:
+    :param rank_ip:
+    :return:
+    """
     # E = SIGMASTAR # (N - rX)
     nue = total_N - rank_X
     undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
