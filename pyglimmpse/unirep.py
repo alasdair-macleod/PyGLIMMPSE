@@ -11,6 +11,136 @@ from pyglimmpse.model.power import Power
 from pyglimmpse.probf import probf
 
 
+def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                             approximation, unirepmethod):
+    """
+    This function calculates power for univariate repeated measures power calculations.
+
+    Parameters
+    ----------
+    rank_C: float
+        rank of the C matrix
+    rank_U: float
+        rank of the U matrix
+    total_N: float
+        total number of observations
+    rank_X:
+        rank of the X matrix
+    error_sum_square: float
+        error sum of squares
+    hypo_sum_square: float
+        hypothesis sum of squares
+    sigmastareval:
+        eigenvalues  of SIGMASTAR=U`*SIGMA*U
+    sigmastarevec:
+        eigenvectors of SIGMASTAR=U`*SIGMA*U
+    exeps: float
+        expected value epsilon estimator
+    eps:
+        epsilon calculated from U`*SIGMA*U
+
+    Returns
+    -------
+    power: Power
+        power for the univariate test.
+    """
+
+    nue = total_N - rank_X
+    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
+    # Create defaults - same for either SIGMA known or estimated
+    sigma_star = error_sum_square / nue
+    hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(eps, exeps, error_sum_square, hypo_sum_square, nue, rank_C, rank_U, unirepmethod)
+    omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
+    # Error checking
+    e_1_2 = _err_checking(e_1_2, rank_U)
+    fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
+
+    # 2. Muller, Edwards & Taylor 2002 and Muller Barton 1989 CDF approx
+    # UCDFTEMP[]=4 reverts to UCDFTEMP[]=2 if exact CDF fails
+    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
+
+    power = Power(power, omega, unirepmethod)
+
+    return power
+
+
+def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                                 approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance):
+    """
+    This function calculates power for univariate repeated measures power calculations.
+
+    Parameters
+    ----------
+    rank_C: float
+        rank of the C matrix
+    rank_U: float
+        rank of the U matrix
+    total_N: float
+        total number of observations
+    rank_X:
+        rank of the X matrix
+    error_sum_square: float  <- sigmastar/
+        error sum of squares
+    hypo_sum_square: float
+        hypothesis sum of squares
+    sigmastareval:
+        eigenvalues  of SIGMASTAR=U`*SIGMA*U
+    sigmastarevec:
+        eigenvectors of SIGMASTAR=U`*SIGMA*U
+    exeps: float
+        expected value epsilon estimator
+    eps:
+        epsilon calculated from U`*SIGMA*U
+
+    Returns
+    -------
+    power: Power
+        power for the univariate test.
+    """
+    # E = SIGMASTAR # (N - rX)
+    nue = total_N - rank_X
+    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
+    # Create defaults - same for either SIGMA known or estimated
+    sigma_star = error_sum_square / nue
+    hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
+    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_C, rank_U, unirepmethod, n_est, rank_est)
+    # Error checking
+    e_1_2 = _err_checking(e_1_2, rank_U)
+    omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
+    if approximation.opt_calc_cm:
+        omega = omegaua
+    fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
+
+    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
+    power = Power(power, omega, unirepmethod)
+    power.glmmpcl_variant(alpha, df1, total_N, df2, Constants.CLTYPE_DESIRED_KNOWN, n_est, alpha_cl, alpha_cu, cl1df, fcrit, tolerance, omega)
+
+    return power
+
+
+def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                                            approximation, sigmastareval, n_ip, rank_ip):
+    # E = SIGMASTAR # (N - rX)
+    nue = total_N - rank_X
+    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
+    # Create defaults - same for either SIGMA known or estimated
+    sigma_star = error_sum_square / nue
+    hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(approximation, exeps, eps, hypothesis_error, sigmastareval, rank_C, rank_U, n_ip, rank_ip)
+
+    # Error checking
+    e_1_2 = _err_checking(e_1_2, rank_U)
+    omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
+    fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
+
+    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
+
+    power = Power(power, omega, approximation.opt_calc_box)
+
+    return power
+
+
 def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     pass
 
@@ -145,6 +275,7 @@ def chi_muller_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U:
     expected_epsilon = _calc_cm_expected_epsilon_estimator(expected_epsilon, rank_X, total_N)
 
     return expected_epsilon
+
 
 def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     """
@@ -453,132 +584,6 @@ def _calc_cm_expected_epsilon_estimator(exeps, rank_X, total_N):
     exeps = uefactor * exeps
     return exeps
 
-def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
-                             approximation, unirepmethod):
-    """
-    This function calculates power for univariate repeated measures power calculations.
-
-    Parameters
-    ----------
-    rank_C: float
-        rank of the C matrix
-    rank_U: float
-        rank of the U matrix
-    total_N: float
-        total number of observations
-    rank_X:
-        rank of the X matrix
-    error_sum_square: float
-        error sum of squares
-    hypo_sum_square: float
-        hypothesis sum of squares
-    sigmastareval:
-        eigenvalues  of SIGMASTAR=U`*SIGMA*U
-    sigmastarevec:
-        eigenvectors of SIGMASTAR=U`*SIGMA*U
-    exeps: float
-        expected value epsilon estimator
-    eps:
-        epsilon calculated from U`*SIGMA*U
-
-    Returns
-    -------
-    power: Power
-        power for the univariate test.
-    """
-
-    nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
-    # Create defaults - same for either SIGMA known or estimated
-    sigma_star = error_sum_square / nue
-    hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(eps, exeps, error_sum_square, hypo_sum_square, nue, rank_C, rank_U, unirepmethod)
-    omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
-    # Error checking
-    e_1_2 = _err_checking(e_1_2, rank_U)
-    fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
-
-    # 2. Muller, Edwards & Taylor 2002 and Muller Barton 1989 CDF approx
-    # UCDFTEMP[]=4 reverts to UCDFTEMP[]=2 if exact CDF fails
-    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
-
-    power = Power(power, omega, unirepmethod)
-
-    return power
-
-def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
-                                 approximation, unirepmethod, n_est, rank_est,alpha_cl, alpha_cu, tolerance):
-    """
-    This function calculates power for univariate repeated measures power calculations.
-
-    Parameters
-    ----------
-    rank_C: float
-        rank of the C matrix
-    rank_U: float
-        rank of the U matrix
-    total_N: float
-        total number of observations
-    rank_X:
-        rank of the X matrix
-    error_sum_square: float  <- sigmastar/
-        error sum of squares
-    hypo_sum_square: float
-        hypothesis sum of squares
-    sigmastareval:
-        eigenvalues  of SIGMASTAR=U`*SIGMA*U
-    sigmastarevec:
-        eigenvectors of SIGMASTAR=U`*SIGMA*U
-    exeps: float
-        expected value epsilon estimator
-    eps:
-        epsilon calculated from U`*SIGMA*U
-
-    Returns
-    -------
-    power: Power
-        power for the univariate test.
-    """
-    # E = SIGMASTAR # (N - rX)
-    nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
-    # Create defaults - same for either SIGMA known or estimated
-    sigma_star = error_sum_square / nue
-    hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_C, rank_U, unirepmethod, n_est, rank_est)
-    # Error checking
-    e_1_2 = _err_checking(e_1_2, rank_U)
-    omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
-    if approximation.opt_calc_cm:
-        omega = omegaua
-    fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
-
-    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
-    power = Power(power, omega, unirepmethod)
-    power.glmmpcl_variant(alpha, df1, total_N, df2, Constants.CLTYPE_DESIRED_KNOWN, n_est, alpha_cl, alpha_cu, cl1df, fcrit, tolerance, omega)
-
-    return power
-
-def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
-                                            approximation, sigmastareval, n_ip, rank_ip):
-    # E = SIGMASTAR # (N - rX)
-    nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
-    # Create defaults - same for either SIGMA known or estimated
-    sigma_star = error_sum_square / nue
-    hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(approximation, exeps, eps, hypothesis_error, sigmastareval, rank_C, rank_U, n_ip, rank_ip)
-
-    # Error checking
-    e_1_2 = _err_checking(e_1_2, rank_U)
-    omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
-    fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
-
-    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
-
-    power = Power(power, omega, approximation.opt_calc_box)
-
-    return power
 
 def _calc_multipliers_known_sigma(eps, exeps, hypothesis_error, rank_C, rank_U, unirepmethod):
 
@@ -594,6 +599,7 @@ def _calc_multipliers_known_sigma(eps, exeps, hypothesis_error, rank_C, rank_U, 
 
     # Obtain noncentrality and critical value for power point estimate
     return e_1_2, e_3_5, e_4
+
 
 def _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_C, rank_U, unirepmethod, n_est, rank_est):
     # Case 2
@@ -651,6 +657,7 @@ def _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_
     cl1df = rank_U * nu_est * e_4 / e_3_5
     return cl1df, e_1_2, e_3_5, e_4, omegaua
 
+
 def _calc_multipliers_internal_pilot(approximation, exeps, eps, hypothesis_error, sigmastareval, rank_C, rank_U, n_ip, rank_ip):
     nu_ip = n_ip - rank_ip
     e_1_2 = exeps
@@ -703,7 +710,6 @@ def _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U):
     undf1 = rank_C * rank_U
     undf2 = rank_U * nue
     return undf1, undf2
-
 
 
 def _err_checking(e_1_2, rank_U):
