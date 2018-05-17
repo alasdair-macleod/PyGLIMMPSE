@@ -86,7 +86,7 @@ def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, 
 def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
                                  approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance):
     """
-    This function calculates power for univariate repeated measures power calculations.
+    This function calculates power for univariate repeated measures power calculations with known Sigma.
 
     Parameters
     ----------
@@ -98,18 +98,47 @@ def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_squa
         total number of observations
     rank_X:
         rank of the X matrix
-    error_sum_square: float  <- sigmastar/
+    error_sum_square: float
         error sum of squares
     hypo_sum_square: float
         hypothesis sum of squares
-    sigmastareval:
-        eigenvalues  of SIGMASTAR=U`*SIGMA*U
-    sigmastarevec:
-        eigenvectors of SIGMASTAR=U`*SIGMA*U
     exeps: float
         expected value epsilon estimator
     eps:
         epsilon calculated from U`*SIGMA*U
+    alpha:
+        Significance level for target GLUM test
+    approximation:
+        Which method was used to find the expected value of epsilon.
+
+        One of:
+
+        * Uncorrected
+
+        * geisser_greenhouse
+
+        * chi_muller
+
+        * hyuhn_feldt
+
+        * box
+    unirepmethod:
+        approximation used for cdf:
+
+        * Muller and Barton (1989) approximation
+
+        * Muller, Edwards and Taylor (2004) approximation
+    or the univariate test.
+    n_est:
+        total N from estimate study
+    rank_est:
+        rank of WHAT??? from estimate study
+    alpha_cl:
+        type one error (alpha) for lower confidence bound
+    alpha_cu:
+        type one error (alpha) for lower confidence bound
+    tolerance:
+        value below which, numbers are considered zero
 
     Returns
     -------
@@ -140,26 +169,62 @@ def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_squa
 def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
                                             approximation, sigmastareval, n_ip, rank_ip):
     """
+    This function calculates power for univariate repeated measures power calculations with known Sigma.
 
+    Parameters
+    ----------
+    rank_C: float
+        rank of the C matrix
+    rank_U: float
+        rank of the U matrix
+    total_N: float
+        total number of observations
+    rank_X:
+        rank of the X matrix
+    error_sum_square: float
+        error sum of squares
+    hypo_sum_square: float
+        hypothesis sum of squares
+    exeps: float
+        expected value epsilon estimator
+    eps:
+        epsilon calculated from U`*SIGMA*U
+    alpha:
+        Significance level for target GLUM test
+    approximation:
+        Which method was used to find the expected value of epsilon.
+
+        One of:
+
+        * Uncorrected
+
+        * geisser_greenhouse
+
+        * chi_muller
+
+        * hyuhn_feldt
+
+        * box
+    unirepmethod:
+        approximation used for cdf:
+
+        * Muller and Barton (1989) approximation
+
+        * Muller, Edwards and Taylor (2004) approximation
+    or the univariate test.
     sigmastareval:
         eigenvalues  of SIGMASTAR=U`*SIGMA*U
     sigmastarevec:
         eigenvectors of SIGMASTAR=U`*SIGMA*U
+    n_ip
+        total N from internal pilot study
+    rank_ip
+        rank of WHAT??? in internal pilot
 
-    :param rank_C:
-    :param rank_U:
-    :param total_N:
-    :param rank_X:
-    :param error_sum_square:
-    :param hypo_sum_square:
-    :param exeps:
-    :param eps:
-    :param alpha:
-    :param approximation:
-    :param sigmastareval:
-    :param n_ip:
-    :param rank_ip:
-    :return:
+    Returns
+    -------
+    power: Power
+        power for the univariate test.
     """
     # E = SIGMASTAR # (N - rX)
     nue = total_N - rank_X
