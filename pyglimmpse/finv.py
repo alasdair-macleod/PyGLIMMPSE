@@ -15,10 +15,7 @@ def finv(alpha, df1, df2):
                     distributed F(DF1,DF2) <= FCRIT is equal to (1-ALPHA)
     """
 
-    if df1 > 10**7.6 or \
-        df2 > 10**9.4 or \
-        df1 < 0 or \
-        df2 < 0:
+    if df1 > 10**7.6 or df2 > 10**9.4 or df1 < 0 or df2 < 0:
         fcrit = np.NaN
     else:
         fcrit = f.ppf(alpha, df1, df2)

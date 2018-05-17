@@ -7,11 +7,11 @@ from pyglimmpse.model.power import Power
 from pyglimmpse.probf import probf
 
 
-def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
+def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     pass
 
 
-def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
+def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     """
     This function computes the approximate expected value of the Geisser-Greenhouse estimate using the approximator
     detailed in Muller and Barton 1989.
@@ -40,7 +40,7 @@ def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, 
     return expected_epsilon
 
 
-def geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
+def geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     """
     This function computes the approximate expected value of the Geisser-Greenhouse estimate using the approximator
     detailed in Muller, Edwards, Simpson and Taylor 2007.
@@ -73,7 +73,7 @@ def geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix,
     return expected_epsilon
 
 
-def chi_muller_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
+def chi_muller_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     """
     This function computes the approximate expected value of the Huynh-Feldt estimate with the Chi-Muller results via
     the approximate expected value of the Huynh-Feldt estimate using the approximator detailed in
@@ -108,7 +108,7 @@ def chi_muller_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N:
     return expected_epsilon_cm
 
 
-def chi_muller_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
+def chi_muller_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     """
     This function computes the approximate expected value of the Huynh-Feldt estimate with the Chi-Muller results via
     the approximate expected value of the Huynh-Feldt estimate using the approximator detailed in
@@ -142,7 +142,7 @@ def chi_muller_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U:
 
     return expected_epsilon
 
-def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
+def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     """
     This function computes power via the approximate expected value of the Huynh-Feldt estimate using the
     approximator detailed in Muller and Barton 1989.
@@ -175,7 +175,7 @@ def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N
     return expected_epsilon
 
 
-def hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
+def hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     """
     This function computes power via the approximate expected value of the Huynh-Feldt estimate using the
     approximator detailed in Muller, Edwards, Simpson and Taylor 2007
@@ -208,7 +208,7 @@ def hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U
     return expected_epsilon
 
 
-def box(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float) -> Power:
+def box(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     pass
 
 def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
@@ -290,7 +290,7 @@ def _calc_g_1(epsilon, f_i, f_ii):
         tm1 = t2 * t3.T
         t4 = epsilon.deigval * np.full((1, epsilon.d), 1)
         tm2 = t4 - t4.T
-        tm2inv = 1 / (tm2 + np.identity(d)) - np.identity(d)
+        tm2inv = 1 / (tm2 + np.identity(epsilon.d)) - np.identity(epsilon.d)
         tm3 = np.multiply(tm1, tm2inv)
         sum2 = np.sum(tm3)
     g_1 = sum1 + sum2
@@ -448,6 +448,7 @@ def _calc_cm_expected_epsilon_estimator(exeps, rank_X, total_N):
         uefactor = (nu_a - 2) * (nu_a - 4) / (nu_a ** 2)
     exeps = uefactor * exeps
     return exeps
+
 
 def lastuni(rank_C, rank_U, total_N, rank_X,
             error_sum_square, hypo_sum_square, sigmastareval, sigmastarevec,
