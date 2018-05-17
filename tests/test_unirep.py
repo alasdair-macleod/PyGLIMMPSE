@@ -9,58 +9,58 @@ from pyglimmpse.constants import Constants
 from pyglimmpse.input import Option
 from pyglimmpse.model.epsilon import Epsilon
 from pyglimmpse.unirep import _err_checking, _calc_multipliers_est_sigma, _calc_undf1_undf2, \
-    geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon
+    _geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon
 
 
 class TestUnirep(TestCase):
 
     def test_geisser_greenhouse_muller_barton_1989(self):
         expected = 0.2871105857
-        actual = unirep.geisser_greenhouse_muller_barton_1989(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                                              rank_U=3, total_N=20, rank_X=5)
+        actual = unirep._geisser_greenhouse_muller_barton_1989(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
+                                                               rank_U=3, total_N=20, rank_X=5)
         self.assertAlmostEqual(actual, expected, places=6)
 
     def test_geisser_greenhouse_muller_edwards_simpson_taylor_2007(self):
         expected = 0.2975124504
-        actual = unirep.geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                                                              rank_U=3, total_N=20, rank_X=5)
+        actual = unirep._geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
+                                                                               rank_U=3, total_N=20, rank_X=5)
         self.assertAlmostEqual(actual, expected, places=6)
     def test_hfexeps(self):
         """ should return expected value """
         expected = 0.2901679
-        actual = unirep.hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                rank_U=3,
-                                total_N=20,
-                                rank_X=5)
+        actual = unirep._hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
+                                                                        rank_U=3,
+                                                                        total_N=20,
+                                                                        rank_X=5)
         self.assertAlmostEqual(actual, expected, places=7)
 
     def test_chi_muller_muller_barton_1989(self):
         expected = 0.3412303
-        actual = unirep.chi_muller_muller_barton_1989(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                                      rank_U=3, total_N=20, rank_X=5)
+        actual = unirep._chi_muller_muller_barton_1989(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
+                                                       rank_U=3, total_N=20, rank_X=5)
         self.assertAlmostEqual(actual, expected, places=6)
 
     def test_chi_muller_muller_edwards_simpson_taylor_2007(self):
         expected = 0.2757015
-        actual = unirep.chi_muller_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                                                      rank_U=3, total_N=20, rank_X=5)
+        actual = unirep._chi_muller_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
+                                                                       rank_U=3, total_N=20, rank_X=5)
         self.assertAlmostEqual(actual, expected, places=6)
-        actual = unirep.chi_muller_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                rank_U=3,
-                                total_N=20,
-                                rank_X=5)
+        actual = unirep._chi_muller_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
+                                                                       rank_U=3,
+                                                                       total_N=20,
+                                                                       rank_X=5)
         self.assertAlmostEqual(actual, expected, places=7)
 
     def test_hyuhn_feldt_muller_barton_1989(self):
         expected = 0.3591350780
-        actual = unirep.hyuhn_feldt_muller_barton_1989(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                                       rank_U=3, total_N=20, rank_X=5)
+        actual = unirep._hyuhn_feldt_muller_barton_1989(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
+                                                        rank_U=3, total_N=20, rank_X=5)
         self.assertAlmostEqual(actual, expected, places=6)
 
     def test_hyuhn_feldt_muller_edwards_simpson_taylor_2007(self):
         expected = 0.2901678808
-        actual = unirep.hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                                                       rank_U=3, total_N=20, rank_X=5)
+        actual = unirep._hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
+                                                                        rank_U=3, total_N=20, rank_X=5)
         self.assertAlmostEqual(actual, expected, places=6)
 
     def test_hf_derivs_functions_eigenvalues(self):
@@ -76,10 +76,10 @@ class TestUnirep(TestCase):
         self.assertAlmostEqual(actual[2], expected_h1, places=5)
         self.assertAlmostEqual(actual[3], expected_h2, places=5)
         expected = 0.2975125
-        actual = unirep.geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                rank_U=3,
-                                total_N=20,
-                                rank_X=5)
+        actual = unirep._geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
+                                                                               rank_U=3,
+                                                                               total_N=20,
+                                                                               rank_X=5)
         self.assertAlmostEqual(actual, expected, delta=0.0000001)
 
     def test_gg_derivs_functions_eigenvalues(self):
@@ -118,8 +118,8 @@ class TestUnirep(TestCase):
                                       [1.648e-17, 5.624e-16, -3.19e-17, 0.89699]])
         exeps = 0.7203684
         eps = 0.7203684
-        result = unirep.unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
-                                                    approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance)
+        result = unirep._unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                                                      approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance)
         actual = result.power
         self.assertAlmostEqual(actual, expected, places=5)
 
@@ -157,12 +157,12 @@ class TestUnirep(TestCase):
                                    [-4.61e-18, 2.387e-16, -2e-16, 1]])
 
         sigma_star = np.multiply(sigmastareval, sigmastarevec)
-        e = geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star, rank_U, total_N, rank_X)
+        e = _geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star, rank_U, total_N, rank_X)
         ep = _calc_epsilon(sigma_star, rank_U)
 
         exeps = 0.7203684
         eps = 0.7203684
-        result = unirep.unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
-                                                    approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance)
+        result = unirep._unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                                                      approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance)
         actual = result.power
         self.assertAlmostEqual(actual, expected, places=5)

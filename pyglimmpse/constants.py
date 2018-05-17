@@ -29,6 +29,10 @@ class Constants:
     CLTYPE_DESIRED_ESTIMATE = '2 BETA estimated, SIGMA estimated and CL desired'
     CLTYPE_NOT_DESIRED = 'Confidence intervals for power not desired'
 
+    SIGMA_KNOWN = 'Sigma known'
+    SIGMA_ESTIMATED = 'Sigma estimated'
+    INTERNAL_PILOT = 'Internal pilot'
+
     #FMETHOD
     FMETHOD_NOAPPROXIMATION = '1 CDF function (no approximation)'
     FMETHOD_TIKU = '2 Tiku approximation (best approximation)'
