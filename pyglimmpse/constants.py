@@ -35,3 +35,13 @@ class Constants:
     FMETHOD_NORMAL_SM = '3 Normal approximation, |Z-score| < 6 (worst approximation)'
     FMETHOD_NORMAL_LR = '4 Normal approximation, |Z-score| > 6 (approximation but power is almost certainly 0 or 1)'
     FMETHOD_MISSING = '5 Power missing'
+
+    COLLAPSE = 'special'
+    HLT      = 'Hotelling - Lawley trace'
+    PBT      = 'Pillai - Bartletttrace'
+    WLK      = 'Wilks Lambda'
+    UN       = 'uncorrected univariate approach to repeated measures'
+    HF       = 'Huynh - Feldt'
+    CM       = 'Huynh - Feldt with Chi - Muller'
+    GG       = 'Geisser - Greenhouse'
+    BOX      = 'Box Conservative'

@@ -49,6 +49,7 @@ def hlt_one_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         return _multi_power(alpha, df1, df2, omega)
     return _undefined_power()
 
+
 def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
@@ -137,6 +138,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, 
         return _multi_power(alpha, df1, df2, omega)
     else:
         return _undefined_power()
+
 
 def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
     """
@@ -375,6 +377,7 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X
             return power
     return _undefined_power()
 
+
 def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
@@ -412,6 +415,7 @@ def wlk_two_moment_null_approx(rank_C: float, rank_U: float, rank_X: float, tota
     else:
         return _multi_power(alpha, df1, df2, omega)
     return _undefined_power()
+
 
 def wlk_two_moment_null_approx_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12) -> Power:
     """
@@ -543,6 +547,7 @@ def _trace(eval_HINVE, rank_X, total_N):
     trace = eval_HINVE * (total_N - rank_X) / total_N
     return trace
 
+
 def _calc_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N: float) -> float:
     """calculate the noncentrality parameter, omega"""
     hlt = _trace(eval_HINVE, rank_X, total_N)
@@ -609,6 +614,7 @@ def _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N):
     df2 = 2 * (m1 - m2) * (1 - m1) / denom
     return df1, df2
 
+
 def _pbt_population_value(evalt, min_rank_C_U):
     """ calculate the populations value for a pbt"""
     v = sum(evalt / (np.ones((min_rank_C_U, 1)) + evalt))
@@ -627,3 +633,4 @@ def _pbt_uncorrected_evalt(eval_HINVE, rank_C, rank_U, rank_X, total_N):
 def _undefined_power():
     """ Returns a Power object with NaN power and noncentralith and missing fmethod"""
     return Power(float('nan'), float('nan'), Constants.FMETHOD_MISSING)
+

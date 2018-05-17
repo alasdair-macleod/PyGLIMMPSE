@@ -1,6 +1,6 @@
 import numpy as np
 
-class Epsilon: #dfFactors
+class Epsilon:
     """
     LIBRARY?????
     This class produces matrices required for Geisser-Greenhouse,

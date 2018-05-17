@@ -1,14 +1,254 @@
 import warnings
 import numpy as np
 
+from pyglimmpse.finv import finv
+
 from pyglimmpse.constants import Constants
 from pyglimmpse.model.epsilon import Epsilon
+from pyglimmpse.model.hypothesis_error import HypothesisError
 from pyglimmpse.model.power import Power
 from pyglimmpse.probf import probf
 
 
-def uncorrected(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
-    pass
+def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                             approximation, unirepmethod):
+    """
+    This function calculates power for univariate repeated measures power calculations with known Sigma.
+
+    Parameters
+    ----------
+    rank_C: float
+        rank of the C matrix
+    rank_U: float
+        rank of the U matrix
+    total_N: float
+        total number of observations
+    rank_X:
+        rank of the X matrix
+    error_sum_square: float
+        error sum of squares
+    hypo_sum_square: float
+        hypothesis sum of squares
+    exeps: float
+        expected value epsilon estimator
+    eps:
+        epsilon calculated from U`*SIGMA*U
+    alpha:
+        Significance level for target GLUM test
+    approximation:
+        Which method was used to find the expected value of epsilon.
+
+        One of:
+
+        * Uncorrected
+
+        * geisser_greenhouse
+
+        * chi_muller
+
+        * hyuhn_feldt
+
+        * box
+    unirepmethod:
+        approximation used for cdf:
+
+        * Muller and Barton (1989) approximation
+
+        * Muller, Edwards and Taylor (2004) approximation
+
+
+    Returns
+    -------
+    power: Power
+        power for the univariate test.
+    """
+
+    nue = total_N - rank_X
+    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
+    # Create defaults - same for either SIGMA known or estimated
+    sigma_star = error_sum_square / nue
+    hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(eps, exeps, error_sum_square, hypo_sum_square, nue, rank_C, rank_U, unirepmethod)
+    omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
+    # Error checking
+    e_1_2 = _err_checking(e_1_2, rank_U)
+    fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
+
+    # 2. Muller, Edwards & Taylor 2002 and Muller Barton 1989 CDF approx
+    # UCDFTEMP[]=4 reverts to UCDFTEMP[]=2 if exact CDF fails
+    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
+
+    power = Power(power, omega, unirepmethod)
+
+    return power
+
+
+def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                                 approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance):
+    """
+    This function calculates power for univariate repeated measures power calculations with known Sigma.
+
+    Parameters
+    ----------
+    rank_C: float
+        rank of the C matrix
+    rank_U: float
+        rank of the U matrix
+    total_N: float
+        total number of observations
+    rank_X:
+        rank of the X matrix
+    error_sum_square: float
+        error sum of squares
+    hypo_sum_square: float
+        hypothesis sum of squares
+    exeps: float
+        expected value epsilon estimator
+    eps:
+        epsilon calculated from U`*SIGMA*U
+    alpha:
+        Significance level for target GLUM test
+    approximation:
+        Which method was used to find the expected value of epsilon.
+
+        One of:
+
+        * Uncorrected
+
+        * geisser_greenhouse
+
+        * chi_muller
+
+        * hyuhn_feldt
+
+        * box
+    unirepmethod:
+        approximation used for cdf:
+
+        * Muller and Barton (1989) approximation
+
+        * Muller, Edwards and Taylor (2004) approximation
+    or the univariate test.
+    n_est:
+        total N from estimate study
+    rank_est:
+        rank of WHAT??? from estimate study
+    alpha_cl:
+        type one error (alpha) for lower confidence bound
+    alpha_cu:
+        type one error (alpha) for lower confidence bound
+    tolerance:
+        value below which, numbers are considered zero
+
+    Returns
+    -------
+    power: Power
+        power for the univariate test.
+    """
+    # E = SIGMASTAR # (N - rX)
+    nue = total_N - rank_X
+    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
+    # Create defaults - same for either SIGMA known or estimated
+    sigma_star = error_sum_square / nue
+    hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
+    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_C, rank_U, unirepmethod, n_est, rank_est)
+    # Error checking
+    e_1_2 = _err_checking(e_1_2, rank_U)
+    omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
+    if approximation == Constants.CM:
+        omega = omegaua
+    fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
+
+    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
+    power = Power(power, omega, unirepmethod)
+    power.glmmpcl(alpha, df1, total_N, df2, Constants.CLTYPE_DESIRED_KNOWN, n_est, alpha_cl, alpha_cu, cl1df, fcrit, tolerance, omega)
+
+    return power
+
+
+def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
+                                            approximation, sigmastareval, n_ip, rank_ip):
+    """
+    This function calculates power for univariate repeated measures power calculations with known Sigma.
+
+    Parameters
+    ----------
+    rank_C: float
+        rank of the C matrix
+    rank_U: float
+        rank of the U matrix
+    total_N: float
+        total number of observations
+    rank_X:
+        rank of the X matrix
+    error_sum_square: float
+        error sum of squares
+    hypo_sum_square: float
+        hypothesis sum of squares
+    exeps: float
+        expected value epsilon estimator
+    eps:
+        epsilon calculated from U`*SIGMA*U
+    alpha:
+        Significance level for target GLUM test
+    approximation:
+        Which method was used to find the expected value of epsilon.
+
+        One of:
+
+        * Uncorrected
+
+        * geisser_greenhouse
+
+        * chi_muller
+
+        * hyuhn_feldt
+
+        * box
+    unirepmethod:
+        approximation used for cdf:
+
+        * Muller and Barton (1989) approximation
+
+        * Muller, Edwards and Taylor (2004) approximation
+    or the univariate test.
+    sigmastareval:
+        eigenvalues  of SIGMASTAR=U`*SIGMA*U
+    sigmastarevec:
+        eigenvectors of SIGMASTAR=U`*SIGMA*U
+    n_ip
+        total N from internal pilot study
+    rank_ip
+        rank of WHAT??? in internal pilot
+
+    Returns
+    -------
+    power: Power
+        power for the univariate test.
+    """
+    # E = SIGMASTAR # (N - rX)
+    nue = total_N - rank_X
+    undf1, undf2 = _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U)
+    # Create defaults - same for either SIGMA known or estimated
+    sigma_star = error_sum_square / nue
+    hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(approximation, exeps, eps, hypothesis_error, sigmastareval, rank_C, rank_U, n_ip, rank_ip)
+
+    # Error checking
+    e_1_2 = _err_checking(e_1_2, rank_U)
+    omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
+    fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
+
+    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
+
+    power = Power(power, omega, approximation.opt_calc_box)
+
+    return power
+
+
+def uncorrected():
+    expected_epsilon = 1
+    return expected_epsilon
 
 
 def geisser_greenhouse_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
@@ -142,6 +382,7 @@ def chi_muller_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U:
 
     return expected_epsilon
 
+
 def hyuhn_feldt_muller_barton_1989(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
     """
     This function computes power via the approximate expected value of the Huynh-Feldt estimate using the
@@ -208,8 +449,10 @@ def hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_U
     return expected_epsilon
 
 
-def box(sigma_star: np.matrix, rank_U: float, total_N: float, rank_X: float):
-    pass
+def box(rank_U: float):
+    expected_epsilon = (1 / rank_U)
+    return expected_epsilon
+
 
 def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
     """
@@ -450,168 +693,134 @@ def _calc_cm_expected_epsilon_estimator(exeps, rank_X, total_N):
     return exeps
 
 
-def lastuni(rank_C, rank_U, total_N, rank_X,
-            error_sum_square, hypo_sum_square, sigmastareval, sigmastarevec,
-            exeps, eps, unirepmethod, Scalar, Option, CL, IP):
-    """
-    This function calculates power for univariate repeated measures power calculations.
+def _calc_multipliers_known_sigma(eps, exeps, hypothesis_error, rank_C, rank_U, unirepmethod):
 
-    Parameters
-    ----------
-    rank_C: float
-        rank of the C matrix
-    rank_U: float
-        rank of the U matrix
-    total_N: float
-        total number of observations
-    rank_X:
-        rank of the X matrix
-    error_sum_square: float
-        error sum of squares
-    hypo_sum_square: float
-        hypothesis sum of squares
-    sigmastareval:
-        eigenvalues  of SIGMASTAR=U`*SIGMA*U
-    sigmastarevec:
-        eigenvectors of SIGMASTAR=U`*SIGMA*U
-    exeps: float
-        expected value epsilon estimator
-    eps:
-        epsilon calculated from U`*SIGMA*U
+    epsn_num = hypothesis_error.q3 + hypothesis_error.q1 * hypothesis_error.q2 * 2 / rank_C
+    epsn_den = hypothesis_error.q4 + hypothesis_error.q5 * 2 / rank_C
+    epsn = epsn_num / (rank_U * epsn_den)
+    e_1_2 = exeps
+    e_4 = eps
+    if unirepmethod == Constants.UCDF_MULLER1989_APPROXIMATION:
+        e_3_5 = eps
+    else:
+        e_3_5 = epsn
 
-    Returns
-    -------
-    power: Power
-        power for the univariate test.
-    """
+    # Obtain noncentrality and critical value for power point estimate
+    return e_1_2, e_3_5, e_4
 
-    nue = total_N - rank_X
 
-    if rank_U > nue and (Option.opt_calc_un or Option.opt_calc_gg or Option.opt_calc_box):
+def _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_C, rank_U, unirepmethod, n_est, rank_est):
+    # Case 2
+    # Enter loop to compute E1-E5 based on estimated SIGMA
+    nu_est = n_est - rank_est
+    if nu_est <= 1:
+        raise Exception("ERROR 81: Too few estimation df in LASTUNI. df = N_EST - RANK_EST <= 1.")
+    # For POWERCALC =6=HF, =7=CM, =8=GG critical values
+    epstilde_r = ((nu_est + 1) * hypothesis_error.q3 - 2 * hypothesis_error.q4) / (rank_U * (nu_est * hypothesis_error.q4 - hypothesis_error.q3))
+    epstilde_r_min = min(epstilde_r, 1)
+    mult = np.power(nu_est, 2) + nu_est - 2
+    epsnhat_num = hypothesis_error.q3 * nu_est * (nu_est + 1) + hypothesis_error.q1 * hypothesis_error.q2 * 2 * mult / rank_C - hypothesis_error.q4 * 2 * nu_est
+    epsnhat_den = hypothesis_error.q4 * nu_est * nu_est + hypothesis_error.q5 * 2 * mult / rank_C - hypothesis_error.q3 * nu_est
+    epsnhat = epsnhat_num / (rank_U * epsnhat_den)
+    nua0 = (nu_est - 1) + nu_est * (nu_est - 1) / 2
+    tau10 = nu_est * ((nu_est + 1) * hypothesis_error.q1 * hypothesis_error.q1 - 2 * hypothesis_error.q4) / (nu_est * nu_est + nu_est - 2)
+    tau20 = nu_est * (nu_est * hypothesis_error.q4 - hypothesis_error.q1 * hypothesis_error.q1) / (nu_est * nu_est + nu_est - 2)
+    epsda = tau10 * (nua0 - 2) * (nua0 - 4) / (rank_U * nua0 * nua0 * tau20)
+    epsda = max(min(epsda, 1), 1 / rank_U)
+    epsna = (1 + 2 * (hypothesis_error.q2 / rank_C) / hypothesis_error.q1) / (1 / epsda + 2 * rank_U * (hypothesis_error.q5 / rank_C) / (hypothesis_error.q1 * hypothesis_error.q1))
+    omegaua = hypothesis_error.q2 * epsna * (rank_U / hypothesis_error.q1)
+    # Set E_1_2 for all tests
+    # for UN or Box critical values
+    if approximation == Constants.UN or approximation == Constants.BOX:
+        e_1_2 = epsda
+
+    # for HF crit val
+    if approximation == Constants.HF:
+        if rank_U <= nue:
+            e_1_2 = epstilde_r_min
+        else:
+            e_1_2 = epsda
+
+    # for CM crit val
+    if approximation == Constants.CM:
+        e_1_2 = epsda
+
+    # for GG crit val
+    if approximation == Constants.GG:
+        e_1_2 = eps
+
+    # Set E_3_5 for all tests
+    if unirepmethod == Constants.UCDF_MULLER1989_APPROXIMATION:
+        e_3_5 = eps
+    else:
+        e_3_5 = epsnhat
+
+    # Set E_4 for all tests
+    if approximation == Constants.CM:
+        e_4 = epsda
+    else:
+        e_4 = eps
+
+    # Compute DF for confidence limits for all tests
+    cl1df = rank_U * nu_est * e_4 / e_3_5
+    return cl1df, e_1_2, e_3_5, e_4, omegaua
+
+
+def _calc_multipliers_internal_pilot(approximation, exeps, eps, hypothesis_error, sigmastareval, rank_C, rank_U, n_ip, rank_ip):
+    nu_ip = n_ip - rank_ip
+    e_1_2 = exeps
+    e_4 = eps
+
+    if approximation == Constants.HF or approximation == Constants.CM or approximation == Constants.GG:
+        lambdap = np.concatenate((sigmastareval,
+                                  np.power(sigmastareval, 2),
+                                  np.power(sigmastareval, 3),
+                                  np.power(sigmastareval, 4)), axis=1)
+        sumlam = np.matrix(np.sum(lambdap, axis=0)).T
+        kappa = np.multiply(np.multiply(np.matrix([[1], [2], [8], [48]]), nu_ip), sumlam)
+        muprime2 = np.asscalar(kappa[1] + np.power(kappa[0], 2))
+        meanq2 = np.asscalar(np.multiply(np.multiply(nu_ip, nu_ip + 1), sumlam[1]) + np.multiply(nu_ip, np.sum(
+            sigmastareval * sigmastareval.T)))
+
+        et1 = muprime2 / np.power(nu_ip, 2)
+        et2 = meanq2 / np.power(nu_ip, 2)
+        ae_epsn_up = et1 + 2 * hypothesis_error.q1 * hypothesis_error.q2
+        ae_epsn_dn = rank_U * (et2 + 2 * hypothesis_error.q5)
+        aex_epsn = ae_epsn_up / ae_epsn_dn
+        e_3_5 = aex_epsn
+    else:
+        epsn_num = hypothesis_error.q3 + hypothesis_error.q1 * hypothesis_error.q2 * 2 / rank_C
+        epsn_den = hypothesis_error.q4 + hypothesis_error.q5 * 2 / rank_C
+        epsn = epsn_num / (rank_U * epsn_den)
+        e_3_5 = epsn
+    return e_1_2, e_3_5, e_4
+
+
+def _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit):
+    df1 = undf1 * e_3_5
+    df2 = undf2 * e_4
+    prob, fmethod = probf(fcrit, df1, df2, omega)
+    if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
+        power = alpha
+    else:
+        power = 1 - prob
+
+    return df1, df2, power
+
+
+def _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U):
+    if rank_U > nue and (approximation == Constants.UN or approximation == Constants.GG or approximation == Constants.BOX):
         warnings.warn('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are '
                       'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
         raise Exception("#TODO what kind of exception")
-
     if np.isnan(exeps) or nue <= 0:
         raise Exception("exeps is NaN or total_N  <= rank_X")
-
     undf1 = rank_C * rank_U
     undf2 = rank_U * nue
+    return undf1, undf2
 
-    # Create defaults - same for either SIGMA known or estimated
-    sigstar = error_sum_square / nue
-    q1 = np.trace(sigstar)
-    q2 = np.trace(hypo_sum_square)
-    q3 = q1 ** 2
-    q4 = np.sum(np.power(sigstar, 2))
-    q5 = np.trace(sigstar * hypo_sum_square)
-    lambar = q1 / rank_U
 
-    # Case 1
-    # Enter loop to compute E1-E5 based on known SIGMA
-    if (not CL.sigma_type) and (not IP.ip_plan):
-        epsn_num = q3 + q1 * q2 * 2 / rank_C
-        epsn_den = q4 + q5 * 2 / rank_C
-        epsn = epsn_num / (rank_U * epsn_den)
-        e_1_2 = exeps
-        e_4 = eps
-        if unirepmethod == Constants.UCDF_MULLER1989_APPROXIMATION:
-            e_3_5 = eps
-        else:
-            e_3_5 = epsn
-
-    # Case 2
-    # Enter loop to compute E1-E5 based on estimated SIGMA
-    if CL.sigma_type and (not IP.ip_plan):
-        nu_est = CL.n_est - CL.rank_est
-        if nu_est <= 1:
-            raise Exception("ERROR 81: Too few estimation df in LASTUNI. df = N_EST - RANK_EST <= 1.")
-
-        # For POWERCALC =6=HF, =7=CM, =8=GG critical values
-        epstilde_r = ((nu_est + 1) * q3 - 2 * q4) / (rank_U * (nu_est * q4 - q3))
-        epstilde_r_min = min(epstilde_r, 1)
-        mult = np.power(nu_est, 2) + nu_est - 2
-
-        epsnhat_num = q3 * nu_est * (nu_est + 1) + q1 * q2 * 2 * mult / rank_C - q4 * 2 * nu_est
-        epsnhat_den = q4 * nu_est * nu_est + q5 * 2 * mult / rank_C - q3 * nu_est
-        epsnhat = epsnhat_num / (rank_U * epsnhat_den)
-
-        nua0 = (nu_est - 1) + nu_est * (nu_est - 1) / 2
-        tau10 = nu_est * ((nu_est + 1) * q1 * q1 - 2 * q4) / (nu_est * nu_est + nu_est - 2)
-        tau20 = nu_est * (nu_est * q4 - q1 * q1) / (nu_est * nu_est + nu_est - 2)
-
-        epsda = tau10 * (nua0 - 2) * (nua0 - 4) / (rank_U * nua0 * nua0 * tau20)
-        epsda = max(min(epsda, 1), 1 / rank_U)
-        epsna = (1 + 2 * (q2 / rank_C) / q1) / (1 / epsda + 2 * rank_U * (q5 / rank_C) / (q1 * q1))
-        omegaua = q2 * epsna * (rank_U / q1)
-
-        # Set E_1_2 for all tests
-
-        # for UN or Box critical values
-        if Option.opt_calc_un or Option.opt_calc_box:
-            e_1_2 = epsda
-
-        # for HF crit val
-        if Option.opt_calc_hf:
-            if rank_U <= nue:
-                e_1_2 = epstilde_r_min
-            else:
-                e_1_2 = epsda
-
-        # for CM crit val
-        if Option.opt_calc_cm:
-            e_1_2 = epsda
-
-        # for GG crit val
-        if Option.opt_calc_gg:
-            e_1_2 = eps
-
-        # Set E_3_5 for all tests
-        if unirepmethod == Constants.UCDF_MULLER1989_APPROXIMATION:
-            e_3_5 = eps
-        else:
-            e_3_5 = epsnhat
-
-        # Set E_4 for all tests
-        if Option.opt_calc_cm:
-            e_4 = epsda
-        else:
-            e_4 = eps
-
-        # Compute DF for confidence limits for all tests
-        cl1df = rank_U * nu_est * e_4 / e_3_5
-
-    # case 3
-    # Enter loop to compute E1-E5 when planning IP study
-    if IP.ip_plan and (not CL.sigma_type):
-        nu_ip = IP.n_ip - IP.rank_ip
-        e_1_2 = exeps
-        e_4 = eps
-
-        if Option.opt_calc_hf or Option.opt_calc_cm or Option.opt_calc_gg:
-            lambdap = np.concatenate((sigmastareval,
-                                      np.power(sigmastareval, 2),
-                                      np.power(sigmastareval, 3),
-                                      np.power(sigmastareval, 4)), axis=1)
-            sumlam = np.matrix(np.sum(lambdap, axis=0)).T
-            kappa = np.multiply(np.multiply(np.matrix([[1], [2], [8], [48]]), nu_ip), sumlam)
-            muprime2 = np.asscalar(kappa[1] + np.power(kappa[0], 2))
-            meanq2 = np.asscalar(np.multiply(np.multiply(nu_ip, nu_ip + 1), sumlam[1]) + np.multiply(nu_ip, np.sum(
-                sigmastareval * sigmastareval.T)))
-
-            et1 = muprime2 / np.power(nu_ip, 2)
-            et2 = meanq2 / np.power(nu_ip, 2)
-            ae_epsn_up = et1 + 2 * q1 * q2
-            ae_epsn_dn = rank_U * (et2 + 2 * q5)
-            aex_epsn = ae_epsn_up / ae_epsn_dn
-            e_3_5 = aex_epsn
-        else:
-            epsn_num = q3 + q1 * q2 * 2 / rank_C
-            epsn_den = q4 + q5 * 2 / rank_C
-            epsn = epsn_num / (rank_U * epsn_den)
-            e_3_5 = epsn
-
-    # Error checking
+def _err_checking(e_1_2, rank_U):
     if e_1_2 < 1 / rank_U:
         e_1_2 = 1 / rank_U
         warnings.warn('PowerWarn17: The approximate expected value of estimated epsilon was truncated up to 1/B.')
@@ -619,88 +828,5 @@ def lastuni(rank_C, rank_U, total_N, rank_X,
         e_1_2 = 1
         warnings.warn('PowerWarn18: The approximate expected value of estimated epsilon was truncated down to 1.')
 
-    # Obtain noncentrality and critical value for power point estimate
-    omega = e_3_5 * q2 / lambar
-    if Option.opt_calc_cm and CL.sigma_type and (not IP.ip_plan):
-        omega = omegaua
+    return e_1_2
 
-    fcrit = finv(1 - Scalar.alpha, undf1 * e_1_2, undf2 * e_1_2)
-
-    # Compute power point estimate
-    # 1. Muller, Edwards & Taylor 2002 CDF exact, Davies' algorithm
-    if unirepmethod == Constants.UCDF_EXACT_DAVIES or \
-            unirepmethod == Constants.UCDF_EXACT_DAVIES_FAIL:
-        df1 = float("nan")
-        df2 = float("nan")
-        fmethod = float("nan")
-        qweight = np.concatenate((sigmastareval, -sigmastareval * fcrit * undf1 / undf2))
-        qnuvec = np.concatenate((np.full((rank_U, 1), rank_C), np.full((rank_U, 1), total_N - rank_X)), axis=0)
-        dgover = np.diag(1 / np.sqrt(np.squeeze(np.asarray(sigmastareval))))
-        factori = sigmastarevec * dgover
-        omegstar = factori.T * hypo_sum_square * factori
-        qnoncen = np.concatenate((np.diag(omegstar), np.zeros((rank_U, 1))), axis=0)
-        # TODO cdfpowr = qprob()
-        cdfpowr = float("nan")
-        if np.isnan(cdfpowr):
-            warnings.warn('PowerWarn19: Power missing due to Davies" algorithm fail.')
-        else:
-            power = 1 - cdfpowr
-
-    # 2. Muller, Edwards & Taylor 2002 and Muller Barton 1989 CDF approx
-    # UCDFTEMP[]=4 reverts to UCDFTEMP[]=2 if exact CDF fails
-    if (unirepmethod == Constants.UCDF_MULLER1989_APPROXIMATION or
-                unirepmethod == Constants.UCDF_MULLER2004_APPROXIMATION) or \
-            (unirepmethod == Constants.UCDF_EXACT_DAVIES_FAIL and np.isnan(power)):
-        df1 = undf1 * e_3_5
-        df2 = undf2 * e_4
-        prob, fmethod = probf(fcrit, df1, df2, omega)
-        if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
-            power = Scalar.alpha
-        else:
-            power = 1 - prob
-
-    # TODO: is this the same as glmmpcl???? looks like it is.
-    if CL.cl_type == Constants.CLTYPE_DESIRED_KNOWN:
-        if unirepmethod == Constants.UCDF_EXACT_DAVIES or \
-                unirepmethod == Constants.UCDF_EXACT_DAVIES_FAIL:
-            raise Exception("ERROR 82: Any use of Exact CDF is incompatible with computation of CL for power.")
-
-        # Calculate lower bound for power
-        if CL.alpha_cl <= Scalar.tolerance:
-            prob_l = 1 - Scalar.alpha
-            fmethod_l = Constants.FMETHOD_MISSING
-            noncen_l = float('nan')
-        else:
-            chi_l = chi2.ppf(CL.alpha_cl, cl1df)
-            noncen_l = omega * (chi_l / cl1df)
-            prob_l, fmethod_l = probf(fcrit, df1, df2, noncen_l)
-
-        if fmethod_l == Constants.FMETHOD_NORMAL_LR and prob_l == 1:
-            power_l = Scalar.alpha
-        else:
-            power_l = 1 - prob_l
-
-        # Calculate upper bound for power
-        if CL.alpha_cu <= Scalar.tolerance:
-            prob_u = 0
-            fmethod_u = Constants.FMETHOD_MISSING
-            noncen_u = float('nan')
-        else:
-            chi_u = chi2.ppf(1 - CL.alpha_cu, cl1df)
-            noncen_u = omega * (chi_u / cl1df)
-            prob_u, fmethod_u = probf(fcrit, df1, df2, noncen_u)
-
-        if fmethod_u == Constants.FMETHOD_NORMAL_LR and prob_u == 1:
-            power_u = Scalar.alpha
-        else:
-            power_u = 1 - prob_u
-
-        power_l = float(power_l)
-        power_u = float(power_u)
-    else:
-        power_l = None
-        power_u = None
-
-    power = float(power)
-
-    return {'lower': power_l, 'power': power, 'upper': power_u}
