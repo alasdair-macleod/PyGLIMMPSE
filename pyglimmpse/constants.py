@@ -45,3 +45,7 @@ class Constants:
     CM       = 'Huynh - Feldt with Chi - Muller'
     GG       = 'Geisser - Greenhouse'
     BOX      = 'Box Conservative'
+
+    STARTING_SAMPLE_SIZE = 2
+    MAX_SAMPLE_SIZE = 536870912
+
