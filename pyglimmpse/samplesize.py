@@ -41,7 +41,7 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
         upper_power = test(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
 
     # note we are using floor division
-    lower_bound = upper_bound//2
+    lower_bound = upper_bound//2 + 1
     lower_power = test(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
 
     #
@@ -58,7 +58,7 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     elif lower_power.power >= targetPower:
         total_N = lower_bound
     else:
-        f = lambda x: test(rank_C, rank_U, rank_X, x, eval_HINVE, alpha) - targetPower
+        f = lambda samplesize: test(rank_C, rank_U, rank_X, samplesize, eval_HINVE, alpha) - targetPower
         total_N = optimize.bisect(f, lower_bound, upper_bound)
 
     return total_N

@@ -15,7 +15,7 @@ class TestSamplesize(TestCase):
         rank_C = 1
         rank_U = 2
         rank_X = 1
-        expected = 4
+        expected = 5
         eval_HINVE = np.array([35])
         alpha = 0.05
         sigmaScale = 1
