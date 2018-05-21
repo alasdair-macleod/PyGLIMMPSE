@@ -18,6 +18,7 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     """
 
     # scale beta and sigma matrices
+    # TODO: how to include this in the finished product?
     scaled_beta = beta * betaScale
     scaled_sigma = sigma * sigmaScale
 
