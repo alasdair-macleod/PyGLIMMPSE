@@ -68,7 +68,7 @@ def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, 
     # Create defaults - same for either SIGMA known or estimated
     sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(eps, exeps, error_sum_square, hypo_sum_square, nue, rank_C, rank_U, unirepmethod)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(eps, exeps, hypothesis_error, rank_C, rank_U, unirepmethod)
     omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
@@ -86,7 +86,7 @@ def unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, 
 def unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, exeps, eps, alpha,
                                  approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance):
     """
-    This function calculates power for univariate repeated measures power calculations with known Sigma.
+    This function calculates power for univariate repeated measures power calculations with estimated Sigma.
 
     Parameters
     ----------
@@ -241,7 +241,7 @@ def unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, err
 
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
 
-    power = Power(power, omega, approximation.opt_calc_box)
+    power = Power(power, omega, approximation)
 
     return power
 

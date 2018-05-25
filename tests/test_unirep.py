@@ -10,6 +10,7 @@ from pyglimmpse.input import Option
 from pyglimmpse.model.epsilon import Epsilon
 from pyglimmpse.unirep import _err_checking, _calc_multipliers_est_sigma, _calc_undf1_undf2, \
     geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon
+from pyglimmpse.model.hypothesis_error import HypothesisError
 
 
 class TestUnirep(TestCase):
@@ -90,6 +91,7 @@ class TestUnirep(TestCase):
         actual = unirep._gg_derivs_functions_eigenvalues(epsilon=eps, rank_U=3)
         self.assertTrue((actual[0] == expected_f_i).all)
         self.assertTrue((actual[1] == expected_f_ii).all)
+
     def test_unirep_power_estimated_sigma_hf(self):
         """ case 1: should return expected value, for hf method """
         expected = 0.98471
@@ -166,3 +168,117 @@ class TestUnirep(TestCase):
                                                     approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance)
         actual = result.power
         self.assertAlmostEqual(actual, expected, places=5)
+
+    def test_calc_multipliers_internal_pilot_1(self):
+        """ for HF, CM, GG"""
+        expected = 1, 0.9934402332, 1
+        actual = unirep._calc_multipliers_internal_pilot(approximation=Constants.HF,
+                                                         exeps=1,
+                                                         eps=1,
+                                                         hypothesis_error=HypothesisError(np.matrix([[166.6666666667, 96.2250448649],
+                                                                                                     [96.2250448649, 722.2222222222]]),
+                                                                                          np.matrix([[40, 2.22e-14],
+                                                                                                     [2.22e-14, 40]]),
+                                                                                          2),
+                                                         sigmastareval= np.matrix([[40],
+                                                                                   [40]]),
+                                                         rank_C=2,
+                                                         rank_U=2,
+                                                         n_ip=15,
+                                                         rank_ip=2)
+        self.assertAlmostEqual(expected[0], actual[0])
+        self.assertAlmostEqual(expected[1], actual[1])
+        self.assertAlmostEqual(expected[2], actual[2])
+
+    def test_calc_multipliers_internal_pilot_2(self):
+        """ for else"""
+        expected = 0.5, 1, 0.875
+        actual = unirep._calc_multipliers_internal_pilot(approximation=Constants.BOX,
+                                                         exeps=0.5,
+                                                         eps=0.875,
+                                                         hypothesis_error=HypothesisError(np.matrix([[166.6666666667, 96.2250448649],
+                                                                                                     [96.2250448649, 722.2222222222]]),
+                                                                                          np.matrix([[40, 2.22e-14],
+                                                                                                     [2.22e-14, 40]]),
+                                                                                          2),
+                                                         sigmastareval= np.matrix([[40],
+                                                                                   [40]]),
+                                                         rank_C=2,
+                                                         rank_U=2,
+                                                         n_ip=15,
+                                                         rank_ip=2)
+        self.assertAlmostEqual(expected[0], actual[0])
+        self.assertAlmostEqual(expected[1], actual[1])
+        self.assertAlmostEqual(expected[2], actual[2])
+
+    def test_calc_multipliers_known_sigma_1(self):
+        expected = 0.5, 1, 1
+        actual = unirep._calc_multipliers_known_sigma(eps=1,
+                                                      exeps=0.5,
+                                                      hypothesis_error=HypothesisError(np.matrix([[166.6666666667, 96.2250448649],
+                                                                                                  [96.2250448649, 722.2222222222]]),
+                                                                                       np.matrix([[40, 2.22e-14],
+                                                                                                  [2.22e-14, 40]]),
+                                                                                       2),
+                                                      rank_C=2,
+                                                      rank_U=2,
+                                                      unirepmethod=Constants.UCDF_MULLER1989_APPROXIMATION
+                                                      )
+        self.assertAlmostEqual(expected[0], actual[0])
+        self.assertAlmostEqual(expected[1], actual[1])
+        self.assertAlmostEqual(expected[2], actual[2])
+
+    def test_calc_multipliers_known_sigma_2(self):
+        """using difference unirepmethod """
+        expected = 0.5, 1, 1
+        actual = unirep._calc_multipliers_known_sigma(eps=1,
+                                                      exeps=0.5,
+                                                      hypothesis_error=HypothesisError(np.matrix([[166.6666666667, 96.2250448649],
+                                                                                                  [96.2250448649, 722.2222222222]]),
+                                                                                       np.matrix([[40, 2.22e-14],
+                                                                                                  [2.22e-14, 40]]),
+                                                                                       2),
+                                                      rank_C=2,
+                                                      rank_U=2,
+                                                      unirepmethod=Constants.UCDF_MULLER2004_APPROXIMATION
+                                                      )
+        self.assertAlmostEqual(expected[0], actual[0])
+        self.assertAlmostEqual(expected[1], actual[1])
+        self.assertAlmostEqual(expected[2], actual[2])
+
+    def test_unirep_power_known_sigma(self):
+        expected = 0.8425396191
+        actual = unirep.unirep_power_known_sigma(rank_C=2,
+                                                 rank_U=2,
+                                                 total_N=15,
+                                                 rank_X=3,
+                                                 error_sum_square=np.matrix([[480,0],
+                                                                             [0,480]]),
+                                                 hypo_sum_square=np.matrix([[166.6666666667, 96.2250448649],
+                                                                            [96.2250448649, 722.2222222222]]),
+                                                 exeps=0.5,
+                                                 eps=1,
+                                                 alpha=0.05,
+                                                 approximation=Constants.BOX,
+                                                 unirepmethod=Constants.UCDF_MULLER2004_APPROXIMATION)
+        self.assertAlmostEqual(expected, actual.power, places=4)
+
+    def test_unirep_power_known_sigma_internal_pilot(self):
+        expected = 0.8395211522
+        actual = unirep.unirep_power_known_sigma_internal_pilot(rank_C=2,
+                                                                rank_U=2,
+                                                                total_N=15,
+                                                                rank_X=3,
+                                                                error_sum_square=np.matrix([[480,0],
+                                                                                            [0,480]]),
+                                                                hypo_sum_square=np.matrix([[166.6666666667, 96.2250448649],
+                                                                                           [96.2250448649, 722.2222222222]]),
+                                                                exeps=0.5,
+                                                                eps=0.875,
+                                                                alpha=0.05,
+                                                                approximation=Constants.BOX,
+                                                                sigmastareval=np.matrix([[40],
+                                                                                         [40]]),
+                                                                n_ip=15,
+                                                                rank_ip=2)
+        self.assertAlmostEqual(expected, actual.power, places=5)
