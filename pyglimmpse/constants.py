@@ -29,10 +29,6 @@ class Constants:
     CLTYPE_DESIRED_ESTIMATE = '2 BETA estimated, SIGMA estimated and CL desired'
     CLTYPE_NOT_DESIRED = 'Confidence intervals for power not desired'
 
-    SIGMA_KNOWN = 'Sigma known'
-    SIGMA_ESTIMATED = 'Sigma estimated'
-    INTERNAL_PILOT = 'Internal pilot'
-
     #FMETHOD
     FMETHOD_NOAPPROXIMATION = '1 CDF function (no approximation)'
     FMETHOD_TIKU = '2 Tiku approximation (best approximation)'
@@ -49,7 +45,3 @@ class Constants:
     CM       = 'Huynh - Feldt with Chi - Muller'
     GG       = 'Geisser - Greenhouse'
     BOX      = 'Box Conservative'
-
-    STARTING_SAMPLE_SIZE = 2
-    MAX_SAMPLE_SIZE = 536870912
-
