@@ -94,7 +94,13 @@ def hlt_two_moment_null_approximator(rank_C: float, rank_U: float, rank_X: float
         return _undefined_power()
 
 
-def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float, rank_U: float, rank_X: float, total_N: float, eval_HINVE: [], alpha: float, tolerance=1e-12 ) -> Power:
+def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float,
+                                                  rank_U: float,
+                                                  rank_X: float,
+                                                  total_N: float,
+                                                  eval_HINVE: [],
+                                                  alpha: float,
+                                                  tolerance=1e-12 ) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
