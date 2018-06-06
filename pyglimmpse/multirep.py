@@ -579,9 +579,6 @@ def _hlt_one_moment_df2(min_rank_C_U: float, rank_U: float, rank_X: float, total
 
 def _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N):
     """Calculate df2 for a hlt which is using an approximator which matches two moments"""
-    #nu_df2 = (total_N - rank_X) * (total_N - rank_X) - (total_N - rank_X) * (2 * rank_U + 3) + rank_U * (rank_U + 3)
-    #de_df2 = (total_N - rank_X) * (rank_C + rank_U + 1) - (rank_C + 2 * rank_U + rank_U * rank_U - 1)
-    #df2 = 4 + (rank_C * rank_U + 2) * (nu_df2 / de_df2)
     df2 = (total_N - rank_X) * (total_N - rank_X) - (total_N - rank_X) * (2 * rank_U + 3) + rank_U * (rank_U + 3);
     df2 = df2 / ((total_N - rank_X) * (rank_C + rank_U + 1) - (rank_C + 2 * rank_U + rank_U * rank_U - 1));
     df2 = 4 + (rank_C * rank_U + 2) * df2;

@@ -1,8 +1,9 @@
-from setuptools import setup
+import setuptools
 
-setup(
+setuptools.setup(
     name='pyglimmpse',
-    packages=['pyglimmpse'],
+    version="0.0.1",
+    packages=setuptools.find_packages(exclude=['tests*']),
     include_package_data=True,
     install_requires=['scipy', ],
 )
