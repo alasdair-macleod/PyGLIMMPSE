@@ -20,16 +20,16 @@ class Constants:
     MULTI_PBT_MULLER = '2 Muller (1998) two moment null approx'
     MULTI_PBT_PILLAI_OS = '3 Pillai (1959) one moment null approx + OS noncen mult'
     MULTI_PBT_MULLER_OS = '4 Muller (1998) two moment null approx + OS noncen mult'
-    
+
     MULTI_WLK_RAO = 'Rao (1951) two moment null approx'
     MULTI_WLK_RAO_OS = 'Rao (1951) two moment null approx + OS noncen mult'
 
-    #CL_TYPE
+    # CL_TYPE
     CLTYPE_DESIRED_KNOWN = '1 BETA known, SIGMA estimated and CL desired'
     CLTYPE_DESIRED_ESTIMATE = '2 BETA estimated, SIGMA estimated and CL desired'
     CLTYPE_NOT_DESIRED = 'Confidence intervals for power not desired'
 
-    #FMETHOD
+    # FMETHOD
     FMETHOD_NOAPPROXIMATION = '1 CDF function (no approximation)'
     FMETHOD_TIKU = '2 Tiku approximation (best approximation)'
     FMETHOD_NORMAL_SM = '3 Normal approximation, |Z-score| < 6 (worst approximation)'
@@ -37,11 +37,14 @@ class Constants:
     FMETHOD_MISSING = '5 Power missing'
 
     COLLAPSE = 'special'
-    HLT      = 'Hotelling - Lawley trace'
-    PBT      = 'Pillai - Bartletttrace'
-    WLK      = 'Wilks Lambda'
-    UN       = 'uncorrected univariate approach to repeated measures'
-    HF       = 'Huynh - Feldt'
-    CM       = 'Huynh - Feldt with Chi - Muller'
-    GG       = 'Geisser - Greenhouse'
-    BOX      = 'Box Conservative'
+    HLT = 'Hotelling - Lawley trace'
+    PBT = 'Pillai - Bartletttrace'
+    WLK = 'Wilks Lambda'
+    UN = 'uncorrected univariate approach to repeated measures'
+    HF = 'Huynh - Feldt'
+    CM = 'Huynh - Feldt with Chi - Muller'
+    GG = 'Geisser - Greenhouse'
+    BOX = 'Box Conservative'
+
+    MAX_SAMPLE_SIZE = 1000000
+    STARTING_SAMPLE_SIZE = 2

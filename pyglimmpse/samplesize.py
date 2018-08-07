@@ -39,11 +39,11 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
         total_N = upper_bound
 
         # call power for this sample size
-        upper_power = test(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
+        upper_power.power = test(sigma, rank_U, total_N, rank_X)
 
     # note we are using floor division
     lower_bound = upper_bound//2 + 1
-    lower_power = test(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
+    lower_power = test(sigma, rank_U, total_N, rank_X)
 
     #
     # At this point we have valid boundaries for searching.
@@ -54,9 +54,9 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     # 3. The upper bound != lower bound and lower bound is less than the required power.
     # In this case we bisection search
     #
-    if lower_power.power == upper_power.power:
+    if lower_power == upper_power.power:
         return lower_bound
-    elif lower_power.power >= targetPower:
+    elif lower_power >= targetPower:
         total_N = lower_bound
     else:
         f = lambda samplesize: test(rank_C, rank_U, rank_X, samplesize, eval_HINVE, alpha) - targetPower
