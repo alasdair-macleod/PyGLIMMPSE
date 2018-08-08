@@ -693,7 +693,7 @@ def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
 
     #todo is this true for ALL epsilon? If so build into the class and remove this method.
     if rank_U != np.shape(sigma_star)[0]:
-        raise Exception("rank of U should equal to nrows of sigma_star")
+        raise Exception("rank of U should be equal to the number of rows in sigma_star")
 
     # Get eigenvalues of covariance matrix associated with E. This is NOT
     # the USUAL sigma. This cov matrix is that of (Y-YHAT)*U, not of (Y-YHAT).
