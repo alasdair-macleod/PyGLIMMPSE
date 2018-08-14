@@ -23,14 +23,14 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     scaled_sigma = sigma * sigmaScale
 
     # calculate max valid per group N
-    max_n = min(sys.maxsize/rank_X, Constants.MAX_SAMPLE_SIZE)
+    max_n = min(sys.maxsize/rank_X, Constants.MAX_SAMPLE_SIZE.value)
 
     # calculate the noncentrality distribution
 
     # find a samplesize which produces power greater than or equal to the desired power
-    upper_bound = Constants.STARTING_SAMPLE_SIZE
+    upper_bound = Constants.STARTING_SAMPLE_SIZE.value
     upper_power = Power()
-    while (np.isnan(upper_power.power) or upper_power.power <= targetPower) and upper_bound < max_n:
+    while (upper_power.power == np.NaN or upper_power.power <= targetPower) and upper_bound < max_n:
         upper_bound += upper_bound
 
         if upper_bound >= max_n:
@@ -39,11 +39,11 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
         total_N = upper_bound
 
         # call power for this sample size
-        upper_power.power = test(sigma, rank_U, total_N, rank_X)
+        upper_power = test(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
 
     # note we are using floor division
     lower_bound = upper_bound//2 + 1
-    lower_power = test(sigma, rank_U, total_N, rank_X)
+    lower_power = test(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
 
     #
     # At this point we have valid boundaries for searching.
@@ -54,9 +54,9 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     # 3. The upper bound != lower bound and lower bound is less than the required power.
     # In this case we bisection search
     #
-    if lower_power == upper_power.power:
+    if lower_power.power == upper_power.power:
         return lower_bound
-    elif lower_power >= targetPower:
+    elif lower_power.power >= targetPower:
         total_N = lower_bound
     else:
         f = lambda samplesize: test(rank_C, rank_U, rank_X, samplesize, eval_HINVE, alpha) - targetPower

@@ -409,7 +409,7 @@ def _unirep_power_estimated_sigma(rank_C,
     # Create defaults - same for either SIGMA known or estimated
     sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(optional_args.approximation, epsilon, hypothesis_error, nue, rank_C, rank_U, unirepmethod, n_est, rank_est)
+    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(optional_args.approximation, epsilon, hypothesis_error, nue, rank_C, rank_U, optional_args.unirepmethod, optional_args.n_est, optional_args.rank_est)
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
     omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
