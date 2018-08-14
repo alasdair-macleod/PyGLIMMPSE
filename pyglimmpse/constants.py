@@ -1,4 +1,7 @@
-class Constants:
+from enum import Enum
+
+
+class Constants(Enum):
     # zotero
     # UNIREP test statistic CDF calculation Methods
     UCDF_MULLER1989_APPROXIMATION = 'Muller and Barton (1989) approximation'
@@ -48,3 +51,8 @@ class Constants:
 
     MAX_SAMPLE_SIZE = 1000000
     STARTING_SAMPLE_SIZE = 2
+
+    SIGMA_KNOWN = 'sigma known'
+    SIGMA_ESTIMATED = 'sigma estimated'
+    INTERNAL_PILOT = 'internal pilot'
+
