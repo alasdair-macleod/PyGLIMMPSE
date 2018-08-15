@@ -317,18 +317,18 @@ def _unirep_power_known_sigma(rank_C,
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
 
     power = Power(power, omega, optional_args.unirepmethod)
-    # power.glmmpcl(alphatest=alpha,
-    #               dfh=df1,
-    #               n2=total_N,
-    #               dfe1=df1,
-    #               dfe2=df2,
-    #               cl_type=Constants.CLTYPE_DESIRED_KNOWN,
-    #               n_est=optional_args.n_est,
-    #               alpha_cl=optional_args.alpha_cl,
-    #               alpha_cu=optional_args.alpha_cu,
-    #               fcrit=fcrit,
-    #               tolerance=optional_args.tolerance,
-    #               omega=omega)
+    power.glmmpcl(alphatest=alpha,
+                  dfh=df1,
+                  n2=total_N,
+                  dfe1=optional_args.n_est-optional_args.rank_est,
+                  dfe2=df2,
+                  cl_type=Constants.CLTYPE_DESIRED_KNOWN,
+                  n_est=optional_args.n_est,
+                  alpha_cl=optional_args.alpha_cl,
+                  alpha_cu=optional_args.alpha_cu,
+                  fcrit=fcrit,
+                  tolerance=optional_args.tolerance,
+                  omega=omega)
 
     return power
 

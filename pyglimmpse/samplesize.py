@@ -1,4 +1,5 @@
 import numpy as np
+import inspect
 import sys
 
 from pyglimmpse.constants import Constants
@@ -6,14 +7,23 @@ from pyglimmpse.model.power import Power
 from scipy import optimize
 
 
-def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta, targetPower, rank_X, eval_HINVE):
+def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta, targetPower, rank_X, eval_HINVE=None, error_sum_square=None, hypothesis_sum_square=None, optional_args=None):
     """
     Gets samplesize required for the requested target power.
     :param test:
+    :param rank_C:
+    :param rank_U:
     :param alpha:
     :param sigmaScale:
+    :param sigma:
     :param betaScale:
+    :param beta:
     :param targetPower:
+    :param rank_X:
+    :param eval_HINVE:
+    :param error_sum_square:
+    :param hypothesis_sum_square:
+    :param optional_args:
     :return:
     """
 
@@ -39,11 +49,43 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
         total_N = upper_bound
 
         # call power for this sample size
-        upper_power = test(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
+        if len(inspect.signature(test).parameters) == 7:
+            upper_power = test(rank_C=rank_C,
+                               rank_U=rank_U,
+                               rank_X=rank_X,
+                               total_N=total_N,
+                               eval_HINVE=eval_HINVE,
+                               alpha=alpha)
+        elif len(inspect.signature(test).parameters) == 9:
+            upper_power = test(rank_C=rank_C,
+                               rank_U=rank_U,
+                               total_N=total_N,
+                               rank_X=rank_X,
+                               error_sum_square=error_sum_square,
+                               hypo_sum_square=hypothesis_sum_square,
+                               sigma_star=sigma,
+                               alpha=alpha,
+                               optional_args=optional_args)
 
     # note we are using floor division
     lower_bound = upper_bound//2 + 1
-    lower_power = test(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
+    if len(inspect.signature(test).parameters) == 7:
+        lower_power = test(rank_C=rank_C,
+                           rank_U=rank_U,
+                           rank_X=rank_X,
+                           total_N=total_N,
+                           eval_HINVE=eval_HINVE,
+                           alpha=alpha)
+    elif len(inspect.signature(test).parameters) == 9:
+        lower_power = test(rank_C=rank_C,
+                           rank_U=rank_U,
+                           total_N=total_N,
+                           rank_X=rank_X,
+                           error_sum_square=error_sum_square,
+                           hypo_sum_square=hypothesis_sum_square,
+                           sigma_star=sigma,
+                           alpha=alpha,
+                           optional_args=optional_args)
 
     #
     # At this point we have valid boundaries for searching.
