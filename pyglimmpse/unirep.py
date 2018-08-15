@@ -1,4 +1,5 @@
 import warnings
+import inspect
 import numpy as np
 
 from pyglimmpse.finv import finv
@@ -14,6 +15,7 @@ class OptionalArgs(object):
     Class to hold optional args
     """
     def __init__(self):
+        self.approximation = Constants.UN
         self.epsilon_estimator = Constants.EPSILON_MULLER2004
         self.unirepmethod = Constants.SIGMA_KNOWN
         self.n_est = None
@@ -28,33 +30,33 @@ def uncorrected(rank_C: int,
                 rank_U: int,
                 total_N: int,
                 rank_X:int,
-                error_sum_square: float,
-                hypo_sum_square: float,
+                error_sum_square: np.matrix,
+                hypo_sum_square: np.matrix,
                 sigma_star: np.matrix,
                 alpha: float,
                 **kwargs) -> Power:
     optional_args = __process_optional_args(**kwargs)
     return _unirep_power(_uncorrected,
-                         alpha,
-                         error_sum_square,
-                         hypo_sum_square,
                          rank_C,
                          rank_U,
-                         rank_X,
-                         sigma_star,
                          total_N,
+                         rank_X,
+                         error_sum_square,
+                         hypo_sum_square,
+                         sigma_star,
+                         alpha,
                          optional_args)
 
 
 
 def chi_muller(rank_C: int,
-               rank_U: int,
-               total_N: int,
-               rank_X:int,
-               error_sum_square: float,
-               hypo_sum_square: float,
-               sigma_star: np.matrix,
-               alpha: float,
+                rank_U: int,
+                total_N: int,
+                rank_X:int,
+                error_sum_square: np.matrix,
+                hypo_sum_square: np.matrix,
+                sigma_star: np.matrix,
+                alpha: float,
                **kwargs) -> Power:
     optional_args = __process_optional_args(**kwargs)
     if optional_args.epsilon_estimator == Constants.EPSILON_MULLER1989:
@@ -62,25 +64,25 @@ def chi_muller(rank_C: int,
     else:
         test = _chi_muller_muller_edwards_simpson_taylor_2007
     return _unirep_power(test,
-                         alpha,
-                         error_sum_square,
-                         hypo_sum_square,
                          rank_C,
                          rank_U,
-                         rank_X,
-                         sigma_star,
                          total_N,
+                         rank_X,
+                         error_sum_square,
+                         hypo_sum_square,
+                         sigma_star,
+                         alpha,
                          optional_args)
 
 
 def geisser_greenhouse(rank_C: int,
-                       rank_U: int,
-                       total_N: int,
-                       rank_X:int,
-                       error_sum_square: float,
-                       hypo_sum_square: float,
-                       sigma_star: np.matrix,
-                       alpha: float,
+                        rank_U: int,
+                        total_N: int,
+                        rank_X:int,
+                        error_sum_square: np.matrix,
+                        hypo_sum_square: np.matrix,
+                        sigma_star: np.matrix,
+                        alpha: float,
                        **kwargs):
     optional_args = __process_optional_args(**kwargs)
     if optional_args.epsilon_estimator == Constants.EPSILON_MULLER1989:
@@ -89,14 +91,14 @@ def geisser_greenhouse(rank_C: int,
         test = _geisser_greenhouse_muller_edwards_simpson_taylor_2007
 
     return _unirep_power(test,
-                         alpha,
-                         error_sum_square,
-                         hypo_sum_square,
                          rank_C,
                          rank_U,
-                         rank_X,
-                         sigma_star,
                          total_N,
+                         rank_X,
+                         error_sum_square,
+                         hypo_sum_square,
+                         sigma_star,
+                         alpha,
                          optional_args)
 
 
@@ -104,8 +106,8 @@ def hyuhn_feldt(rank_C: int,
                 rank_U: int,
                 total_N: int,
                 rank_X:int,
-                error_sum_square: float,
-                hypo_sum_square: float,
+                error_sum_square: np.matrix,
+                hypo_sum_square: np.matrix,
                 sigma_star: np.matrix,
                 alpha: float,
                 **kwargs):
@@ -115,14 +117,14 @@ def hyuhn_feldt(rank_C: int,
     else:
         test = _hyuhn_feldt_muller_edwards_simpson_taylor_2007
     return _unirep_power(test,
-                         alpha,
-                         error_sum_square,
-                         hypo_sum_square,
                          rank_C,
                          rank_U,
-                         rank_X,
-                         sigma_star,
                          total_N,
+                         rank_X,
+                         error_sum_square,
+                         hypo_sum_square,
+                         sigma_star,
+                         alpha,
                          optional_args)
 
 
@@ -130,52 +132,79 @@ def box(rank_C: int,
         rank_U: int,
         total_N: int,
         rank_X:int,
-        error_sum_square: float,
-        hypo_sum_square: float,
+        error_sum_square: np.matrix,
+        hypo_sum_square: np.matrix,
         sigma_star: np.matrix,
         alpha: float,
         **kwargs):
     optional_args = __process_optional_args(**kwargs)
     return _unirep_power(_box,
-                         alpha,
-                         error_sum_square,
-                         hypo_sum_square,
                          rank_C,
                          rank_U,
-                         rank_X,
-                         sigma_star,
                          total_N,
+                         rank_X,
+                         error_sum_square,
+                         hypo_sum_square,
+                         sigma_star,
+                         alpha,
                          optional_args)
 
 def _unirep_power(test,
-                  rank_C,
-                  rank_U,
-                  rank_X,
-                  total_N,
-                  alpha,
-                  sigma_star,
-                  error_sum_square,
-                  hypo_sum_square,
+                  rank_C: int,
+                  rank_U: int,
+                  total_N: int,
+                  rank_X: int,
+                  error_sum_square: np.matrix,
+                  hypo_sum_square: np.matrix,
+                  sigma_star: np.matrix,
+                  alpha: float,
                   optional_args: OptionalArgs):
 
-    expected_epsilon = test()
+    if len(inspect.signature(test).parameters) == 0:
+        expected_epsilon = test()
+    elif len(inspect.signature(test).parameters) == 1:
+        expected_epsilon = test(rank_U=rank_U)
+    else:
+        expected_epsilon = test(sigma_star=sigma_star, rank_U=rank_U, total_N=total_N, rank_X=rank_X)
     epsilon = _calc_epsilon(sigma_star, rank_U)
     if optional_args.unirepmethod == Constants.SIGMA_KNOWN:
-        power = _unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square,
-                                          expected_epsilon, epsilon.eps, alpha,
-                                          Constants.UN, optional_args.epsilon_estimator)
+        power = _unirep_power_known_sigma(rank_C,
+                                          rank_U,
+                                          total_N,
+                                          rank_X,
+                                          error_sum_square,
+                                          hypo_sum_square,
+                                          expected_epsilon,
+                                          epsilon.eps,
+                                          alpha,
+                                          optional_args)
     if optional_args.unirepmethod == Constants.SIGMA_ESTIMATED:
-        power = _unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square,
-                                              expected_epsilon, epsilon, alpha,
-                                              optional_args.epsilon_estimator, optional_args.unirepmethod, optional_args.n_est, optional_args.rank_est, optional_args.alpha_cl, optional_args.alpha_cu,
-                                              optional_args.tolerance)
+        power = _unirep_power_estimated_sigma(rank_C,
+                                              rank_U,
+                                              total_N,
+                                              rank_X,
+                                              error_sum_square,
+                                              hypo_sum_square,
+                                              expected_epsilon,
+                                              epsilon,
+                                              alpha,
+                                              Constants.UN,
+                                              optional_args)
     if optional_args.unirepmethod == Constants.INTERNAL_PILOT:
         sigmastareval = np.linalg.eigvals(sigma_star)
-        power = _unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, error_sum_square,
-                                                         hypo_sum_square, expected_epsilon, epsilon, alpha,
-                                                         optional_args.epsilon_estimator, sigmastareval, optional_args.n_ip, optional_args.rank_ip)
-    power.glmmpcl()
+        power = _unirep_power_known_sigma_internal_pilot(rank_C,
+                                                         rank_U,
+                                                         total_N,
+                                                         rank_X,
+                                                         error_sum_square,
+                                                         hypo_sum_square,
+                                                         expected_epsilon,
+                                                         epsilon,
+                                                         alpha,
+                                                         sigmastareval,
+                                                         optional_args)
     return power
+
 
 def __process_optional_args(**kwargs) -> OptionalArgs:
     """
@@ -185,40 +214,42 @@ def __process_optional_args(**kwargs) -> OptionalArgs:
     """
     args = OptionalArgs()
     if kwargs is not None:
-        for key, value in kwargs.iteritems():
-            if key == "epsilon_estimator":
-                if value == Constants.EPSILON_MULLER1989:
-                    args.epsilon_estimator = value
-                else:
-                    warnings.warn("epsilon_estimator must be one of Constants.EPSILON_MULLER2007/Constants.EPSILON_MULLER2007")
-            elif key == "unirepmethod":
-                if value == Constants.SIGMA_ESTIMATED:
-                    args.unirepmethod = value
-                else:
-                    warnings.warn("unirepmethod must be one of Constants.SIGMA_ESTIMATED/Constants.SIGMA_KNOWN")
-            elif key == "n_est":
-                args.n_est = value
-            elif key == "rank_est":
-                args.rank_est = value
-            elif key == "alpha_cl":
-                args.alpha_cl = value
-            elif key == "alpha_cu":
-                args.alpha_cu = value
-            elif key == "n_ip":
-                args.n_ip = value
-            elif key == "rank_ip":
-                args.rank_ip = value
-            elif key == "rank_ip":
-                args.rank_ip = value
-            elif key == "tolerance":
-                args.tolerance = value
-            else:
-                warnings.warn(key + " is not a valid parameter.")
+        for key, value in kwargs.items():
+            if value.get("epsilon_estimator"):
+                args.epsilon_estimator = value.get("epsilon_estimator")
+            if value.get("unirepmethod"):
+                args.unirepmethod = value.get("unirepmethod")
+            if value.get("n_est"):
+                args.n_est = value.get("n_est")
+            if value.get("rank_est"):
+                args.rank_est = value.get("rank_est")
+            if value.get("alpha_cl"):
+                args.alpha_cl = value.get("alpha_cl")
+            if value.get("alpha_cu"):
+                args.alpha_cu = value.get("alpha_cu")
+            if value.get("n_ip"):
+                args.n_ip = value.get("n_ip")
+            if value.get("rank_ip"):
+                args.rank_ip = value.get("rank_ip")
+            if value.get("rank_ip"):
+                args.rank_ip = value.get("rank_ip")
+            if value.get("approximation"):
+                args.approximation = value.get("approximation")
+            if value.get("tolerance"):
+                args.tolerance = value.get("tolerance")
     return args
 
 
-def _unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, expected_epsilon, epsilon, alpha,
-                              approximation, unirepmethod):
+def _unirep_power_known_sigma(rank_C,
+                              rank_U,
+                              total_N,
+                              rank_X,
+                              error_sum_square,
+                              hypo_sum_square,
+                              expected_epsilon,
+                              epsilon,
+                              alpha,
+                              optional_args):
     """
     This function calculates power for univariate repeated measures power calculations with known Sigma.
 
@@ -232,9 +263,9 @@ def _unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square,
         total number of observations
     rank_X:
         rank of the X matrix
-    error_sum_square: float
+    error_sum_square: np.matrix
         error sum of squares
-    hypo_sum_square: float
+    hypo_sum_square: np.matrix
         hypothesis sum of squares
     expected_epsilon: float
         expected value epsilon estimator
@@ -271,11 +302,11 @@ def _unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square,
     """
 
     nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(approximation, expected_epsilon, nue, rank_C, rank_U)
+    undf1, undf2 = _calc_undf1_undf2(optional_args.approximation, expected_epsilon, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
     sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(epsilon, expected_epsilon, error_sum_square, hypo_sum_square, nue, rank_C, rank_U, unirepmethod)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(epsilon, expected_epsilon, hypothesis_error, rank_C, rank_U, optional_args.unirepmethod)
     omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
@@ -285,13 +316,33 @@ def _unirep_power_known_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square,
     # UCDFTEMP[]=4 reverts to UCDFTEMP[]=2 if exact CDF fails
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
 
-    power = Power(power, omega, unirepmethod)
+    power = Power(power, omega, optional_args.unirepmethod)
+    # power.glmmpcl(alphatest=alpha,
+    #               dfh=df1,
+    #               n2=total_N,
+    #               dfe1=df1,
+    #               dfe2=df2,
+    #               cl_type=Constants.CLTYPE_DESIRED_KNOWN,
+    #               n_est=optional_args.n_est,
+    #               alpha_cl=optional_args.alpha_cl,
+    #               alpha_cu=optional_args.alpha_cu,
+    #               fcrit=fcrit,
+    #               tolerance=optional_args.tolerance,
+    #               omega=omega)
 
     return power
 
 
-def _unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, expected_epsilon, epsilon, alpha,
-                                  approximation, unirepmethod, n_est, rank_est, alpha_cl, alpha_cu, tolerance):
+def _unirep_power_estimated_sigma(rank_C,
+                                  rank_U,
+                                  total_N,
+                                  rank_X,
+                                  error_sum_square,
+                                  hypo_sum_square,
+                                  expected_epsilon,
+                                  epsilon,
+                                  alpha,
+                                  optional_args):
     """
     This function calculates power for univariate repeated measures power calculations with known Sigma.
 
@@ -354,27 +405,47 @@ def _unirep_power_estimated_sigma(rank_C, rank_U, total_N, rank_X, error_sum_squ
     """
     # E = SIGMASTAR # (N - rX)
     nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(approximation, expected_epsilon, nue, rank_C, rank_U)
+    undf1, undf2 = _calc_undf1_undf2(optional_args.approximation, expected_epsilon, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
     sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(approximation, epsilon, hypothesis_error, nue, rank_C, rank_U, unirepmethod, n_est, rank_est)
+    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(optional_args.approximation, epsilon, hypothesis_error, nue, rank_C, rank_U, optional_args.unirepmethod, optional_args.n_est, optional_args.rank_est)
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
     omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
-    if approximation == Constants.CM:
+    if optional_args.approximation == Constants.CM:
         omega = omegaua
     fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
 
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
-    power = Power(power, omega, unirepmethod)
-    power.glmmpcl(alpha, df1, total_N, df2, Constants.CLTYPE_DESIRED_KNOWN, n_est, alpha_cl, alpha_cu, cl1df, fcrit, tolerance, omega)
+    power = Power(power, omega, optional_args.unirepmethod)
+    # power.glmmpcl(alphatest=alpha,
+    #               dfh=cl1df,
+    #               n2=total_N,
+    #               dfe1=df1,
+    #               dfe2=df2,
+    #               cl_type=Constants.CLTYPE_DESIRED_KNOWN,
+    #               n_est=optional_args.n_est,
+    #               alpha_cl=optional_args.alpha_cl,
+    #               alpha_cu=optional_args.alpha_cu,
+    #               fcrit=fcrit,
+    #               tolerance=optional_args.tolerance,
+    #               omega=omega)
 
     return power
 
 
-def _unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, error_sum_square, hypo_sum_square, expected_epsilon, epsilon, alpha,
-                                             approximation, sigmastareval, n_ip, rank_ip):
+def _unirep_power_known_sigma_internal_pilot(rank_C,
+                                             rank_U,
+                                             total_N,
+                                             rank_X,
+                                             error_sum_square,
+                                             hypo_sum_square,
+                                             expected_epsilon,
+                                             epsilon,
+                                             alpha,
+                                             sigmastareval,
+                                             optional_args):
     """
     This function calculates power for univariate repeated measures power calculations with known Sigma.
 
@@ -435,11 +506,11 @@ def _unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, er
     """
     # E = SIGMASTAR # (N - rX)
     nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(approximation, expected_epsilon, nue, rank_C, rank_U)
+    undf1, undf2 = _calc_undf1_undf2(optional_args.approximation, expected_epsilon, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
     sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(approximation, expected_epsilon, epsilon, hypothesis_error, sigmastareval, rank_C, rank_U, n_ip, rank_ip)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(optional_args.approximation, expected_epsilon, epsilon, hypothesis_error, sigmastareval, rank_C, rank_U, optional_args.n_ip, optional_args.rank_ip)
 
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
@@ -448,7 +519,7 @@ def _unirep_power_known_sigma_internal_pilot(rank_C, rank_U, total_N, rank_X, er
 
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
 
-    power = Power(power, omega, approximation.opt_calc_box)
+    power = Power(power, omega, Constants.BOX)
 
     return power
 
