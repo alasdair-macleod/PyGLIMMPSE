@@ -556,7 +556,7 @@ def _trace(eval_HINVE, rank_X, total_N):
 
 def _calc_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N: float) -> float:
     """calculate the noncentrality parameter, omega"""
-    hlt = _trace(eval_HINVE, rank_X, total_N)
+    hlt = _trace(np.sum(eval_HINVE), rank_X, total_N)
     omega = (total_N * min_rank_C_U) * (hlt / min_rank_C_U)
     return omega
 
@@ -620,7 +620,7 @@ def _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N):
 
 def _pbt_population_value(evalt, min_rank_C_U):
     """ calculate the populations value for a pbt"""
-    v = sum(evalt / (np.ones((min_rank_C_U, 1)) + evalt))
+    v = np.sum(evalt / (np.ones((min_rank_C_U, 1)) + evalt))
     return v
 
 
