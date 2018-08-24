@@ -69,6 +69,7 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
 
     # note we are using floor division
     lower_bound = upper_bound//2 + 1
+    lower_power = Power()
     if len(inspect.signature(test).parameters) == 7:
         lower_power = test(rank_C=rank_C,
                            rank_U=rank_U,
