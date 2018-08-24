@@ -460,7 +460,7 @@ def wlk_two_moment_null_approx(rank_C: float,
     #       = 3  Rao (1951) two moment null approx + OS Obrien shieh noncen mult
     #       = 4  Rao (1951) two moment null approx + OS noncen mult
     if _valid_df2_eigenvalues(eval_HINVE):
-        w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE)))
+        w = np.exp(np.sum(-np.log(np.ones((1, min_rank_C_U)) + eval_HINVE)))
 
     if min_rank_C_U == 1:
         df2 = total_N - rank_X -rank_U + 1
@@ -468,8 +468,8 @@ def wlk_two_moment_null_approx(rank_C: float,
         tempw = w
     else:
         rm = total_N - rank_X - (rank_U - rank_C + 1)/2
-        rs = np.sqrt(rank_C*rank_C*rank_U*rank_U - 4) / (rank_C*rank_C + rank_U*rank_U - 5)
-        r1 = (rank_U - rank_C - 2)/4
+        rs = np.sqrt((rank_C*rank_C*rank_U*rank_U - 4) / (rank_C*rank_C + rank_U*rank_U - 5))
+        r1 = (rank_U * rank_C - 2)/4
         if np.isnan(w):
             tempw = float('nan')
         else:
@@ -535,7 +535,7 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
     #       = 3  Rao (1951) two moment null approx + OS Obrien shieh noncen mult
     #       = 4  Rao (1951) two moment null approx + OS noncen mult
     if _valid_df2_eigenvalues(eval_HINVE):
-        w = np.exp(np.sum(-np.log(np.ones((min_rank_C_U, 1)) + eval_HINVE * (total_N - rank_X)/total_N)))
+        w = np.exp(np.sum(-np.log(np.ones((1, min_rank_C_U)) + eval_HINVE * (total_N - rank_X)/total_N)))
 
     if min_rank_C_U == 1:
         df2 = total_N - rank_X -rank_U + 1
@@ -543,8 +543,8 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
         tempw = w
     else:
         rm = total_N - rank_X - (rank_U - rank_C + 1)/2
-        rs = np.sqrt(rank_C*rank_C*rank_U*rank_U - 4) / (rank_C*rank_C + rank_U*rank_U - 5)
-        r1 = (rank_U - rank_C - 2)/4
+        rs = np.sqrt((rank_C*rank_C*rank_U*rank_U - 4) / (rank_C*rank_C + rank_U*rank_U - 5))
+        r1 = (rank_U * rank_C - 2)/4
         if np.isnan(w):
             tempw = float('nan')
         else:
@@ -648,7 +648,7 @@ def _calc_hlt_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N:
     if min_rank_C_U == 1:
         omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
     else:
-        hlt = eval_HINVE
+        hlt = np.sum(eval_HINVE)
         omega = df2 * (hlt / min_rank_C_U)
     return omega
 
@@ -702,7 +702,7 @@ def _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N):
 
 def _pbt_population_value(evalt, min_rank_C_U):
     """ calculate the populations value for a pbt"""
-    v = np.sum(evalt / (np.ones((min_rank_C_U, 1)) + evalt))
+    v = np.sum(evalt / (np.ones((1, min_rank_C_U)) + evalt))
     return v
 
 

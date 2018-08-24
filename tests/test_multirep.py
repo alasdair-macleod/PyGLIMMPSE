@@ -12,193 +12,213 @@ class TestMultirep(TestCase):
         """
 
         rank_C = 1
-        rank_U = 3
-        rank_X = 2
-        total_N = 8
-        eval_HINVE = np.array([0.5])
+        rank_U = 1
+        rank_X = 1
+        total_N = 10
+        error_sum_square = np.matrix([[18]])
+        hypothesis_sum_square = np.matrix([[10]])
         alpha = 0.05
-        expected = 0.138179071626
-        actual = multirep.hlt_one_moment_null_approximator(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 4), round(actual.power, 4))
+        expected = 0.514351069870
+        actual = multirep.hlt_one_moment_null_approximator(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_hlt_one_moment_null_approximator_min_rakn_C_U_2(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
-        rank_U = 3
-        rank_X = 2
-        total_N = 8
-        eval_HINVE = np.array([0.5])
+        rank_C = 3
+        rank_U = 2
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850], [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.138179071626
-        actual = multirep.hlt_one_moment_null_approximator(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 4), round(actual.power, 4))
+        expected = 0.203028693139
+        actual = multirep.hlt_one_moment_null_approximator(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_hlt_two_moment_null_approximator(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
+        rank_C = 3
         rank_U = 2
-        rank_X = 1
-        total_N = 5
-        eval_HINVE = np.array([35])
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850], [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 1
-        actual = multirep.hlt_two_moment_null_approximator(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 3), round(actual.power, 3))
+        expected = 0.132606902708
+        actual = multirep.hlt_two_moment_null_approximator(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_hlt_one_moment_null_approximator_obrien_shieh(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
+        rank_C = 3
         rank_U = 2
-        rank_X = 1
-        total_N = 3
-        eval_HINVE = np.array([35])
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850], [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.326487905774
-        actual = multirep.hlt_one_moment_null_approximator_obrien_shieh(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 2), round(actual.power, 2))
+        expected = 0.229495804549
+        actual = multirep.hlt_one_moment_null_approximator_obrien_shieh(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_hlt_two_moment_null_approximator_obrien_shieh(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
+        rank_C = 3
         rank_U = 2
-        rank_X = 1
-        total_N = 5
-        eval_HINVE = np.array([35])
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850], [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.9998
-        actual = multirep.hlt_two_moment_null_approximator_obrien_shieh(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 4), round(actual.power, 4))
+        expected = 0.209176173376
+        actual = multirep.hlt_two_moment_null_approximator_obrien_shieh(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_pbt_one_moment_null_approx(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
+        rank_C = 3
         rank_U = 2
-        rank_X = 1
-        total_N = 3
-        eval_HINVE = np.array([35])
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850],
+                                      [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.326487905774
-        actual = multirep.pbt_one_moment_null_approx(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 2), round(actual.power, 2))
+        expected = 0.209723893717
+        actual = multirep.pbt_one_moment_null_approx(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 4), round(actual.power, 4))
 
     def test_pbt_two_moment_null_approx(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
-        rank_U = 3
-        rank_X = 2
-        total_N = 8
-        eval_HINVE = np.array([0.5])
+        rank_C = 3
+        rank_U = 2
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850],
+                                      [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.138179071626
-        actual = multirep.pbt_two_moment_null_approx(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 4), round(actual.power, 4))
+        expected =0.222786795810
+        actual = multirep.pbt_two_moment_null_approx(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_pbt_one_moment_null_approx_obrien_shieh(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
+        rank_C = 3
         rank_U = 2
-        rank_X = 1
-        total_N = 3
-        eval_HINVE = np.array([35])
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850],
+                                      [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.326487905774
-        actual = multirep.pbt_one_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 2), round(actual.power, 2))
+        expected = 0.214237639104
+        actual = multirep.pbt_one_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_pbt_two_moment_null_approx_obrien_shieh(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
-        rank_U = 3
-        rank_X = 2
-        total_N = 8
-        eval_HINVE = np.array([0.05])
+        rank_C = 3
+        rank_U = 2
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850],
+                                      [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.058149316 # 0.138179071626
-        actual = multirep.pbt_two_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 3), round(actual.power, 3))
+        expected = 0.205398851860
+        actual = multirep.pbt_two_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N,  alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_wlk(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
-        rank_U = 3
-        rank_X = 2
-        total_N = 8
-        eval_HINVE = np.array([0.5])
+        rank_C = 3
+        rank_U = 2
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850],
+                                      [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.107399189 # 0.138179071626
-        actual = multirep.wlk_two_moment_null_approx(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 3), round(actual.power, 3))
+        expected = 0.207213613964 # 0.138179071626
+        actual = multirep.wlk_two_moment_null_approx(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 4), round(actual.power, 4))
 
     def test_wlk_os(self):
         """
         This should return the expected value
         """
 
-        rank_C = 1
+        rank_C = 3
         rank_U = 2
-        rank_X = 1
-        total_N = 3
-        eval_HINVE = np.array([35])
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850],
+                                      [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.326487905774
-        actual = multirep.wlk_two_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N, eval_HINVE, alpha)
-        self.assertEqual(round(expected, 2), round(actual.power, 2))
+        expected = 0.222089414105
+        actual = multirep.wlk_two_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N,  alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
 
     def test_special(self):
         """
         This should return the expected value
         """
-        rank_C = 1
+        rank_C = 3
         rank_U = 2
-        rank_X = 1
-        total_N = 3
-        eval_HINVE = np.array([35])
+        rank_X = 4
+        total_N = 20
+        error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850],
+                                      [0.000000000000000444089209850, 9.59999999999999000000000000]])
+        hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.326487905774
-        actual = multirep.special(rank_C, rank_U, rank_X,total_N,eval_HINVE,alpha)
-        self.assertEqual(round(expected, 2), round(actual.power, 2))
+        expected = 0.197974983838
+        actual = multirep.special(rank_C, rank_U, rank_X,total_N,alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 4), round(actual.power, 4))
 
     def test_special_2(self):
         """
         This should return the expected value
         """
         rank_C = 1
-        rank_U = 3
-        rank_X = 2
-        total_N = 8
-        eval_HINVE = np.array([0.5])
+        rank_U = 1
+        rank_X = 1
+        total_N = 10
+        error_sum_square = np.matrix([[18]])
+        hypothesis_sum_square = np.matrix([[10]])
         alpha = 0.05
-        expected = 0.138179071626
-        actual = multirep.special(rank_C, rank_U, rank_X,total_N,eval_HINVE,alpha)
-        self.assertEqual(round(expected, 2), round(actual.power, 2))
+        expected = 0.514351069870
+        actual = multirep.special(rank_C, rank_U, rank_X,total_N,alpha, error_sum_square, hypothesis_sum_square)
+        self.assertEqual(round(expected, 5), round(actual.power, 5))
 
 
 
