@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import f
+from scipy.stats import stats
 
 def finv(alpha, df1, df2):
     """
@@ -18,6 +18,6 @@ def finv(alpha, df1, df2):
     if df1 > 10**7.6 or df2 > 10**9.4 or df1 < 0 or df2 < 0:
         fcrit = np.NaN
     else:
-        fcrit = f.ppf(alpha, df1, df2)
+        fcrit = stats.f.ppf(alpha, df1, df2)
 
     return fcrit
