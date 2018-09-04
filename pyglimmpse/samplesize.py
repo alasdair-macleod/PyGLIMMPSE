@@ -49,13 +49,14 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
         total_N = upper_bound
 
         # call power for this sample size
-        if len(inspect.signature(test).parameters) == 7:
+        if len(inspect.signature(test).parameters) == 8:
             upper_power = test(rank_C=rank_C,
                                rank_U=rank_U,
                                rank_X=rank_X,
                                total_N=total_N,
-                               eval_HINVE=eval_HINVE,
-                               alpha=alpha)
+                               alpha=alpha,
+                               error_sum_square=error_sum_square,
+                               hypothesis_sum_square=hypothesis_sum_square)
         elif len(inspect.signature(test).parameters) == 9:
             upper_power = test(rank_C=rank_C,
                                rank_U=rank_U,
@@ -70,13 +71,14 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     # note we are using floor division
     lower_bound = upper_bound//2 + 1
     lower_power = Power()
-    if len(inspect.signature(test).parameters) == 7:
-        lower_power = test(rank_C=rank_C,
-                           rank_U=rank_U,
-                           rank_X=rank_X,
-                           total_N=total_N,
-                           eval_HINVE=eval_HINVE,
-                           alpha=alpha)
+    if len(inspect.signature(test).parameters) == 8:
+            upper_power = test(rank_C=rank_C,
+                               rank_U=rank_U,
+                               rank_X=rank_X,
+                               total_N=total_N,
+                               alpha=alpha,
+                               error_sum_square=error_sum_square,
+                               hypothesis_sum_square=hypothesis_sum_square)
     elif len(inspect.signature(test).parameters) == 9:
         lower_power = test(rank_C=rank_C,
                            rank_U=rank_U,
