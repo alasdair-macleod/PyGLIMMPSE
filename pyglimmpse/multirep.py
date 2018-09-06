@@ -722,7 +722,7 @@ def _undefined_power():
 
 def _calc_eval(min_rank_C_U, error_sum_square,hypothesis_sum_square):
     """ Calculate eigenvalues for H*INV(E) for Multi-rep"""
-    inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square)).T
+    inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square))
     hei_orth = inverse_error_sum * hypothesis_sum_square * inverse_error_sum.T
     hei_orth_symm = (hei_orth + hei_orth.T) / 2
     eval = np.linalg.eigvals(hei_orth_symm)[0:min_rank_C_U]
