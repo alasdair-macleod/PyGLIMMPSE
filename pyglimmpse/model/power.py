@@ -8,6 +8,9 @@ from pyglimmpse.finv import finv
 from pyglimmpse.probf import probf
 
 
+def subtrtact_target_power(a, b):
+    return a.power - b
+
 class Power:
     """
     This object represents power and contains metedata about how it was calculated
@@ -126,6 +129,10 @@ class Power:
         else:
             self.lower_bound = None
             self.upper_bound = None
+
+    @staticmethod
+    def subtrtact_target_power(a, b):
+        return a.power - b
 
     def _warn_conservative_ci(self, alpha_cl, cl_type, n2, n_est):
         """warning for conservative confidence interval"""

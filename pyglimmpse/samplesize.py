@@ -3,7 +3,7 @@ import inspect
 import sys
 
 from pyglimmpse.constants import Constants
-from pyglimmpse.model.power import Power
+from pyglimmpse.model.power import Power, subtrtact_target_power
 from scipy import optimize
 
 
@@ -49,13 +49,14 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
         total_N = upper_bound
 
         # call power for this sample size
-        if len(inspect.signature(test).parameters) == 7:
+        if len(inspect.signature(test).parameters) == 8:
             upper_power = test(rank_C=rank_C,
                                rank_U=rank_U,
                                rank_X=rank_X,
                                total_N=total_N,
-                               eval_HINVE=eval_HINVE,
-                               alpha=alpha)
+                               alpha=alpha,
+                               error_sum_square=error_sum_square,
+                               hypothesis_sum_square=hypothesis_sum_square)
         elif len(inspect.signature(test).parameters) == 9:
             upper_power = test(rank_C=rank_C,
                                rank_U=rank_U,
@@ -70,13 +71,14 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     # note we are using floor division
     lower_bound = upper_bound//2 + 1
     lower_power = Power()
-    if len(inspect.signature(test).parameters) == 7:
-        lower_power = test(rank_C=rank_C,
-                           rank_U=rank_U,
-                           rank_X=rank_X,
-                           total_N=total_N,
-                           eval_HINVE=eval_HINVE,
-                           alpha=alpha)
+    if len(inspect.signature(test).parameters) == 8:
+            lower_power = test(rank_C=rank_C,
+                               rank_U=rank_U,
+                               rank_X=rank_X,
+                               total_N=total_N,
+                               alpha=alpha,
+                               error_sum_square=error_sum_square,
+                               hypothesis_sum_square=hypothesis_sum_square)
     elif len(inspect.signature(test).parameters) == 9:
         lower_power = test(rank_C=rank_C,
                            rank_U=rank_U,
@@ -102,7 +104,26 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     elif lower_power.power >= targetPower:
         total_N = lower_bound
     else:
-        f = lambda samplesize: test(rank_C, rank_U, rank_X, samplesize, eval_HINVE, alpha) - targetPower
+        f = None
+        if len(inspect.signature(test).parameters) == 8:
+            f = lambda samplesize: subtrtact_target_power(test(rank_C=rank_C,
+                               rank_U=rank_U,
+                               rank_X=rank_X,
+                               total_N=total_N,
+                               alpha=alpha,
+                               error_sum_square=error_sum_square,
+                               hypothesis_sum_square=hypothesis_sum_square), targetPower)
+        elif len(inspect.signature(test).parameters) == 9:
+            f = lambda samplesize: subtract_target_power(test(rank_C=rank_C,
+                               rank_U=rank_U,
+                               total_N=total_N,
+                               rank_X=rank_X,
+                               error_sum_square=error_sum_square,
+                               hypo_sum_square=hypothesis_sum_square,
+                               sigma_star=sigma,
+                               alpha=alpha,
+                               optional_args=optional_args), targetPower)
+        print(f, lower_bound, upper_bound)
         total_N = optimize.bisect(f, lower_bound, upper_bound)
 
     return total_N
