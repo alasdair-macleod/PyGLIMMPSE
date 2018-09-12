@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import stats
+from scipy import stats
 
 def finv(alpha, df1, df2):
     """
