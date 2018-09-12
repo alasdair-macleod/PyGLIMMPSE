@@ -123,7 +123,6 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
                                sigma_star=sigma,
                                alpha=alpha,
                                optional_args=optional_args), targetPower)
-        print(f, lower_bound, upper_bound)
         total_N = optimize.bisect(f, lower_bound, upper_bound)
 
     return total_N
