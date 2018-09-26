@@ -460,7 +460,8 @@ def wlk_two_moment_null_approx(rank_C: float,
     #       = 3  Rao (1951) two moment null approx + OS Obrien shieh noncen mult
     #       = 4  Rao (1951) two moment null approx + OS noncen mult
     if _valid_df2_eigenvalues(eval_HINVE):
-        w = np.exp(np.sum(-np.log(np.ones((1, min_rank_C_U)) + eval_HINVE)))
+        evalt = eval_HINVE * (total_N - rank_X) / total_N
+        w = np.exp(np.sum(-np.log(np.ones((1, min_rank_C_U)) + evalt)))
 
     if min_rank_C_U == 1:
         df2 = total_N - rank_X -rank_U + 1
@@ -479,7 +480,7 @@ def wlk_two_moment_null_approx(rank_C: float,
     if np.isnan(tempw):
         omega = float('nan')
     else:
-        omega = df2 * (1 - tempw) / tempw
+        omega = total_N * rs * (1 - tempw) / tempw
 
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
