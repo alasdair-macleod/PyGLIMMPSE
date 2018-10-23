@@ -90,12 +90,12 @@ def hlt_two_moment_null_approximator(rank_C: float,
         Significance level for target GLUM test
     tolerance
         value below which a number is considered zero. defaults to 1e-12
-    
+
     Returns
     -------
     power
         power for Hotelling-Lawley trace & CL if requested
-    """    # MMETHOD default= [4,2,2]
+    """  # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 2  McKeon (1974) two moment null approx
     min_rank_C_U = min(rank_C, rank_U)
@@ -429,16 +429,17 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float,
     df1, df2 = _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N)
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
 
+    warning_message = 'Power is missing because because the min_rank_C_U - v  <= 0.'
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         evalt = _trace(eval_HINVE, rank_X, total_N)
         v = _pbt_population_value(evalt, min_rank_C_U)
         if (min_rank_C_U - v) <= tolerance:
-            warnings.warn('Power is missing because because the min_rank_C_U - v  <= 0.')
+            warnings.warn(warning_message)
         else:
             omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             power = _multi_power(alpha, df1, df2, omega)
             return power
-    return _undefined_power()
+    return _undefined_power(warning_message)
 
 
 def wlk_two_moment_null_approx(rank_C: float,
@@ -463,17 +464,17 @@ def wlk_two_moment_null_approx(rank_C: float,
         w = np.exp(np.sum(-np.log(np.ones((1, min_rank_C_U)) + eval_HINVE)))
 
     if min_rank_C_U == 1:
-        df2 = total_N - rank_X -rank_U + 1
+        df2 = total_N - rank_X - rank_U + 1
         rs = 1
         tempw = w
     else:
-        rm = total_N - rank_X - (rank_U - rank_C + 1)/2
-        rs = np.sqrt((rank_C*rank_C*rank_U*rank_U - 4) / (rank_C*rank_C + rank_U*rank_U - 5))
-        r1 = (rank_U * rank_C - 2)/4
+        rm = total_N - rank_X - (rank_U - rank_C + 1) / 2
+        rs = np.sqrt((rank_C * rank_C * rank_U * rank_U - 4) / (rank_C * rank_C + rank_U * rank_U - 5))
+        r1 = (rank_U * rank_C - 2) / 4
         if np.isnan(w):
             tempw = float('nan')
         else:
-            tempw = np.power(w, 1/rs)
+            tempw = np.power(w, 1 / rs)
         df2 = (rm * rs) - 2 * r1
 
     if np.isnan(tempw):
@@ -481,11 +482,12 @@ def wlk_two_moment_null_approx(rank_C: float,
     else:
         omega = df2 * (1 - tempw) / tempw
 
+    warning_message = 'Power is missing because because the noncentrality could not be computed.'
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
-        warnings.warn('Power is missing because because the noncentrality could not be computed.')
+        warnings.warn(warning_message)
     else:
         return _multi_power(alpha, df1, df2, omega)
-    return _undefined_power()
+    return _undefined_power(warning_message)
 
 
 def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
@@ -535,26 +537,26 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
     #       = 3  Rao (1951) two moment null approx + OS Obrien shieh noncen mult
     #       = 4  Rao (1951) two moment null approx + OS noncen mult
     if _valid_df2_eigenvalues(eval_HINVE):
-        w = np.exp(np.sum(-np.log(np.ones((1, min_rank_C_U)) + eval_HINVE * (total_N - rank_X)/total_N)))
+        w = np.exp(np.sum(-np.log(np.ones((1, min_rank_C_U)) + eval_HINVE * (total_N - rank_X) / total_N)))
 
     if min_rank_C_U == 1:
-        df2 = total_N - rank_X -rank_U + 1
+        df2 = total_N - rank_X - rank_U + 1
         rs = 1
         tempw = w
     else:
-        rm = total_N - rank_X - (rank_U - rank_C + 1)/2
-        rs = np.sqrt((rank_C*rank_C*rank_U*rank_U - 4) / (rank_C*rank_C + rank_U*rank_U - 5))
-        r1 = (rank_U * rank_C - 2)/4
+        rm = total_N - rank_X - (rank_U - rank_C + 1) / 2
+        rs = np.sqrt((rank_C * rank_C * rank_U * rank_U - 4) / (rank_C * rank_C + rank_U * rank_U - 5))
+        r1 = (rank_U * rank_C - 2) / 4
         if np.isnan(w):
             tempw = float('nan')
         else:
-            tempw = np.power(w, 1/rs)
+            tempw = np.power(w, 1 / rs)
         df2 = (rm * rs) - 2 * r1
 
     if np.isnan(tempw):
         omega = float('nan')
     else:
-        omega = (total_N * rs) * (1 - tempw) /tempw
+        omega = (total_N * rs) * (1 - tempw) / tempw
 
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
@@ -643,7 +645,7 @@ def _calc_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N: flo
     return omega
 
 
-def _calc_hlt_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N: float, df2:float):
+def _calc_hlt_omega(min_rank_C_U: float, eval_HINVE: [], rank_X: float, total_N: float, df2: float):
     """calculate the noncentrality parameter, omega, for a hotelling lawley trace."""
     if min_rank_C_U == 1:
         omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
@@ -667,7 +669,7 @@ def _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N):
     return df2
 
 
-def _valid_df2_eigenvalues(eval_HINVE: [],df2=1, tolerance=1e-12) -> bool:
+def _valid_df2_eigenvalues(eval_HINVE: [], df2=1, tolerance=1e-12) -> bool:
     """check that df2 is positive and thath the eigenvalues have been calculates"""
     # df2 need to be > 0 and eigenvalues not missing
     if df2 <= tolerance or np.isnan(eval_HINVE[0]):
@@ -715,12 +717,12 @@ def _pbt_uncorrected_evalt(eval_HINVE, rank_C, rank_U, rank_X, total_N):
     return evalt
 
 
-def _undefined_power():
+def _undefined_power(error_message=None):
     """ Returns a Power object with NaN power and noncentralith and missing fmethod"""
-    return Power(float('nan'), float('nan'), Constants.FMETHOD_MISSING)
+    return Power(float('nan'), float('nan'), Constants.FMETHOD_MISSING, error_message)
 
 
-def _calc_eval(min_rank_C_U, error_sum_square,hypothesis_sum_square):
+def _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square):
     """ Calculate eigenvalues for H*INV(E) for Multi-rep"""
     inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square))
     hei_orth = inverse_error_sum * hypothesis_sum_square * inverse_error_sum.T

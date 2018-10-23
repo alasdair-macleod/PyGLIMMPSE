@@ -54,12 +54,13 @@ class Power:
     --------
 
     """
-    def __init__(self, power=0, noncentrality_parameter=0, fmethod="DEFAULT"):
+    def __init__(self, power=0, noncentrality_parameter=0, fmethod="DEFAULT", error_message = None):
         self.power = power
         self.noncentrality_parameter = noncentrality_parameter
         self.fmethod = fmethod
         self.lower_bound = None
         self.upper_bound = None
+        self.error_message = error_message
 
     def glmmpcl(self,
                 alphatest,
