@@ -429,17 +429,21 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float,
     df1, df2 = _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N)
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
 
-    warning_message = 'Power is missing because because the min_rank_C_U - v  <= 0.'
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         evalt = _trace(eval_HINVE, rank_X, total_N)
         v = _pbt_population_value(evalt, min_rank_C_U)
         if (min_rank_C_U - v) <= tolerance:
-            warnings.warn(warning_message)
+            warning_message_min_rank_C_U = 'Power is missing because because the min_rank_C_U - v  <= 0.'
+            warnings.warn(warning_message_min_rank_C_U)
+            return _undefined_power(warning_message_min_rank_C_U)
         else:
             omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             power = _multi_power(alpha, df1, df2, omega)
             return power
-    return _undefined_power(warning_message)
+    warning_message_df2_eval_HINVE = 'Power is missing because df2 or eval_HINVE is not valid.'
+    warnings.warn(warning_message_df2_eval_HINVE)
+    return _undefined_power(warning_message_df2_eval_HINVE)
+
 
 
 def wlk_two_moment_null_approx(rank_C: float,
@@ -482,12 +486,12 @@ def wlk_two_moment_null_approx(rank_C: float,
     else:
         omega = df2 * (1 - tempw) / tempw
 
-    warning_message = 'Power is missing because because the noncentrality could not be computed.'
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
+        warning_message = 'Power is missing because because the noncentrality could not be computed.'
         warnings.warn(warning_message)
+        return _undefined_power(warning_message)
     else:
         return _multi_power(alpha, df1, df2, omega)
-    return _undefined_power(warning_message)
 
 
 def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
