@@ -1090,7 +1090,8 @@ def _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U):
     if rank_U > nue and (approximation == Constants.UN or approximation == Constants.GG or approximation == Constants.BOX):
         warnings.warn('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are '
                       'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
-        raise Exception("#TODO what kind of exception")
+        raise Exception('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are'
+                      'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
     if np.isnan(exeps) or nue <= 0:
         raise Exception("exeps is NaN or total_N  <= rank_X")
     undf1 = rank_C * rank_U
