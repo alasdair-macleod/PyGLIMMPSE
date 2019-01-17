@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='pyglimmpse',
-    version="0.0.13",
+    version="0.0.15",
     packages=setuptools.find_packages(exclude=['tests*']),
     include_package_data=True,
     install_requires=['scipy', 'numpy'],

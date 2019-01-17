@@ -167,7 +167,7 @@ class TestMultirep(TestCase):
                                       [0.000000000000000444089209850, 9.59999999999999000000000000]])
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.207213613964 # 0.138179071626
+        expected = 0.2221 # 0.138179071626
         actual = multirep.wlk_two_moment_null_approx(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
         self.assertEqual(round(expected, 4), round(actual.power, 4))
 
