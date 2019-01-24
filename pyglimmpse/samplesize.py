@@ -7,7 +7,21 @@ from pyglimmpse.model.power import Power, subtrtact_target_power
 from scipy import optimize
 
 
-def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta, targetPower, rank_X, eval_HINVE=None, error_sum_square=None, hypothesis_sum_square=None, optional_args=None):
+def samplesize(test,
+               rank_C,
+               rank_U,
+               alpha,
+               sigmaScale,
+               sigma,
+               betaScale,
+               beta,
+               targetPower,
+               rank_X,
+               eval_HINVE=None,
+               error_sum_square=None,
+               hypothesis_sum_square=None,
+               starting_sample_size=Constants.STARTING_SAMPLE_SIZE.value,
+               optional_args=None):
     """
     Gets samplesize required for the requested target power.
     :param test:
@@ -23,6 +37,7 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     :param eval_HINVE:
     :param error_sum_square:
     :param hypothesis_sum_square:
+    :param starting_sample_size:
     :param optional_args:
     :return:
     """
@@ -38,9 +53,10 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
     # calculate the noncentrality distribution
 
     # find a samplesize which produces power greater than or equal to the desired power
-    upper_bound = Constants.STARTING_SAMPLE_SIZE.value
+    upper_bound = starting_sample_size
     upper_power = Power()
-    while (upper_power.power == np.NaN or upper_power.power <= targetPower) and upper_bound < max_n:
+    while (upper_power.power == np.NaN or upper_power.power <= targetPower)\
+           and upper_bound < max_n:
         upper_bound += upper_bound
 
         if upper_bound >= max_n:
@@ -67,6 +83,9 @@ def samplesize(test, rank_C, rank_U, alpha, sigmaScale, sigma,  betaScale, beta,
                                sigma_star=sigma,
                                alpha=alpha,
                                optional_args=optional_args)
+        if type(upper_power.power) is str:
+            raise ValueError('Upper power is not calculable. Check that your design is realisable.'
+                             ' Usually the easies way to do this is to increase sample size')
 
     # note we are using floor division
     lower_bound = upper_bound//2 + 1
