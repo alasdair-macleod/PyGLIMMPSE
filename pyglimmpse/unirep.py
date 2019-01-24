@@ -167,6 +167,7 @@ def _unirep_power(test,
     else:
         expected_epsilon = test(sigma_star=sigma_star, rank_U=rank_U, total_N=total_N, rank_X=rank_X)
     epsilon = _calc_epsilon(sigma_star, rank_U)
+    power = Power(power='Not Calculable.')
     if optional_args.unirepmethod == Constants.SIGMA_KNOWN:
         power = _unirep_power_known_sigma(rank_C,
                                           rank_U,
