@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import inspect
 import sys
@@ -69,14 +71,14 @@ def samplesize(test,
             upper_power = test(rank_C=rank_C,
                                rank_U=rank_U,
                                rank_X=rank_X,
-                               total_N=total_N,
+                               total_N=upper_bound,
                                alpha=alpha,
                                error_sum_square=error_sum_square,
                                hypothesis_sum_square=hypothesis_sum_square)
         elif len(inspect.signature(test).parameters) == 9:
             upper_power = test(rank_C=rank_C,
                                rank_U=rank_U,
-                               total_N=total_N,
+                               total_N=upper_bound,
                                rank_X=rank_X,
                                error_sum_square=error_sum_square,
                                hypo_sum_square=hypothesis_sum_square,
@@ -94,14 +96,14 @@ def samplesize(test,
             lower_power = test(rank_C=rank_C,
                                rank_U=rank_U,
                                rank_X=rank_X,
-                               total_N=total_N,
+                               total_N=lower_bound,
                                alpha=alpha,
                                error_sum_square=error_sum_square,
                                hypothesis_sum_square=hypothesis_sum_square)
     elif len(inspect.signature(test).parameters) == 9:
         lower_power = test(rank_C=rank_C,
                            rank_U=rank_U,
-                           total_N=total_N,
+                           total_N=lower_bound,
                            rank_X=rank_X,
                            error_sum_square=error_sum_square,
                            hypo_sum_square=hypothesis_sum_square,
@@ -119,29 +121,51 @@ def samplesize(test,
     # In this case we bisection search
     #
     if lower_power.power == upper_power.power:
-        return lower_bound
+        return lower_bound, lower_power.power
     elif lower_power.power >= targetPower:
         total_N = lower_bound
+        power = lower_power
     else:
         f = None
         if len(inspect.signature(test).parameters) == 8:
-            f = lambda samplesize: subtrtact_target_power(test(rank_C=rank_C,
-                               rank_U=rank_U,
-                               rank_X=rank_X,
-                               total_N=total_N,
-                               alpha=alpha,
-                               error_sum_square=error_sum_square,
-                               hypothesis_sum_square=hypothesis_sum_square), targetPower)
+            f = lambda n: subtrtact_target_power(test( rank_C=rank_C,
+                                                       rank_U=rank_U,
+                                                       rank_X=rank_X,
+                                                       total_N=n,
+                                                       alpha=alpha,
+                                                       error_sum_square=error_sum_square,
+                                                       hypothesis_sum_square=hypothesis_sum_square), targetPower)
         elif len(inspect.signature(test).parameters) == 9:
-            f = lambda samplesize: subtract_target_power(test(rank_C=rank_C,
-                               rank_U=rank_U,
-                               total_N=total_N,
-                               rank_X=rank_X,
-                               error_sum_square=error_sum_square,
-                               hypo_sum_square=hypothesis_sum_square,
-                               sigma_star=sigma,
-                               alpha=alpha,
-                               optional_args=optional_args), targetPower)
+            f = lambda n: subtrtact_target_power(test( rank_C=rank_C,
+                                                       rank_U=rank_U,
+                                                       total_N=n,
+                                                       rank_X=rank_X,
+                                                       error_sum_square=error_sum_square,
+                                                       hypo_sum_square=hypothesis_sum_square,
+                                                       sigma_star=sigma,
+                                                       alpha=alpha,
+                                                       optional_args=optional_args), targetPower)
         total_N = optimize.bisect(f, lower_bound, upper_bound)
+        total_N = math.ceil(total_N)
 
-    return total_N
+
+        if len(inspect.signature(test).parameters) == 8:
+            power = test(rank_C=rank_C,
+                         rank_U=rank_U,
+                         rank_X=rank_X,
+                         total_N=total_N,
+                         alpha=alpha,
+                         error_sum_square=error_sum_square,
+                         hypothesis_sum_square=hypothesis_sum_square)
+        elif len(inspect.signature(test).parameters) == 9:
+            power =test(rank_C=rank_C,
+                        rank_U=rank_U,
+                        total_N=total_N,
+                        rank_X=rank_X,
+                        error_sum_square=error_sum_square,
+                        hypo_sum_square=hypothesis_sum_square,
+                        sigma_star=sigma,
+                        alpha=alpha,
+                        optional_args=optional_args)
+
+    return total_N, power.power

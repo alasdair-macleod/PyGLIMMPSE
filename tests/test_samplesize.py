@@ -23,7 +23,7 @@ class TestSamplesize(TestCase):
         rank_C = np.linalg.matrix_rank(cmatrix)
         rank_U = np.linalg.matrix_rank(umatrix)
         rank_X = np.linalg.matrix_rank(essence_design_matrix)
-        expected = 17
+        expected = 20
         alpha = 0.01
         sigma_scale = 1
         beta_scale = 1
@@ -39,18 +39,19 @@ class TestSamplesize(TestCase):
                 'rank_ip': 1,
                 'tolerance': 1e-10}
 
-        size = samplesize.samplesize(test=test,
-                                     rank_C=rank_C,
-                                     rank_U=rank_U,
-                                     alpha=alpha,
-                                     sigmaScale=sigma_scale,
-                                     sigma=sigma_star,
-                                     betaScale=beta_scale,
-                                     beta=hypothesis_beta,
-                                     targetPower=target_power,
-                                     rank_X=rank_X,
-                                     error_sum_square=error_sum_square,
-                                     hypothesis_sum_square=hypothesis_sum_square,
-                                     starting_sample_size=2,
-                                     optional_args=args)
-        self.assertEqual(expected, size)
+        result = samplesize.samplesize(test=test,
+                                       rank_C=rank_C,
+                                       rank_U=rank_U,
+                                       alpha=alpha,
+                                       sigmaScale=sigma_scale,
+                                       sigma=sigma_star,
+                                       betaScale=beta_scale,
+                                       beta=hypothesis_beta,
+                                       targetPower=target_power,
+                                       rank_X=rank_X,
+                                       error_sum_square=error_sum_square,
+                                       hypothesis_sum_square=hypothesis_sum_square,
+                                       starting_sample_size=2,
+                                       optional_args=args)
+        self.assertTrue(target_power <= result[1])
+        self.assertEqual(expected, result[0])
