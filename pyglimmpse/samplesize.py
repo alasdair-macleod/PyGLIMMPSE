@@ -120,9 +120,7 @@ def samplesize(test,
     # 3. The upper bound != lower bound and lower bound is less than the required power.
     # In this case we bisection search
     #
-    if lower_power.power == upper_power.power:
-        return lower_bound, lower_power.power
-    elif lower_power.power >= targetPower:
+    if lower_power.power >= targetPower:
         total_N = lower_bound
         power = lower_power
     else:
@@ -168,4 +166,6 @@ def samplesize(test,
                         alpha=alpha,
                         optional_args=optional_args)
 
+    if power.power < targetPower:
+        raise ValueError('Samplesize cannot be calculated. Pleas check your design.')
     return total_N, power.power
