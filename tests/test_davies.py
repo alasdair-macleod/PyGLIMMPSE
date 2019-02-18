@@ -1,5 +1,4 @@
 from unittest import TestCase
-import numpy as np
 from pyglimmpse.WeightedSumOfNoncentralChiSquaresDistribution import *
 from pyglimmpse.chisquareterm import *
 
