@@ -104,7 +104,7 @@ class NonCentralityDistribution(object):
     #      * otherwise a Satterthwaite style approximation is used.
     #      * @throws IllegalArgumentException
     #      
-    def __init__(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, U, thetaNull, beta, sigmaError, sigmaG, exact):
+    def __init__(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, U, thetaNull, beta, sigmaError, sigmaG, sigmaStar, exact):
         """ generated source for method __init__ """
         print("CREATING NonCentralityDistribution")
         print("begin parameters")
@@ -132,12 +132,13 @@ class NonCentralityDistribution(object):
             beta=beta,
             sigmaError=sigmaError,
             sigmaG=sigmaG,
+            sigmaStar=sigmaStar,
             exact=exact)
 
     # 
     #      * Pre-calculate intermediate matrices, perform setup, etc.
     #      
-    def initialize(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, U, thetaNull, beta, sigmaError, sigmaG, exact):
+    def initialize(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, U, thetaNull, beta, sigmaError, sigmaG, sigmaStar, exact):
         """ generated source for method initialize """
         print("entering initialize")
         #  reset member variables
@@ -159,6 +160,7 @@ class NonCentralityDistribution(object):
         self.beta = beta
         self.sigmaError = sigmaError
         self.sigmaG = sigmaG
+        self.sigmaStar = sigmaStar
         #  calculate intermediate matrices
         #         RealMatrix FEssence = params.getDesignEssence().getFullDesignMatrixFixed();
         #  TODO: do we ever get here with values that can cause integer overflow,
@@ -177,7 +179,7 @@ class NonCentralityDistribution(object):
 
             #  build intermediate terms h1, S
             if FtFinverse == None:
-                FtFinverse = np.linalg.inv(FEssence.transpose().multiply(FEssence))
+                FtFinverse = np.linalg.inv(FEssence.T * FEssence)
                 print("FEssence", FEssence)
                 print("FtFinverse = (FEssence transpose * FEssence) inverse", FtFinverse)
             else:
@@ -193,7 +195,7 @@ class NonCentralityDistribution(object):
             self.FT1 = np.linalg.cholesky(self.T1)
             print("FT1 = Cholesky decomposition (L) of T1", self.FT1)
             #calculate theta difference
-            C = CFixed + CRand
+            C = np.concatenate((np.array(CFixed), np.array(CRand)), axis=1)
             thetaHat = C * beta * U
             print("C", C)
             print("beta", beta)
@@ -205,7 +207,7 @@ class NonCentralityDistribution(object):
             print("thetaDiff = thetaHat - thetaNull", thetaDiff)
 
             #TODO: specific to HLT or UNIREP
-            sigmaStarInverse = self.getSigmaStarInverse(sigmaError, test)
+            sigmaStarInverse = self.getSigmaStarInverse(sigmaStar, test)
             print("sigmaStarInverse", sigmaStarInverse)
 
             H1matrix = thetaDiff.T * self.T1 * thetaDiff * sigmaStarInverse
@@ -224,6 +226,8 @@ class NonCentralityDistribution(object):
             # sEigenDecomp = EigenDecomposition(self.S)
             # self.sEigenValues = sEigenDecomp.getRealEigenvalues()
             self.sEigenValues, svecs = np.linalg.eig(self.S)
+            self.sEigenValues = self.sEigenValues[::-1]
+            svecs = np.flip(svecs, 1)
             svec = np.matrix(svecs).T
 
             if len(self.sEigenValues) > 0:
@@ -288,7 +292,7 @@ class NonCentralityDistribution(object):
             nu = self.N - self.qF
             lambda_ = b0
             delta = 0
-            chiSquareTerms.add(ChiSquareTerm(lambda_, nu, delta))
+            chiSquareTerms.append(ChiSquareTerm(lambda_, nu, delta))
             # add in the first chi-squared term in the estimate of the non-centrality
             # (expressed as a sum of weighted chi-squared r.v.s)
             # initial chi-square term is central (delta=0) with N-qf df, and lambda = b0
@@ -312,14 +316,14 @@ class NonCentralityDistribution(object):
                     # non-central (delta = mz^2), 1 df, lambda = (b0 - kth eigen value of S)
                     nu = 1
                     lambda_ = b0 - self.sEigenValues[k]
-                    delta = self.mzSq.getEntry(k, 0)
-                    chiSquareTerms.add(ChiSquareTerm(lambda_, nu, delta))
+                    delta = self.mzSq[k, 0]
+                    chiSquareTerms.append(ChiSquareTerm(lambda_, nu, delta))
                 else:
                     # for k = sStar+1 to a, chi-sqaure term is non-central (delta = mz^2), 1 df,
                     # lambda = b0
                     nu = 1
                     lambda_ = b0
-                    delta = self.mzSq.getEntry(k, 0)
+                    delta = self.mzSq[k, 0]
                     chiSquareTerms.add(ChiSquareTerm(lambda_, nu, delta))
                 # accumulate terms
                 if lambda_ > 0:
@@ -351,10 +355,11 @@ class NonCentralityDistribution(object):
                                  df2=1,
                                  noncen=lastPositiveNoncentrality)
                 elif lastPositiveNoncentrality == 0 and lastNegativeNoncentrality > 0:
-                    return 1 - probf(fcrit=1 / Fstar,
-                                     df1=1,
-                                     df2=Nstar,
-                                     noncen=lastNegativeNoncentrality)
+                    prob, method = probf(fcrit=1 / Fstar,
+                          df1=1,
+                          df2=Nstar,
+                          noncen=lastNegativeNoncentrality)
+                    return 1 - prob
             if self.exact:
                 dist = WeightedSumOfNoncentralChiSquaresDistribution(chiSquareTerms, 0.0, 0.001)
                 return dist.cdf(0)
@@ -370,8 +375,8 @@ class NonCentralityDistribution(object):
                 x = (nuStarNegative * lambdaStarNegative) / (nuStarPositive * lambdaStarPositive)
                 return f(x, nuStarPositive, nuStarNegative)
         except Exception as e:
-            self.LOGGER.warn("exiting cdf abnormally", e)
-            raise Exception(e.getMessage(), constants.DISTRIBUTION_NONCENTRALITY_PARAMETER_CDF_FAILED)
+            print("exiting cdf abnormally", e)
+            raise Exception(e)
 
     def inverseCDF(self, probability):
         """ generated source for method inverseCDF """
@@ -394,7 +399,7 @@ class NonCentralityDistribution(object):
         # print("sigmaStar = U transpose * sigmaError * U", sigmaStar)
         if not self.isPositiveDefinite(sigma_star):
             raise Exception("Sigma star is not positive definite.")
-        if test == Constants.HLT:
+        if test == Constants.HLT.value:
             return np.linalg.inv(sigma_star)
         else:
             # stat should only be UNIREP (uncorrected, box, GG, or HF) at this point
