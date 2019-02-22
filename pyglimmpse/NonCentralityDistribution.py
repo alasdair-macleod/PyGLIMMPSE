@@ -4,7 +4,6 @@ import numpy as np
 from scipy.optimize import optimize
 from scipy.stats import f
 
-from pyglimmpse import constants
 from pyglimmpse.WeightedSumOfNoncentralChiSquaresDistribution import WeightedSumOfNoncentralChiSquaresDistribution
 from pyglimmpse.constants import Constants
 from pyglimmpse.probf import probf
