@@ -10,36 +10,23 @@ from pyglimmpse.constants import Constants
 from pyglimmpse.probf import probf
 
 """ generated source for module NonCentralityDistribution """
-# 
-#  * Java Statistics.  A java library providing power/sample size estimation for
-#  * the general linear model.
-#  *
-#  * Copyright (C) 2010 Regents of the University of Colorado.
-#  *
-#  * This program is free software; you can redistribute it and/or
-#  * modify it under the terms of the GNU General Public License
-#  * as published by the Free Software Foundation; either version 2
-#  * of the License, or (at your option) any later version.
-#  *
-#  * This program is distributed in the hope that it will be useful,
-#  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  * GNU General Public License for more details.
-#  *
-#  * You should have received a copy of the GNU General Public License
-#  * along with this program; if not, write to the Free Software
-#  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#
-# 
-#  * Class representing the distribution of the non-centrality parameter in
-#  * the general linear multivariate model.  Used by the GLMMPowerCalculator class
-#  * for computing unconditional and quantile power.
-#  *
-#  * @see edu.cudenver.bios.power.GLMMPowerCalculator
-#  * @author Sarah Kreidler
-#
 from pyglimmpse.chisquareterm import ChiSquareTerm
 
+
+class NonCentralityQuantileFunction():
+    """ generated source for class NonCentralityQuantileFunction """
+    quantile = float()
+
+    def __init__(self, quantile):
+        """ generated source for method __init__ """
+        self.quantile = quantile
+
+    def value(self, n):
+        """ generated source for method value """
+        try:
+            return self.cdf(n) - self.quantile
+        except Exception as pe:
+            raise Exception(pe.getMessage(), pe)
 
 class NonCentralityDistribution(object):
     """ generated source for class NonCentralityDistribution """
@@ -64,39 +51,6 @@ class NonCentralityDistribution(object):
     #  with the Satterthwaite approximation from Glueck & Muller
     exact = bool()
 
-    #  cache input parameters - needed for dynamic reset of sample size and beta matrix
-    #test = Test()
-    # FEssence = np.matrix()
-    # FtFinverse = np.matrix()
-    # perGroupN = int()
-    # CFixed = np.matrix()
-    # CRand = np.matrix()
-    # U = np.matrix()
-    # thetaNull = np.matrix()
-    # beta = np.matrix()
-    # sigmaError = np.matrix()
-    # sigmaG = np.matrix()
-
-    # 
-    #      * Function calculating the difference between the probability of a target quantile
-    #      * and the  (used by the bisection solver from Apache Commons Math)
-    #      * @see org.apache.commons.math.analysis.UnivariateRealFunction
-    #      
-    class NonCentralityQuantileFunction():
-        """ generated source for class NonCentralityQuantileFunction """
-        quantile = float()
-
-        def __init__(self, quantile):
-            """ generated source for method __init__ """
-            self.quantile = quantile
-
-        def value(self, n):
-            """ generated source for method value """
-            try:
-                return self.cdf(n) - self.quantile
-            except Exception as pe:
-                raise Exception(pe.getMessage(), pe)
-
     # 
     #      * Create a non-centrality distribution for the specified inputs.
     #      * @param params GLMM input parameters
@@ -104,7 +58,7 @@ class NonCentralityDistribution(object):
     #      * otherwise a Satterthwaite style approximation is used.
     #      * @throws IllegalArgumentException
     #      
-    def __init__(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, U, thetaNull, beta, sigmaError, sigmaG, sigmaStar, exact):
+    def __init__(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, thetaDiff, sigmaStar, stddevG, exact):
         """ generated source for method __init__ """
         print("CREATING NonCentralityDistribution")
         print("begin parameters")
@@ -113,11 +67,7 @@ class NonCentralityDistribution(object):
         print("FtFinverse:", FtFinverse)
         print("perGroupN: ", perGroupN)
         print("CFixedRand:", CFixed + CRand)
-        print("U:", U)
-        print("thetaNull:", thetaNull)
-        print("beta:", beta)
-        print("sigmaError:", sigmaError)
-        print("sigmaG:", sigmaG)
+        print("thetaNull:", thetaDiff)
         print("exact: ", exact)
         print("end parameters")
         self.initialize(
@@ -127,18 +77,15 @@ class NonCentralityDistribution(object):
             perGroupN=perGroupN,
             CFixed=CFixed,
             CRand=CRand,
-            U=U,
-            thetaNull=thetaNull,
-            beta=beta,
-            sigmaError=sigmaError,
-            sigmaG=sigmaG,
+            thetaDiff=thetaDiff,
             sigmaStar=sigmaStar,
+            stddevG = stddevG,
             exact=exact)
 
     # 
     #      * Pre-calculate intermediate matrices, perform setup, etc.
     #      
-    def initialize(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, U, thetaNull, beta, sigmaError, sigmaG, sigmaStar, exact):
+    def initialize(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, thetaDiff, sigmaStar, stddevG, exact):
         """ generated source for method initialize """
         print("entering initialize")
         #  reset member variables
@@ -155,11 +102,7 @@ class NonCentralityDistribution(object):
         self.perGroupN = perGroupN
         self.CFixed = CFixed
         self.CRand = CRand
-        self.U = U
-        self.thetaNull = thetaNull
-        self.beta = beta
-        self.sigmaError = sigmaError
-        self.sigmaG = sigmaG
+        self.thetaDiff = thetaDiff
         self.sigmaStar = sigmaStar
         #  calculate intermediate matrices
         #         RealMatrix FEssence = params.getDesignEssence().getFullDesignMatrixFixed();
@@ -196,14 +139,6 @@ class NonCentralityDistribution(object):
             print("FT1 = Cholesky decomposition (L) of T1", self.FT1)
             #calculate theta difference
             C = np.concatenate((np.array(CFixed), np.array(CRand)), axis=1)
-            thetaHat = C * beta * U
-            print("C", C)
-            print("beta", beta)
-            print("U", U)
-            print("thetaHat = C * beta * U", thetaHat)
-
-            thetaDiff = thetaHat - thetaNull
-            print("thetaNull", thetaNull)
             print("thetaDiff = thetaHat - thetaNull", thetaDiff)
 
             #TODO: specific to HLT or UNIREP
@@ -223,8 +158,6 @@ class NonCentralityDistribution(object):
             # for a central F distribution.  The resulting F distribution is used as an approximation
             # for the distribution of the non-centrality parameter.
             # See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details.
-            # sEigenDecomp = EigenDecomposition(self.S)
-            # self.sEigenValues = sEigenDecomp.getRealEigenvalues()
             self.sEigenValues, svecs = np.linalg.eig(self.S)
             self.sEigenValues = self.sEigenValues[::-1]
             svecs = np.flip(svecs, 1)
@@ -240,25 +173,19 @@ class NonCentralityDistribution(object):
                     self.sStar += 1
             # TODO: throw error if sStar is <= 0
             # TODO: NO: throw error if sStar != sEigenValues.length instead???
-
-            stddevG = np.sqrt(sigmaG[0, 0])
-            # svec = sEigenDecomp.getVT()
-            # get eigenvectors
             # create square matrix using these
-
             self.mzSq = svec * self.FT1.T * CGaussian * (1 / stddevG)
             i = 0
             while i < self.mzSq.shape[0]:
                 j = 0
                 #while j < self.mzSq.getColumnDimension():
-                while j < self.mzSq.shape[1]:
+                while j <  self.mzSq.shape[1]:
                     entry = self.mzSq[i, j]
                     self.mzSq[i, j] = entry * entry
                     j += 1
                 i += 1
                 print("exiting initialize normally")
         except Exception as e:
-            #self.LOGGER.warn("exiting initialize abnormally", e)
             raise e
 
     def setPerGroupSampleSize(self, perGroupN):
@@ -393,10 +320,6 @@ class NonCentralityDistribution(object):
 
     def getSigmaStarInverse(self, sigma_star, test):
         """ generated source for method getSigmaStarInverse """
-        # sigmaStar = forceSymmetric(U.transpose().multiply(sigmaError).multiply(U))
-        # print("U", U)
-        # print("sigmaError", sigmaError)
-        # print("sigmaStar = U transpose * sigmaError * U", sigmaStar)
         if not self.isPositiveDefinite(sigma_star):
             raise Exception("Sigma star is not positive definite.")
         if test == Constants.HLT.value:
