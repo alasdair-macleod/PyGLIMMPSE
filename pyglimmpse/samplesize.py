@@ -19,7 +19,7 @@ def samplesize(test,
                m,
                t,
                groups,
-               starting_sample_size=Constants.STARTING_SAMPLE_SIZE.value,
+               starting_smallest_group_size=Constants.STARTING_SAMPLE_SIZE.value,
                optional_args=None):
     """
     Gets samplesize required for the requested target power.
