@@ -193,7 +193,7 @@ def _calc_err_sum_square(total_n, rank_x, sigma_star):
 
 def _calc_hypothesis_sum_square(total_n, relative_group_sizes, delta):
     """
-    Calculate hypothesis sums of squares matrix.
+    Calculate hypothesis sum of squares matrix.
 
     :param total_n: total samplesize
     :param relative_group_sizes: A list of ratios of size of the groups in your design.
