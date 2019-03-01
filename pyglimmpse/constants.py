@@ -50,7 +50,7 @@ class Constants(Enum):
     BOX = 'Box Conservative'
 
     MAX_SAMPLE_SIZE = 1000000
-    STARTING_SAMPLE_SIZE = 2
+    STARTING_SAMPLE_SIZE = 1
 
     SIGMA_KNOWN = 'sigma known'
     SIGMA_ESTIMATED = 'sigma estimated'
