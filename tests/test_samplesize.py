@@ -22,6 +22,8 @@ class TestSamplesize(TestCase):
         target_power = 0.9
         essence_design_matrix=np.matrix([[1]])
         test = hlt_two_moment_null_approximator_obrien_shieh
+        delta = np.transpose(theta - theta_zero) * np.linalg.inv(m) * (theta-theta_zero)
+
         size, power = samplesize.samplesize(test=test,
                                             rank_C=np.linalg.matrix_rank(c_matrix),
                                             rank_U=np.linalg.matrix_rank(u_matrix),
@@ -29,14 +31,16 @@ class TestSamplesize(TestCase):
                                             sigma_star=sigma_star,
                                             targetPower=target_power,
                                             rank_X=np.linalg.matrix_rank(essence_design_matrix),
-                                            m=m,
-                                            t=(theta - theta_zero),
-                                            groups=groups)
+                                            delta=delta,
+                                            relative_group_sizes=groups,
+                                            starting_smallest_group_size=10)
         self.assertEqual(size, 50)
-        self.assertEqual(power, 0.9010195056728821)
+        self.assertEqual(round(power, 8), round(0.9010195056728821, 8))
 
     def test_samplesize_hlt_multi_group(self):
         m=np.matrix([[1.16666667, 0.16666667], [0.16666667, 0.66666667]])
+        t = np.matrix([[-5], [3.5]])
+        delta=t.T * np.linalg.inv(m) * t
         sigma_star=np.matrix([[112.5]])
         alpha = 0.01
         groups = [6, 1,2]
@@ -50,11 +54,10 @@ class TestSamplesize(TestCase):
                                             sigma_star=sigma_star,
                                             targetPower=target_power,
                                             rank_X=3,
-                                            m=m,
-                                            t=np.matrix([[-5], [3.5]]),
-                                            groups=groups)
+                                            delta=delta,
+                                            relative_group_sizes=groups)
 
-        self.assertEqual(0.904593341412432, power)
+        self.assertEqual(round(0.904593341412432, 8) , round(power, 8))
         self.assertEqual(369, size)
 
 
