@@ -120,12 +120,9 @@ class NonCentralityDistribution(object):
             CGaussian = CRand
 
             #  build intermediate terms h1, S
-            if FtFinverse == None:
-                FtFinverse = np.linalg.inv(FEssence.T * FEssence)
-                print("FEssence", FEssence)
-                print("FtFinverse = (FEssence transpose * FEssence) inverse", FtFinverse)
-            else:
-                print("FtFinverse", FtFinverse)
+            FtFinverse = np.linalg.inv(FEssence.T * FEssence)
+            print("FEssence", FEssence)
+            print("FtFinverse = (FEssence transpose * FEssence) inverse", FtFinverse)
             PPt = Cfixed * self.FtFinverse * (1 / self.perGroupN) * Cfixed.T
             print("Cfixed", Cfixed)
             print("n = ", self.perGroupN)
@@ -281,6 +278,11 @@ class NonCentralityDistribution(object):
                                  df2=1,
                                  noncen=lastPositiveNoncentrality)
                 elif lastPositiveNoncentrality == 0 and lastNegativeNoncentrality > 0:
+                    # print("fcrit", 1 / Fstar)
+                    # print("df1", 1)
+                    # print("df2", Nstar)
+                    # print("omega", lastNegativeNoncentrality)
+                    # print("RUN _PROBF(PROB, FMETHOD, ", 1 / Fstar,", ",1,", ",Nstar,", ",lastNegativeNoncentrality,");")
                     prob, method = probf(fcrit=1 / Fstar,
                           df1=1,
                           df2=Nstar,
@@ -291,10 +293,10 @@ class NonCentralityDistribution(object):
                 return dist.cdf(0)
             else:
                 # handle general case - Satterthwaite approximation
-                nuStarPositive = 2 * (m1Positive * m1Positive) / m2Positive;
-                nuStarNegative = 2 * (m1Negative * m1Negative) / m2Negative;
-                lambdaStarPositive = m2Positive / (2 * m1Positive);
-                lambdaStarNegative = m2Negative / (2 * m1Negative);
+                nuStarPositive = 2 * (m1Positive * m1Positive) / m2Positive
+                nuStarNegative = 2 * (m1Negative * m1Negative) / m2Negative
+                lambdaStarPositive = m2Positive / (2 * m1Positive)
+                lambdaStarNegative = m2Negative / (2 * m1Negative)
 
                 # create a central F to approximate the distribution of the non-centrality parameter
                 # return power based on the non-central F
