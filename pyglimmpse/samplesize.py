@@ -47,7 +47,7 @@ def samplesize(test,
     upper_bound_smallest_group_size = starting_smallest_group_size
 
     # find a samplesize which produces power greater than or equal to the desired power
-    while (upper_power.power == np.NaN or upper_power.power <= targetPower)\
+    while (np.isnan(upper_power.power) or upper_power.power <= targetPower)\
             and upper_bound_smallest_group_size < max_n:
         upper_bound_total_N = sum([smallest_group_size * g for g in relative_group_sizes])
 
