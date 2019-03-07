@@ -47,7 +47,7 @@ def samplesize(test,
     upper_bound_smallest_group_size = starting_smallest_group_size
 
     # find a samplesize which produces power greater than or equal to the desired power
-    while (upper_power.power == np.NaN or upper_power.power <= targetPower)\
+    while (np.isnan(upper_power.power) or upper_power.power <= targetPower)\
             and upper_bound_smallest_group_size < max_n:
         upper_bound_total_N = sum([smallest_group_size * g for g in relative_group_sizes])
 
@@ -193,7 +193,7 @@ def _calc_err_sum_square(total_n, rank_x, sigma_star):
 
 def _calc_hypothesis_sum_square(total_n, relative_group_sizes, delta):
     """
-    Calculate hypothesis sums of squares matrix.
+    Calculate hypothesis sum of squares matrix.
 
     :param total_n: total samplesize
     :param relative_group_sizes: A list of ratios of size of the groups in your design.
