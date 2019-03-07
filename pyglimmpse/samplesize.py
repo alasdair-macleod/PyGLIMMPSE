@@ -149,7 +149,8 @@ def samplesize(test,
                                                       alpha=alpha,
                                                       optional_args=optional_args), targetPower)
         total_per_group_n = optimize.bisect(f, smallest_group_size//2, smallest_group_size)
-        total_N = sum([math.ceil(total_per_group_n) * g for g in relative_group_sizes])
+        total_per_group_n = math.ceil(total_per_group_n)
+        total_N = sum([total_per_group_n * g for g in relative_group_sizes])
 
         # recalculate error sum square and hypothesis sum square for result total N
         # this must be recalculated for every samplesize before our power calculation
@@ -176,7 +177,30 @@ def samplesize(test,
                         optional_args=optional_args)
 
     if power.power < targetPower:
-        raise ValueError('Samplesize cannot be calculated. Please check your design.')
+        total_N = sum([(total_per_group_n + 1) * g for g in relative_group_sizes])
+        error_sum_square = _calc_err_sum_square(total_N, rank_X, sigma_star)
+        hypothesis_sum_square = _calc_hypothesis_sum_square(total_N, relative_group_sizes, delta)
+
+        if len(inspect.signature(test).parameters) == 8:
+            power = test(rank_C=rank_C,
+                         rank_U=rank_U,
+                         rank_X=rank_X,
+                         total_N=total_N,
+                         alpha=alpha,
+                         error_sum_square=error_sum_square,
+                         hypothesis_sum_square=hypothesis_sum_square)
+        elif len(inspect.signature(test).parameters) == 9:
+            power = test(rank_C=rank_C,
+                         rank_U=rank_U,
+                         total_N=total_N,
+                         rank_X=rank_X,
+                         error_sum_square=error_sum_square,
+                         hypo_sum_square=hypothesis_sum_square,
+                         sigma_star=sigma_star,
+                         alpha=alpha,
+                         optional_args=optional_args)
+        if power.power < targetPower:
+            raise ValueError('Samplesize cannot be calculated. Please check your design.')
     return total_N, power.power
 
 def _calc_err_sum_square(total_n, rank_x, sigma_star):
