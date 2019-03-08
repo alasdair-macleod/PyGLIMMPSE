@@ -10,16 +10,15 @@ from scipy import optimize
 
 
 def samplesize(test,
-               rank_C,
-               rank_U,
-               alpha,
-               sigma_star,
-               targetPower,
-               rank_X,
-               delta,
+               rank_C: float,
+               rank_X: float,
                relative_group_sizes,
+               alpha: float,
+               sigma_star: np.matrix,
+               delta_es: np.matrix,
+               targetPower,
                starting_smallest_group_size=Constants.STARTING_SAMPLE_SIZE.value,
-               optional_args=None):
+               **kwargs):
     """
     Get the smallest realizable samplesize for the requested target power.
     :param test: The statistical test chosen. This must be pne of the tests available in pyglimmpse.multirep or pyglimmpse.unirep
@@ -39,8 +38,6 @@ def samplesize(test,
     # calculate max valid per group N
     max_n = min(sys.maxsize/rank_X, Constants.MAX_SAMPLE_SIZE.value)
     # declare variables prior to integration
-    error_sum_square = None
-    hypothesis_sum_square = None
     upper_power = Power()
     lower_power = Power()
     smallest_group_size = starting_smallest_group_size
@@ -49,72 +46,36 @@ def samplesize(test,
     # find a samplesize which produces power greater than or equal to the desired power
     while (np.isnan(upper_power.power) or upper_power.power <= targetPower)\
             and upper_bound_smallest_group_size < max_n:
-        upper_bound_total_N = sum([smallest_group_size * g for g in relative_group_sizes])
 
+        upper_bound_total_N = upper_bound_smallest_group_size * sum(relative_group_sizes)
         if upper_bound_total_N >= max_n:
-            upper_bound_total_N = max_n
-
-        # recalculate error sum square and hypothesis sum square for upper bound total N
-        # this must be recalculated for every samplesize before our power calculation
-        error_sum_square = _calc_err_sum_square(upper_bound_total_N, rank_X, sigma_star)
-        hypothesis_sum_square = _calc_hypothesis_sum_square(upper_bound_total_N, relative_group_sizes, delta)
+            upper_bound_smallest_group_size = upper_bound_total_N/max_n
 
         # call power for this sample size
-        if len(inspect.signature(test).parameters) == 8:
-            upper_power = test(rank_C=rank_C,
-                               rank_U=rank_U,
-                               rank_X=rank_X,
-                               total_N=upper_bound_total_N,
-                               alpha=alpha,
-                               error_sum_square=error_sum_square,
-                               hypothesis_sum_square=hypothesis_sum_square)
-        elif len(inspect.signature(test).parameters) == 9:
-            upper_power = test(rank_C=rank_C,
-                               rank_U=rank_U,
-                               total_N=upper_bound_total_N,
-                               rank_X=rank_X,
-                               error_sum_square=error_sum_square,
-                               hypo_sum_square=hypothesis_sum_square,
-                               sigma_star=sigma_star,
-                               alpha=alpha,
-                               optional_args=optional_args)
+        upper_power = test(rank_C=rank_C,
+                           rank_X=rank_X,
+                           relative_group_sizes=relative_group_sizes,
+                           rep_N=upper_bound_smallest_group_size,
+                           alpha=alpha,
+                           sigma_star=sigma_star,
+                           delta_es=delta_es)
         if type(upper_power.power) is str:
             raise ValueError('Upper power is not calculable. Check that your design is realisable.'
                              ' Usually the easies way to do this is to increase sample size')
-        smallest_group_size += smallest_group_size
+        upper_bound_smallest_group_size += upper_bound_smallest_group_size
 
-
-
-    # find a samplesize which produces power greater than or equal to the desired power
     # find a samplesize for the per group n/2 + 1 to define the lower bound of our search.
     #undo last doubling
-    smallest_group_size = smallest_group_size / 2
+    upper_bound_smallest_group_size = upper_bound_smallest_group_size / 2
     # note we are using floor division
-    lower_bound_total_N = sum([(smallest_group_size//2) * g for g in relative_group_sizes])
-
-    # recalculate error sum square and hypothesis sum square for lower bound total N
-    # this must be recalculated for every samplesize before our power calculation
-    error_sum_square = _calc_err_sum_square(lower_bound_total_N, rank_X, sigma_star)
-    hypothesis_sum_square = _calc_hypothesis_sum_square(lower_bound_total_N, relative_group_sizes, delta)
-
-    if len(inspect.signature(test).parameters) == 8:
-        lower_power = test(rank_C=rank_C,
-                           rank_U=rank_U,
-                           rank_X=rank_X,
-                           total_N=lower_bound_total_N,
-                           alpha=alpha,
-                           error_sum_square=error_sum_square,
-                           hypothesis_sum_square=hypothesis_sum_square)
-    elif len(inspect.signature(test).parameters) == 9:
-        lower_power = test(rank_C=rank_C,
-                           rank_U=rank_U,
-                           total_N=lower_bound_total_N,
-                           rank_X=rank_X,
-                           error_sum_square=error_sum_square,
-                           hypo_sum_square=hypothesis_sum_square,
-                           sigma_star=sigma_star,
-                           alpha=alpha,
-                           optional_args=optional_args)
+    lower_bound_smallest_group_size = upper_bound_smallest_group_size//2
+    lower_power = test(rank_C=rank_C,
+                       rank_X=rank_X,
+                       relative_group_sizes=relative_group_sizes,
+                       rep_N=upper_bound_smallest_group_size//2,
+                       alpha=alpha,
+                       sigma_star=sigma_star,
+                       delta_es=delta_es)
 
     #
     # At this point we have valid boundaries for searching.
@@ -126,57 +87,38 @@ def samplesize(test,
     # In this case we bisection search
     #
     if lower_power.power >= targetPower:
-        total_N = lower_bound_total_N
+        total_N = lower_bound_smallest_group_size * sum(relative_group_sizes)
         power = lower_power
     else:
-        f = None
-        if len(inspect.signature(test).parameters) == 8:
-            f = lambda n: subtrtact_target_power(test(rank_C=rank_C,
-                                                      rank_U=rank_U,
-                                                      rank_X=rank_X,
-                                                      total_N=sum([n * g for g in relative_group_sizes]),
-                                                      alpha=alpha,
-                                                      error_sum_square=error_sum_square,
-                                                      hypothesis_sum_square=hypothesis_sum_square), targetPower)
-        elif len(inspect.signature(test).parameters) == 9:
-            f = lambda n: subtrtact_target_power(test(rank_C=rank_C,
-                                                      rank_U=rank_U,
-                                                      total_N=sum([n * g for g in relative_group_sizes]),
-                                                      rank_X=rank_X,
-                                                      error_sum_square=error_sum_square,
-                                                      hypo_sum_square=hypothesis_sum_square,
-                                                      sigma_star=sigma_star,
-                                                      alpha=alpha,
-                                                      optional_args=optional_args), targetPower)
-        total_per_group_n = optimize.bisect(f, smallest_group_size//2, smallest_group_size)
-        total_N = sum([math.ceil(total_per_group_n) * g for g in relative_group_sizes])
+        f = lambda n: subtrtact_target_power(test(rank_C=rank_C,
+                                                  rank_X=rank_X,
+                                                  relative_group_sizes=relative_group_sizes,
+                                                  rep_N=n,
+                                                  alpha=alpha,
+                                                  sigma_star=sigma_star,
+                                                  delta_es=delta_es),
+                                             targetPower)
 
-        # recalculate error sum square and hypothesis sum square for result total N
-        # this must be recalculated for every samplesize before our power calculation
-        error_sum_square = _calc_err_sum_square(total_N, rank_X, sigma_star)
-        hypothesis_sum_square = _calc_hypothesis_sum_square(total_N, relative_group_sizes, delta)
+        total_per_group_n = optimize.bisect(f, lower_bound_smallest_group_size, upper_bound_smallest_group_size)
+        power = test(rank_C=rank_C,
+                     rank_X=rank_X,
+                     relative_group_sizes=relative_group_sizes,
+                     rep_N=total_per_group_n,
+                     alpha=alpha,
+                     sigma_star=sigma_star,
+                     delta_es=delta_es)
 
-        if len(inspect.signature(test).parameters) == 8:
+        if power.power < targetPower:
             power = test(rank_C=rank_C,
-                         rank_U=rank_U,
                          rank_X=rank_X,
-                         total_N=total_N,
+                         relative_group_sizes=relative_group_sizes,
+                         rep_N=total_per_group_n+1,
                          alpha=alpha,
-                         error_sum_square=error_sum_square,
-                         hypothesis_sum_square=hypothesis_sum_square)
-        elif len(inspect.signature(test).parameters) == 9:
-            power =test(rank_C=rank_C,
-                        rank_U=rank_U,
-                        total_N=total_N,
-                        rank_X=rank_X,
-                        error_sum_square=error_sum_square,
-                        hypo_sum_square=hypothesis_sum_square,
-                        sigma_star=sigma_star,
-                        alpha=alpha,
-                        optional_args=optional_args)
-
-    if power.power < targetPower:
-        raise ValueError('Samplesize cannot be calculated. Please check your design.')
+                         sigma_star=sigma_star,
+                         delta_es=delta_es)
+            if power.power < targetPower:
+                raise ValueError('Samplesize cannot be calculated. Please check your design.')
+        total_N = sum([math.ceil(total_per_group_n) * g for g in relative_group_sizes])
     return total_N, power.power
 
 def _calc_err_sum_square(total_n, rank_x, sigma_star):
