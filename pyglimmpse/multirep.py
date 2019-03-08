@@ -732,7 +732,7 @@ def _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N):
 
 
 def _valid_df2_eigenvalues(eval_HINVE: [], df2=1, tolerance=1e-12) -> bool:
-    """check that df2 is positive and thath the eigenvalues have been calculates"""
+    """check that df2 is positive and thath the eigenvalues have been calculated"""
     # df2 need to be > 0 and eigenvalues not missing
     if df2 <= tolerance or np.isnan(df2) or np.isnan(eval_HINVE[0]):
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
@@ -810,7 +810,7 @@ def _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square):
     inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square))
     hei_orth = inverse_error_sum * hypothesis_sum_square * inverse_error_sum.T
     hei_orth_symm = (hei_orth + hei_orth.T) / 2
-    eigenvaluesorted = np.sort(np.linalg.eigvals(hei_orth_symm))[::-1]
+    eigenvaluesorted = np.sort(np.linalg.eigvals(np.around(hei_orth_symm, 12)))[::-1]
     eval = eigenvaluesorted[0:min_rank_C_U]
     return eval
 
