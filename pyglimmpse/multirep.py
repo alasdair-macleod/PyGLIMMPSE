@@ -15,8 +15,6 @@ def hlt_one_moment_null_approximator(rank_C: float,
                                      alpha: float,
                                      sigma_star: np.matrix,
                                      delta_es: np.matrix,
-                                     #??? rank_U: float <- dim of sigma star,
-                                     # total_N = rep_N *relative: float,
                                      tolerance=1e-12) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
