@@ -8,6 +8,7 @@ from pyglimmpse.constants import Constants
 from pyglimmpse.model.epsilon import Epsilon
 from pyglimmpse.model.hypothesis_error import HypothesisError
 from pyglimmpse.model.power import Power
+from pyglimmpse.multirep import calc_properties
 from pyglimmpse.probf import probf
 
 class OptionalArgs(object):
@@ -26,140 +27,131 @@ class OptionalArgs(object):
         self.rank_ip = None
         self.tolerance = 0.00000000000001
 
-def uncorrected(rank_C: int,
-                rank_U: int,
-                total_N: int,
-                rank_X:int,
-                error_sum_square: np.matrix,
-                hypo_sum_square: np.matrix,
-                sigma_star: np.matrix,
+def uncorrected(rank_C: float,
+                rank_X: float,
+                relative_group_sizes,
+                rep_N: float,
                 alpha: float,
+                sigma_star: np.matrix,
+                delta_es: np.matrix,
                 **kwargs) -> Power:
     optional_args = __process_optional_args(**kwargs)
-    return _unirep_power(_uncorrected,
-                         rank_C,
-                         rank_U,
-                         total_N,
-                         rank_X,
-                         error_sum_square,
-                         hypo_sum_square,
-                         sigma_star,
-                         alpha,
-                         optional_args)
+    return _unirep_power(test=_uncorrected,
+                         rank_C=rank_C,
+                         rank_X=rank_X,
+                         relative_group_sizes=relative_group_sizes,
+                         rep_N=rep_N,
+                         alpha=alpha,
+                         sigma_star=sigma_star,
+                         delta_es=delta_es,
+                         optional_args=optional_args)
 
 
-
-def chi_muller(rank_C: int,
-                rank_U: int,
-                total_N: int,
-                rank_X:int,
-                error_sum_square: np.matrix,
-                hypo_sum_square: np.matrix,
-                sigma_star: np.matrix,
-                alpha: float,
+def chi_muller(rank_C: float,
+               rank_X: float,
+               relative_group_sizes,
+               rep_N: float,
+               alpha: float,
+               sigma_star: np.matrix,
+               delta_es: np.matrix,
                **kwargs) -> Power:
     optional_args = __process_optional_args(**kwargs)
     if optional_args.epsilon_estimator == Constants.EPSILON_MULLER1989:
         test = _chi_muller_muller_barton_1989
     else:
         test = _chi_muller_muller_edwards_simpson_taylor_2007
-    return _unirep_power(test,
-                         rank_C,
-                         rank_U,
-                         total_N,
-                         rank_X,
-                         error_sum_square,
-                         hypo_sum_square,
-                         sigma_star,
-                         alpha,
-                         optional_args)
+    return _unirep_power(test=_uncorrected,
+                         rank_C=rank_C,
+                         rank_X=rank_X,
+                         relative_group_sizes=relative_group_sizes,
+                         rep_N=rep_N,
+                         alpha=alpha,
+                         sigma_star=sigma_star,
+                         delta_es=delta_es,
+                         optional_args=optional_args)
 
 
-def geisser_greenhouse(rank_C: int,
-                        rank_U: int,
-                        total_N: int,
-                        rank_X:int,
-                        error_sum_square: np.matrix,
-                        hypo_sum_square: np.matrix,
-                        sigma_star: np.matrix,
-                        alpha: float,
+def geisser_greenhouse(rank_C: float,
+                       rank_X: float,
+                       relative_group_sizes,
+                       rep_N: float,
+                       alpha: float,
+                       sigma_star: np.matrix,
+                       delta_es: np.matrix,
                        **kwargs):
     optional_args = __process_optional_args(**kwargs)
     if optional_args.epsilon_estimator == Constants.EPSILON_MULLER1989:
         test = _geisser_greenhouse_muller_barton_1989
     else:
         test = _geisser_greenhouse_muller_edwards_simpson_taylor_2007
-
-    return _unirep_power(test,
-                         rank_C,
-                         rank_U,
-                         total_N,
-                         rank_X,
-                         error_sum_square,
-                         hypo_sum_square,
-                         sigma_star,
-                         alpha,
-                         optional_args)
+    return _unirep_power(test=_uncorrected,
+                         rank_C=rank_C,
+                         rank_X=rank_X,
+                         relative_group_sizes=relative_group_sizes,
+                         rep_N=rep_N,
+                         alpha=alpha,
+                         sigma_star=sigma_star,
+                         delta_es=delta_es,
+                         optional_args=optional_args)
 
 
-def hyuhn_feldt(rank_C: int,
-                rank_U: int,
-                total_N: int,
-                rank_X:int,
-                error_sum_square: np.matrix,
-                hypo_sum_square: np.matrix,
-                sigma_star: np.matrix,
+def hyuhn_feldt(rank_C: float,
+                rank_X: float,
+                relative_group_sizes,
+                rep_N: float,
                 alpha: float,
+                sigma_star: np.matrix,
+                delta_es: np.matrix,
                 **kwargs):
     optional_args = __process_optional_args(**kwargs)
     if optional_args.epsilon_estimator == Constants.EPSILON_MULLER1989:
         test = _hyuhn_feldt_muller_barton_1989
     else:
         test = _hyuhn_feldt_muller_edwards_simpson_taylor_2007
-    return _unirep_power(test,
-                         rank_C,
-                         rank_U,
-                         total_N,
-                         rank_X,
-                         error_sum_square,
-                         hypo_sum_square,
-                         sigma_star,
-                         alpha,
-                         optional_args)
+    return _unirep_power(test=_uncorrected,
+                         rank_C=rank_C,
+                         rank_X=rank_X,
+                         relative_group_sizes=relative_group_sizes,
+                         rep_N=rep_N,
+                         alpha=alpha,
+                         sigma_star=sigma_star,
+                         delta_es=delta_es,
+                         optional_args=optional_args)
 
 
-def box(rank_C: int,
-        rank_U: int,
-        total_N: int,
-        rank_X:int,
-        error_sum_square: np.matrix,
-        hypo_sum_square: np.matrix,
-        sigma_star: np.matrix,
+def box(rank_C: float,
+        rank_X: float,
+        relative_group_sizes,
+        rep_N: float,
         alpha: float,
+        sigma_star: np.matrix,
+        delta_es: np.matrix,
         **kwargs):
     optional_args = __process_optional_args(**kwargs)
-    return _unirep_power(_box,
-                         rank_C,
-                         rank_U,
-                         total_N,
-                         rank_X,
-                         error_sum_square,
-                         hypo_sum_square,
-                         sigma_star,
-                         alpha,
-                         optional_args)
+    return _unirep_power(test=_uncorrected,
+                         rank_C=rank_C,
+                         rank_X=rank_X,
+                         relative_group_sizes=relative_group_sizes,
+                         rep_N=rep_N,
+                         alpha=alpha,
+                         sigma_star=sigma_star,
+                         delta_es=delta_es,
+                         optional_args=optional_args)
 
 def _unirep_power(test,
-                  rank_C: int,
-                  rank_U: int,
-                  total_N: int,
-                  rank_X: int,
-                  error_sum_square: np.matrix,
-                  hypo_sum_square: np.matrix,
-                  sigma_star: np.matrix,
+                  rank_C: float,
+                  rank_X: float,
+                  relative_group_sizes,
+                  rep_N: float,
                   alpha: float,
+                  sigma_star: np.matrix,
+                  delta_es: np.matrix,
                   optional_args: OptionalArgs):
-
+    error_sum_square, hypo_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     if len(inspect.signature(test).parameters) == 0:
         expected_epsilon = test()
     elif len(inspect.signature(test).parameters) == 1:
@@ -173,7 +165,7 @@ def _unirep_power(test,
                                           rank_U,
                                           total_N,
                                           rank_X,
-                                          error_sum_square,
+                                          sigma_star,
                                           hypo_sum_square,
                                           expected_epsilon,
                                           epsilon.eps,
@@ -184,7 +176,7 @@ def _unirep_power(test,
                                               rank_U,
                                               total_N,
                                               rank_X,
-                                              error_sum_square,
+                                              sigma_star,
                                               hypo_sum_square,
                                               expected_epsilon,
                                               epsilon,
@@ -197,7 +189,7 @@ def _unirep_power(test,
                                                          rank_U,
                                                          total_N,
                                                          rank_X,
-                                                         error_sum_square,
+                                                         sigma_star,
                                                          hypo_sum_square,
                                                          expected_epsilon,
                                                          epsilon,
@@ -245,7 +237,7 @@ def _unirep_power_known_sigma(rank_C,
                               rank_U,
                               total_N,
                               rank_X,
-                              error_sum_square,
+                              sigma_star,
                               hypo_sum_square,
                               expected_epsilon,
                               epsilon,
@@ -305,7 +297,6 @@ def _unirep_power_known_sigma(rank_C,
     nue = total_N - rank_X
     undf1, undf2 = _calc_undf1_undf2(optional_args.approximation, expected_epsilon, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
-    sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
     e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(epsilon, expected_epsilon, hypothesis_error, rank_C, rank_U, optional_args.unirepmethod)
     omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
@@ -338,7 +329,7 @@ def _unirep_power_estimated_sigma(rank_C,
                                   rank_U,
                                   total_N,
                                   rank_X,
-                                  error_sum_square,
+                                  sigma_star,
                                   hypo_sum_square,
                                   expected_epsilon,
                                   epsilon,
@@ -408,7 +399,6 @@ def _unirep_power_estimated_sigma(rank_C,
     nue = total_N - rank_X
     undf1, undf2 = _calc_undf1_undf2(optional_args.approximation, expected_epsilon, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
-    sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
     cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(optional_args.approximation, epsilon, hypothesis_error, nue, rank_C, rank_U, optional_args.unirepmethod, optional_args.n_est, optional_args.rank_est)
     # Error checking
@@ -440,7 +430,7 @@ def _unirep_power_known_sigma_internal_pilot(rank_C,
                                              rank_U,
                                              total_N,
                                              rank_X,
-                                             error_sum_square,
+                                             sigma_star,
                                              hypo_sum_square,
                                              expected_epsilon,
                                              epsilon,
@@ -509,7 +499,6 @@ def _unirep_power_known_sigma_internal_pilot(rank_C,
     nue = total_N - rank_X
     undf1, undf2 = _calc_undf1_undf2(optional_args.approximation, expected_epsilon, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
-    sigma_star = error_sum_square / nue
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
     e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(optional_args.approximation, expected_epsilon, epsilon, hypothesis_error, sigmastareval, rank_C, rank_U, optional_args.n_ip, optional_args.rank_ip)
 

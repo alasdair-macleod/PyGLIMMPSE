@@ -1,15 +1,11 @@
 from unittest import TestCase
 import numpy as np
-from pyglimmpse.finv import finv
 
 from pyglimmpse import unirep
 from pyglimmpse.model import epsilon
 
 from pyglimmpse.constants import Constants
-from pyglimmpse.input import Option
-from pyglimmpse.model.epsilon import Epsilon
-from pyglimmpse.unirep import _err_checking, _calc_multipliers_est_sigma, _calc_undf1_undf2, \
-    _geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon, OptionalArgs
+from pyglimmpse.unirep import _geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon, OptionalArgs
 
 
 class TestUnirep(TestCase):
@@ -135,7 +131,7 @@ class TestUnirep(TestCase):
                                                       rank_U=rank_U,
                                                       total_N=total_N,
                                                       rank_X=rank_X,
-                                                      error_sum_square=error_sum_square,
+                                                      sigma_star=error_sum_square/(total_N-rank_X),
                                                       hypo_sum_square=hypo_sum_square,
                                                       expected_epsilon=exeps,
                                                       epsilon=eps,
@@ -200,7 +196,7 @@ class TestUnirep(TestCase):
                                                       rank_U=rank_U,
                                                       total_N=total_N,
                                                       rank_X=rank_X,
-                                                      error_sum_square=error_sum_square,
+                                                      sigma_star=error_sum_square/(total_N-rank_X),
                                                       hypo_sum_square=hypo_sum_square,
                                                       expected_epsilon=exeps,
                                                       epsilon=eps,
