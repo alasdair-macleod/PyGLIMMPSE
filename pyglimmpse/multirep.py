@@ -807,14 +807,20 @@ def calc_properties(delta_es, rank_X, relative_group_sizes, rep_N, sigma_star):
 
 def _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square):
     """ Calculate eigenvalues for H*INV(E) for Multi-rep"""
+    # inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square))
+    # hei_orth = inverse_error_sum * hypothesis_sum_square * inverse_error_sum.T
+    #
+    #
+    # # we use a singular value decomposition here rather than calvulating eigenvalues
+    # # for numerical stability. We can do this because hei_orth is a square
+    # # symmetric non-negative definite matrix.
+    # eval = np.linalg.svd(hei_orth, full_matrices=True, compute_uv=False)
+
     inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square))
     hei_orth = inverse_error_sum * hypothesis_sum_square * inverse_error_sum.T
-
-
-    # we use a singular value decomposition here rather than calvulating eigenvalues
-    # for numerical stability. We can do this because hei_orth is a square
-    # symmetric non-negative definite matrix.
-    eval = np.linalg.svd(hei_orth, full_matrices=True, compute_uv=False)
+    hei_orth_symm = (hei_orth + hei_orth.T) / 2
+    eigenvaluesorted = np.sort(np.linalg.eigvals(hei_orth_symm))[::-1]
+    eval = np.real(eigenvaluesorted[0:min_rank_C_U])
     return eval
 
 def calc_error_sum_square(total_n, rank_x, sigma_star):
