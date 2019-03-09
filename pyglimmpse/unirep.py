@@ -60,7 +60,7 @@ def chi_muller(rank_C: float,
         test = _chi_muller_muller_barton_1989
     else:
         test = _chi_muller_muller_edwards_simpson_taylor_2007
-    return _unirep_power(test=_uncorrected,
+    return _unirep_power(test=test,
                          rank_C=rank_C,
                          rank_X=rank_X,
                          relative_group_sizes=relative_group_sizes,
@@ -84,7 +84,7 @@ def geisser_greenhouse(rank_C: float,
         test = _geisser_greenhouse_muller_barton_1989
     else:
         test = _geisser_greenhouse_muller_edwards_simpson_taylor_2007
-    return _unirep_power(test=_uncorrected,
+    return _unirep_power(test=test,
                          rank_C=rank_C,
                          rank_X=rank_X,
                          relative_group_sizes=relative_group_sizes,
@@ -108,7 +108,7 @@ def hyuhn_feldt(rank_C: float,
         test = _hyuhn_feldt_muller_barton_1989
     else:
         test = _hyuhn_feldt_muller_edwards_simpson_taylor_2007
-    return _unirep_power(test=_uncorrected,
+    return _unirep_power(test=test,
                          rank_C=rank_C,
                          rank_X=rank_X,
                          relative_group_sizes=relative_group_sizes,
@@ -128,7 +128,7 @@ def box(rank_C: float,
         delta_es: np.matrix,
         **kwargs):
     optional_args = __process_optional_args(**kwargs)
-    return _unirep_power(test=_uncorrected,
+    return _unirep_power(test=_box,
                          rank_C=rank_C,
                          rank_X=rank_X,
                          relative_group_sizes=relative_group_sizes,
