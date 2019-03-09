@@ -809,9 +809,12 @@ def _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square):
     """ Calculate eigenvalues for H*INV(E) for Multi-rep"""
     inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square))
     hei_orth = inverse_error_sum * hypothesis_sum_square * inverse_error_sum.T
-    hei_orth_symm = (hei_orth + hei_orth.T) / 2
-    eigenvaluesorted = np.sort(np.linalg.eigvals(np.around(hei_orth_symm, 12)))[::-1]
-    eval = eigenvaluesorted[0:min_rank_C_U]
+
+
+    # we use a singular value decomposition here rather than calvulating eigenvalues
+    # for numerical stability. We can do this because hei_orth is a square
+    # symmetric non-negative definite matrix.
+    eval = np.linalg.svd(hei_orth, full_matrices=True, compute_uv=False)
     return eval
 
 def calc_error_sum_square(total_n, rank_x, sigma_star):
