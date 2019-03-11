@@ -59,16 +59,16 @@ class NonCentralityDistribution(object):
     #      
     def __init__(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, thetaDiff, sigmaStar, stddevG, exact):
         """ generated source for method __init__ """
-        print("CREATING NonCentralityDistribution")
-        print("begin parameters")
-        print("test: " + test)
-        print("FEssence:", FEssence)
-        print("FtFinverse:", FtFinverse)
-        print("perGroupN: ", perGroupN)
-        print("CFixedRand:", CFixed + CRand)
-        print("thetaNull:", thetaDiff)
-        print("exact: ", exact)
-        print("end parameters")
+        # print("CREATING NonCentralityDistribution")
+        # print("begin parameters")
+        # print("test: " + test)
+        # print("FEssence:", FEssence)
+        # print("FtFinverse:", FtFinverse)
+        # print("perGroupN: ", perGroupN)
+        # print("CFixedRand:", CFixed + CRand)
+        # print("thetaNull:", thetaDiff)
+        # print("exact: ", exact)
+        # print("end parameters")
         self.initialize(
             test=test,
             FEssence=FEssence,
@@ -109,6 +109,7 @@ class NonCentralityDistribution(object):
         #        and if so, does it matter?
         self.N = float(FEssence.shape[0]) * perGroupN
         self.exact = exact
+        self.errors = []
         try:
             #  TODO: need to calculate H0, need to adjust H1 for Unirep
             #  get design matrix for fixed parameters only
@@ -134,7 +135,8 @@ class NonCentralityDistribution(object):
             self.FT1 = np.linalg.cholesky(self.T1)
             print("FT1 = Cholesky decomposition (L) of T1", self.FT1)
             #calculate theta difference
-            C = np.concatenate((np.array(CFixed), np.array(CRand)), axis=1)
+            # TODO I think CRand should already be an array
+            C = np.concatenate((np.array(CFixed), np.array([[CRand]])), axis=1)
             print("thetaDiff = thetaHat - thetaNull", thetaDiff)
 
             #TODO: specific to HLT or UNIREP
@@ -322,7 +324,7 @@ class NonCentralityDistribution(object):
     def getSigmaStarInverse(self, sigma_star, test):
         """ generated source for method getSigmaStarInverse """
         if not self.isPositiveDefinite(sigma_star):
-            raise Exception("Sigma star is not positive definite.")
+            self.errors.append(Constants.ERR_NOT_POSITIVE_DEFINITE)
         if test == Constants.HLT.value:
             return np.linalg.inv(sigma_star)
         else:
