@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-from scipy.optimize import optimize
+from scipy import optimize
 from scipy.stats import f
 
 from pyglimmpse.WeightedSumOfNoncentralChiSquaresDistribution import WeightedSumOfNoncentralChiSquaresDistribution
@@ -10,22 +10,6 @@ from pyglimmpse.probf import probf
 
 """ generated source for module NonCentralityDistribution """
 from pyglimmpse.chisquareterm import ChiSquareTerm
-
-
-class NonCentralityQuantileFunction():
-    """ generated source for class NonCentralityQuantileFunction """
-    quantile = float()
-
-    def __init__(self, quantile):
-        """ generated source for method __init__ """
-        self.quantile = quantile
-
-    def value(self, n):
-        """ generated source for method value """
-        try:
-            return self.cdf(n) - self.quantile
-        except Exception as pe:
-            raise Exception(pe.getMessage(), pe)
 
 class NonCentralityDistribution(object):
     """ generated source for class NonCentralityDistribution """
@@ -124,7 +108,8 @@ class NonCentralityDistribution(object):
             FtFinverse = np.linalg.inv(FEssence.T * FEssence)
             print("FEssence", FEssence)
             print("FtFinverse = (FEssence transpose * FEssence) inverse", FtFinverse)
-            PPt = Cfixed * self.FtFinverse * (1 / self.perGroupN) * Cfixed.T
+            # PPt = Cfixed * self.FtFinverse * (1 / self.perGroupN) * Cfixed.T
+            PPt = Cfixed * FtFinverse * (1 / self.perGroupN) * Cfixed.T
             print("Cfixed", Cfixed)
             print("n = ", self.perGroupN)
             print("PPt = Cfixed * FtF inverse * (1/n) * Cfixed transpose", PPt)
@@ -136,7 +121,7 @@ class NonCentralityDistribution(object):
             print("FT1 = Cholesky decomposition (L) of T1", self.FT1)
             #calculate theta difference
             # TODO I think CRand should already be an array
-            C = np.concatenate((np.array(CFixed), np.array([[CRand]])), axis=1)
+            # C = np.concatenate((np.array(CFixed), np.array(CRand)), axis=1)
             print("thetaDiff = thetaHat - thetaNull", thetaDiff)
 
             #TODO: specific to HLT or UNIREP
@@ -308,24 +293,28 @@ class NonCentralityDistribution(object):
             print("exiting cdf abnormally", e)
             raise Exception(e)
 
-    def inverseCDF(self, probability):
+    def inverseCDF(self, quantile):
         """ generated source for method inverseCDF """
         if self.H1 <= 0:
             return 0
-        quantFunc = self.NonCentralityQuantileFunction(probability)
+        quantFunc = lambda n: quantile -  self.cdf(n)
         try:
-            return optimize.bisect(f=quantFunc,
-                                   a=self.H0,
-                                   b=self.H1,
-                                   maxiter=self.MAX_ITERATIONS)
+            return optimize.bisect(quantFunc, self.H0, self.H1)
         except Exception as e:
-            raise Exception("Failed to determine non-centrality quantile: " + e.getMessage())
+            raise Exception("Failed to determine non-centrality quantile: " + e.args[0])
+
+    def NonCentralityQuantileFunction(self, quantile):
+        """ generated source for class NonCentralityQuantileFunction """
+        try:
+            return self.cdf(n) - quantile
+        except Exception as pe:
+            raise Exception(pe, pe)
 
     def getSigmaStarInverse(self, sigma_star, test):
         """ generated source for method getSigmaStarInverse """
         if not self.isPositiveDefinite(sigma_star):
             self.errors.append(Constants.ERR_NOT_POSITIVE_DEFINITE)
-        if test == Constants.HLT.value:
+        if test == Constants.HLT or Constants.HLT.value:
             return np.linalg.inv(sigma_star)
         else:
             # stat should only be UNIREP (uncorrected, box, GG, or HF) at this point
