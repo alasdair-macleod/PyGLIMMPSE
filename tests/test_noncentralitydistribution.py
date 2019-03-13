@@ -12,10 +12,9 @@ class TestNoncentralityDist(TestCase):
         a = NonCentralityDistribution(
             test=Constants.HLT.value,
             FEssence=np.matrix([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
-            FtFinverse=np.matrix([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).T*np.matrix([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
             perGroupN=5,
             CFixed=np.matrix([[1.0, -1.0, 0.0],[1.0, 0.0, -1.0]]),
-            CRand=np.matrix([[1.0], [1.0]]),
+            CGaussian=np.matrix([[1.0], [1.0]]),
             thetaDiff=(np.concatenate((np.array(np.matrix([[1.0, -1.0, 0.0],[1.0, 0.0, -1.0]])), np.array(np.matrix([[1.0], [1.0]]))), axis=1) * np.matrix([[1.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.9, 0.0]]) * np.matrix([[1.0, 0.0],[0.0, 1.0]])) -np.matrix([[0.0, 0.0], [0.0, 0.0]]),
             stddevG=np.matrix([1.0]),
             sigmaStar= np.matrix([[0.19,0.0],[0.0,1.0]]),
@@ -73,10 +72,9 @@ class TestNoncentralityDist(TestCase):
         a = NonCentralityDistribution(
             test=Constants.HLT.value,
             FEssence=FEssence,
-            FtFinverse=FEssence,
             perGroupN=perGroupN,
             CFixed=Cf,
-            CRand=Cg,
+            CGaussian=Cg,
             thetaDiff=thetaDiff,
             stddevG=stdevG,
             sigmaStar= sigmaStar,

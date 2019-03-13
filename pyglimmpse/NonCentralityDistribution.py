@@ -41,25 +41,14 @@ class NonCentralityDistribution(object):
     #      * otherwise a Satterthwaite style approximation is used.
     #      * @throws IllegalArgumentException
     #      
-    def __init__(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, thetaDiff, sigmaStar, stddevG, exact):
+    def __init__(self, test, FEssence, perGroupN, CFixed, CGaussian, thetaDiff, sigmaStar, stddevG, exact):
         """ generated source for method __init__ """
-        # print("CREATING NonCentralityDistribution")
-        # print("begin parameters")
-        # print("test: " + test)
-        # print("FEssence:", FEssence)
-        # print("FtFinverse:", FtFinverse)
-        # print("perGroupN: ", perGroupN)
-        # print("CFixedRand:", CFixed + CRand)
-        # print("thetaNull:", thetaDiff)
-        # print("exact: ", exact)
-        # print("end parameters")
         self.initialize(
             test=test,
             FEssence=FEssence,
-            FtFinverse=FtFinverse,
             perGroupN=perGroupN,
-            CFixed=CFixed,
-            CRand=CRand,
+            Cfixed=CFixed,
+            CGaussian=CGaussian,
             thetaDiff=thetaDiff,
             sigmaStar=sigmaStar,
             stddevG = stddevG,
@@ -68,7 +57,7 @@ class NonCentralityDistribution(object):
     # 
     #      * Pre-calculate intermediate matrices, perform setup, etc.
     #      
-    def initialize(self, test, FEssence, FtFinverse, perGroupN, CFixed, CRand, thetaDiff, sigmaStar, stddevG, exact):
+    def initialize(self, test, FEssence, perGroupN, Cfixed, CGaussian, thetaDiff, sigmaStar, stddevG, exact):
         """ generated source for method initialize """
         print("entering initialize")
         #  reset member variables
@@ -79,14 +68,6 @@ class NonCentralityDistribution(object):
         self.H0 = 0
         self.sStar = 0
         #  cache inputs
-        self.test = test
-        self.FEssence = FEssence
-        self.FtFinverse = FtFinverse
-        self.perGroupN = perGroupN
-        self.CFixed = CFixed
-        self.CRand = CRand
-        self.thetaDiff = thetaDiff
-        self.sigmaStar = sigmaStar
         #  calculate intermediate matrices
         #         RealMatrix FEssence = params.getDesignEssence().getFullDesignMatrixFixed();
         #  TODO: do we ever get here with values that can cause integer overflow,
@@ -101,17 +82,15 @@ class NonCentralityDistribution(object):
             self.qF = FEssence.shape[1]
             #  a = CFixedRand.getCombinedMatrix().getRowDimension();
             #  get fixed contrasts
-            Cfixed = self.CFixed
-            CGaussian = CRand
 
             #  build intermediate terms h1, S
             FtFinverse = np.linalg.inv(FEssence.T * FEssence)
             print("FEssence", FEssence)
             print("FtFinverse = (FEssence transpose * FEssence) inverse", FtFinverse)
             # PPt = Cfixed * self.FtFinverse * (1 / self.perGroupN) * Cfixed.T
-            PPt = Cfixed * FtFinverse * (1 / self.perGroupN) * Cfixed.T
+            PPt = Cfixed * FtFinverse * (1 / perGroupN) * Cfixed.T
             print("Cfixed", Cfixed)
-            print("n = ", self.perGroupN)
+            print("n = ", perGroupN)
             print("PPt = Cfixed * FtF inverse * (1/n) * Cfixed transpose", PPt)
 
             self.T1 = self.forceSymmetric(np.linalg.inv(PPt))
