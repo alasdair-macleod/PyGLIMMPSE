@@ -15,7 +15,8 @@ def hlt_one_moment_null_approximator(rank_C: float,
                                      alpha: float,
                                      sigma_star: np.matrix,
                                      delta_es: np.matrix,
-                                     tolerance=1e-12) -> Power:
+                                     tolerance=1e-12,
+                                    **kwargs) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -71,7 +72,8 @@ def hlt_two_moment_null_approximator(rank_C: float,
                                      alpha: float,
                                      sigma_star: np.matrix,
                                      delta_es: np.matrix,
-                                     tolerance=1e-12) -> Power:
+                                     tolerance=1e-12,
+                                     **kwargs) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -128,7 +130,8 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float,
                                                   alpha: float,
                                                   sigma_star: np.matrix,
                                                   delta_es: np.matrix,
-                                                  tolerance=1e-12) -> Power:
+                                                  tolerance=1e-12,
+                                                  **kwargs) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -187,7 +190,8 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float,
                                                   alpha: float,
                                                   sigma_star: np.matrix,
                                                   delta_es: np.matrix,
-                                                  tolerance=1e-12) -> Power:
+                                                  tolerance=1e-12,
+                                                  **kwargs) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -234,7 +238,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float,
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, **kwargs)
     else:
         return _undefined_power()
 
@@ -246,7 +250,8 @@ def pbt_one_moment_null_approx(rank_C: float,
                                alpha: float,
                                sigma_star: np.matrix,
                                delta_es: np.matrix,
-                               tolerance=1e-12) -> Power:
+                               tolerance=1e-12,
+                               **kwargs) -> Power:
     """
     This function calculates power for Pillai-Bartlett trace based on the F approx. method.
     V is the "population value" of PBT.
@@ -309,7 +314,8 @@ def pbt_two_moment_null_approx(rank_C: float,
                                alpha: float,
                                sigma_star: np.matrix,
                                delta_es: np.matrix,
-                               tolerance=1e-12) -> Power:
+                               tolerance=1e-12,
+                               **kwargs) -> Power:
     """
         This function calculates power for Pillai-Bartlett trace based on the F approx. method.
         V is the "population value" of PBT.
@@ -372,7 +378,8 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float,
                                             alpha: float,
                                             sigma_star: np.matrix,
                                             delta_es: np.matrix,
-                                            tolerance=1e-12) -> Power:
+                                            tolerance=1e-12,
+                                            **kwargs) -> Power:
     """
         This function calculates power for Pillai-Bartlett trace based on the F approx. method.
         V is the "population value" of PBT.
@@ -432,7 +439,8 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float,
                                             alpha: float,
                                             sigma_star: np.matrix,
                                             delta_es: np.matrix,
-                                            tolerance=1e-12) -> Power:
+                                            tolerance=1e-12,
+                                            **kwargs) -> Power:
     """
     This function calculates power for Pillai-Bartlett trace based on the F approx. method.
     V is the "population value" of PBT.
@@ -495,7 +503,8 @@ def wlk_two_moment_null_approx(rank_C: float,
                                alpha: float,
                                sigma_star: np.matrix,
                                delta_es: np.matrix,
-                               tolerance=1e-12) -> Power:
+                               tolerance=1e-12,
+                               **kwargs) -> Power:
     error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
                                                                                rank_X=rank_X,
                                                                                relative_group_sizes=relative_group_sizes,
@@ -549,7 +558,8 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
                                             alpha: float,
                                             sigma_star: np.matrix,
                                             delta_es: np.matrix,
-                                            tolerance=1e-12) -> Power:
+                                            tolerance=1e-12,
+                                            **kwargs) -> Power:
     """
     This function calculates power for Wilk's Lambda based on
     the F approx. method.  W is the "population value" of Wilks` Lambda,
@@ -629,7 +639,8 @@ def special(rank_C: float,
             alpha: float,
             sigma_star: np.matrix,
             delta_es: np.matrix,
-            tolerance=1e-12) -> Power:
+            tolerance=1e-12,
+            **kwargs) -> Power:
     """
     This function performs two disparate tasks. For B=1 (UNIVARIATE
     TEST), the powers are calculated more efficiently. For A=1 (SPECIAL
@@ -681,10 +692,19 @@ def _df1_rank_c_u(rank_C: float, rank_U: float) -> float:
     return df1
 
 
-def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
+def _multi_power(alpha: float,
+                 df1: float,
+                 df2: float,
+                 omega: float,
+                 **kwargs) -> Power:
     """ The common part for these four multirep methods computing power"""
+    for key, value in kwargs.items():
+        if key == 'noncentrality_distribution':
+            omega = __calc_quantile_omega(value, 0.5)
+
     fcrit = finv(1 - alpha, df1, df2)
     prob, fmethod = probf(fcrit, df1, df2, omega)
+
     if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
         powerval = alpha
     else:
@@ -692,6 +712,11 @@ def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
     powerval = float(powerval)
     power = Power(powerval, omega, fmethod)
     return power
+
+
+def __calc_quantile_omega(noncentrality_distribution, quantile):
+    omega = noncentrality_distribution.inverseCDF(0.5)
+    return omega
 
 
 def _trace(eval_HINVE, rank_X, total_N):
