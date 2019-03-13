@@ -67,11 +67,6 @@ class NonCentralityDistribution(object):
         self.mzSq = None
         self.H0 = 0
         self.sStar = 0
-        #  cache inputs
-        #  calculate intermediate matrices
-        #         RealMatrix FEssence = params.getDesignEssence().getFullDesignMatrixFixed();
-        #  TODO: do we ever get here with values that can cause integer overflow,
-        #        and if so, does it matter?
         self.N = float(FEssence.shape[0]) * perGroupN
         self.exact = exact
         self.errors = []
