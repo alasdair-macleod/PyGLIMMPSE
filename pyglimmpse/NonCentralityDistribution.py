@@ -59,7 +59,6 @@ class NonCentralityDistribution(object):
     #      
     def initialize(self, test, FEssence, perGroupN, Cfixed, CGaussian, thetaDiff, sigmaStar, stddevG, exact):
         """ generated source for method initialize """
-        print("entering initialize")
         #  reset member variables
         self.T1 = None
         self.FT1 = None
@@ -80,37 +79,18 @@ class NonCentralityDistribution(object):
 
             #  build intermediate terms h1, S
             FtFinverse = np.linalg.inv(FEssence.T * FEssence)
-            print("FEssence", FEssence)
-            print("FtFinverse = (FEssence transpose * FEssence) inverse", FtFinverse)
-            # PPt = Cfixed * self.FtFinverse * (1 / self.perGroupN) * Cfixed.T
             PPt = Cfixed * FtFinverse * (1 / perGroupN) * Cfixed.T
-            print("Cfixed", Cfixed)
-            print("n = ", perGroupN)
-            print("PPt = Cfixed * FtF inverse * (1/n) * Cfixed transpose", PPt)
-
             self.T1 = self.forceSymmetric(np.linalg.inv(PPt))
-            print("T1 = PPt inverse", self.T1)
-
             self.FT1 = np.linalg.cholesky(self.T1)
-            print("FT1 = Cholesky decomposition (L) of T1", self.FT1)
             #calculate theta difference
             # TODO I think CRand should already be an array
             # C = np.concatenate((np.array(CFixed), np.array(CRand)), axis=1)
-            print("thetaDiff = thetaHat - thetaNull", thetaDiff)
-
             #TODO: specific to HLT or UNIREP
             sigmaStarInverse = self.getSigmaStarInverse(sigmaStar, test)
-            print("sigmaStarInverse", sigmaStarInverse)
-
             H1matrix = thetaDiff.T * self.T1 * thetaDiff * sigmaStarInverse
-            print("H1matrix = thetaDiff transpose * T1 * thetaDiff * sigmaStarInverse", H1matrix)
             self.H1 = np.trace(H1matrix)
-            print("H1 = ", self.H1)
-
             # Matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s.
             self.S = self.FT1.T * thetaDiff * sigmaStarInverse * thetaDiff.T * self.FT1 * (1 / self.H1)
-            print("S = FT1 transpose * thetaDiff * sigmaStar inverse * thetaDiff transpose * FT1 * (1/H1)", self.S)
-
             # We use the S matrix to generate the F-critical, numerical df's, and denominator df's
             # for a central F distribution.  The resulting F distribution is used as an approximation
             # for the distribution of the non-centrality parameter.
@@ -141,7 +121,6 @@ class NonCentralityDistribution(object):
                     self.mzSq[i, j] = entry * entry
                     j += 1
                 i += 1
-                print("exiting initialize normally")
         except Exception as e:
             raise e
 
