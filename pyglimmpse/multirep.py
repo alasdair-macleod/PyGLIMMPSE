@@ -16,7 +16,7 @@ def hlt_one_moment_null_approximator(rank_C: float,
                                      sigma_star: np.matrix,
                                      delta_es: np.matrix,
                                      tolerance=1e-12,
-                                    **kwargs) -> Power:
+                                     **kwargs) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"

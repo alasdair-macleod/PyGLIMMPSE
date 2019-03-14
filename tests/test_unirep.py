@@ -115,17 +115,6 @@ class TestUnirep(TestCase):
         exeps = 0.7203684
         eps = 0.7203684
 
-        optional_args = OptionalArgs()
-        optional_args.approximation = approximation
-        optional_args.epsilon_estimator = Constants.EPSILON_MULLER2004
-        optional_args.unirepmethod = Constants.SIGMA_KNOWN
-        optional_args.n_est = n_est
-        optional_args.rank_est = rank_est
-        optional_args.alpha_cl = alpha_cl
-        optional_args.alpha_cu = alpha_cu
-        optional_args.n_ip = 1
-        optional_args.rank_ip = 1
-        optional_args.tolerance = tolerance
 
         result = unirep._unirep_power_estimated_sigma(rank_C=rank_C,
                                                       rank_U=rank_U,
@@ -136,7 +125,16 @@ class TestUnirep(TestCase):
                                                       expected_epsilon=exeps,
                                                       epsilon=eps,
                                                       alpha=alpha,
-                                                      optional_args=optional_args)
+                                                      approximation=approximation,
+                                                      epsilon_estimator=Constants.EPSILON_MULLER2004,
+                                                      unirepmethod=Constants.SIGMA_KNOWN,
+                                                      n_est=n_est,
+                                                      rank_est=rank_est,
+                                                      alpha_cl=alpha_cl,
+                                                      alpha_cu=alpha_cu,
+                                                      n_ip=1,
+                                                      rank_ip=1,
+                                                      tolerance=tolerance)
         actual = result.power
         self.assertAlmostEqual(actual, expected, places=5)
 
@@ -180,18 +178,6 @@ class TestUnirep(TestCase):
         exeps = 0.7203684
         eps = 0.7203684
 
-        optional_args = OptionalArgs()
-        optional_args.approximation = approximation
-        optional_args.epsilon_estimator = Constants.EPSILON_MULLER2004
-        optional_args.unirepmethod = Constants.SIGMA_KNOWN
-        optional_args.n_est = n_est
-        optional_args.rank_est = rank_est
-        optional_args.alpha_cl = alpha_cl
-        optional_args.alpha_cu = alpha_cu
-        optional_args.n_ip = 1
-        optional_args.rank_ip = 1
-        optional_args.tolerance = tolerance
-
         result = unirep._unirep_power_estimated_sigma(rank_C=rank_C,
                                                       rank_U=rank_U,
                                                       total_N=total_N,
@@ -201,6 +187,15 @@ class TestUnirep(TestCase):
                                                       expected_epsilon=exeps,
                                                       epsilon=eps,
                                                       alpha=alpha,
-                                                      optional_args=optional_args)
+                                                      approximation=approximation,
+                                                      epsilon_estimator=Constants.EPSILON_MULLER2004.value,
+                                                      unirepmethod=Constants.SIGMA_KNOWN.value,
+                                                      n_est=n_est,
+                                                      rank_est=rank_est,
+                                                      alpha_cl=alpha_cl,
+                                                      alpha_cu=alpha_cu,
+                                                      n_ip=1,
+                                                      rank_ip=1,
+                                                      tolerance=tolerance)
         actual = result.power
         self.assertAlmostEqual(actual, expected, places=5)
