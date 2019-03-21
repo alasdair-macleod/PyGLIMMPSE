@@ -8,7 +8,7 @@ from pyglimmpse.constants import Constants
 from pyglimmpse.model.epsilon import Epsilon
 from pyglimmpse.model.hypothesis_error import HypothesisError
 from pyglimmpse.model.power import Power
-from pyglimmpse.multirep import calc_properties
+from pyglimmpse.multirep import calc_properties, __calc_quantile_omega
 from pyglimmpse.probf import probf
 
 class OptionalArgs(object):
@@ -303,9 +303,24 @@ def _unirep_power_known_sigma(rank_C,
     e_1_2 = _err_checking(e_1_2, rank_U)
     fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
 
-    # 2. Muller, Edwards & Taylor 2002 and Muller Barton 1989 CDF approx
-    # UCDFTEMP[]=4 reverts to UCDFTEMP[]=2 if exact CDF fails
-    df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
+    noncentrality_dist = None
+    quantile = None
+    for key, value in kwargs.items():
+        if key == 'noncentrality_distribution':
+            noncentrality_dist = value
+        if key == 'quantile':
+            quantile = value
+    if noncentrality_dist and quantile:
+        omega = __calc_quantile_omega(noncentrality_dist, quantile)
+        df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
+    elif noncentrality_dist and not quantile:
+        df1 = undf1 * e_3_5
+        df2 = undf2 * e_4
+        power = noncentrality_dist.unconditional_power_simpson(fcrit=fcrit, df1=df1, df2=df2)
+    else:
+        # 2. Muller, Edwards & Taylor 2002 and Muller Barton 1989 CDF approx
+        # UCDFTEMP[]=4 reverts to UCDFTEMP[]=2 if exact CDF fails
+        df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
 
     power = Power(power, omega, optional_args.unirepmethod)
     power.glmmpcl(alphatest=alpha,
