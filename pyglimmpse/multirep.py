@@ -698,12 +698,22 @@ def _multi_power(alpha: float,
                  omega: float,
                  **kwargs) -> Power:
     """ The common part for these four multirep methods computing power"""
+    noncentrality_dist = None
+    quantile = None
     for key, value in kwargs.items():
         if key == 'noncentrality_distribution':
-            omega = __calc_quantile_omega(value, 0.5)
+            noncentrality_dist = value
+        if key == 'quantile':
+            quantile = value
 
     fcrit = finv(1 - alpha, df1, df2)
-    prob, fmethod = probf(fcrit, df1, df2, omega)
+    if noncentrality_dist and quantile:
+        omega = __calc_quantile_omega(noncentrality_dist, quantile)
+        prob, fmethod = probf(fcrit, df1, df2, omega)
+    elif noncentrality_dist and not quantile:
+        prob = noncentrality_dist.unconditional_power_simpson(fcrit=fcrit, df1=df1, df2=df2)
+    else:
+        prob, fmethod = probf(fcrit, df1, df2, omega)
 
     if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
         powerval = alpha
