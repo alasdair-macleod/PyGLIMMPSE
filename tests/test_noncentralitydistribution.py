@@ -62,6 +62,7 @@ class TestNoncentralityDist(TestCase):
             stddevG=stdevG,
             sigmaStar= sigmaStar,
             exact=False)
+
         self.assertAlmostEqual(30.07007667770580, a.inverseCDF(0.1))
         self.assertAlmostEqual(36.147160249831344, a.inverseCDF(0.2))
         self.assertAlmostEqual(40.66756344933491, a.inverseCDF(0.3))
@@ -72,6 +73,51 @@ class TestNoncentralityDist(TestCase):
         self.assertAlmostEqual(58.06316056229026, a.inverseCDF(0.8))
         self.assertAlmostEqual(61.361079235392985, a.inverseCDF(0.9))
         self.assertAlmostEqual(63.33333333333333, a.inverseCDF(1.0))
+
+    def test_unconditional(self):
+
+        Cf = np.matrix([[1.0, -1.0, 0.0], [1.0, 0.0, -1.0]])
+        Cg = np.matrix([[0.0], [0.0]])
+        C = np.concatenate((Cf, Cg), axis=1)
+
+        Bf = np.matrix([[1.0,0.0,0.0],[0.0,2.0,0.0],[0.0,0.0,0.0]])
+        Bg = np.matrix([[0.5,0.5,0.5]])
+        beta_scale = [0.4997025, 0.8075886, 1.097641]
+        B = [np.concatenate((Bf*scale, Bg), axis=0) for scale in beta_scale]
+
+        U = np.matrix([[1.0, 0.0, 0.0], [0.0, 1.0 ,0.0], [0.0, 0.0, 1.0]])
+
+        Theta = [C*b*U for b in B]
+        Theta0=np.matrix([[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]])
+        thetaDiff = [t - Theta0 for t in Theta]
+
+        FEssence = np.matrix([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        SigmaError= np.matrix([[0.75,-0.25,-0.25],[-0.25,0.75,-0.25],[-0.25,-0.25,0.75]])
+        sigmaStar = U.T * SigmaError * U
+        stdevG = 1.0
+
+        perGroupN = 5
+        tests = [Constants.UN.value, Constants.HF.value, Constants.GG.value, Constants.BOX.value]
+
+        noncen_dists = []
+        for test in tests:
+            for theta_diff in thetaDiff:
+                noncen_dists.append(NonCentralityDistribution(
+                    test=test,
+                    FEssence=FEssence,
+                    perGroupN=perGroupN,
+                    CFixed=Cf,
+                    CGaussian=Cg,
+                    thetaDiff=theta_diff,
+                    stddevG=stdevG,
+                    sigmaStar=sigmaStar,
+                    exact=False))
+
+        r = noncen_dists[3].unconditional_power_simpson(fcrit=2.15720777985222,
+                                                        df1=7.29946278309409,
+                                                        df2=37.93877551020408)
+
+        print(r)
 
     def test_probf(self):
         print(probf(0.05, 0.5, 0.5, 10.0))

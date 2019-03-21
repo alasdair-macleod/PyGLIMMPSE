@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-
 import numpy as np
 from scipy import optimize
 from scipy.stats import f
+import scipy.integrate as integrate
 
 from pyglimmpse.WeightedSumOfNoncentralChiSquaresDistribution import WeightedSumOfNoncentralChiSquaresDistribution
 from pyglimmpse.constants import Constants
@@ -96,7 +96,7 @@ class NonCentralityDistribution(object):
             # for the distribution of the non-centrality parameter.
             # See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details.
             self.sEigenValues, svecs = np.linalg.eig(self.S)
-            self.sEigenValues = self.sEigenValues[::-1]
+            # self.sEigenValues = self.sEigenValues[::-1]
             svecs = np.flip(svecs, 1)
             svec = np.matrix(svecs).T
 
@@ -121,6 +121,7 @@ class NonCentralityDistribution(object):
                     self.mzSq[i, j] = entry * entry
                     j += 1
                 i += 1
+            pass
         except Exception as e:
             raise e
 
@@ -267,7 +268,7 @@ class NonCentralityDistribution(object):
         """ generated source for method getSigmaStarInverse """
         if not self.isPositiveDefinite(sigma_star):
             self.errors.append(Constants.ERR_NOT_POSITIVE_DEFINITE)
-        if test == Constants.HLT or Constants.HLT.value:
+        if test == Constants.HLT or test == Constants.HLT.value:
             return np.linalg.inv(sigma_star)
         else:
             # stat should only be UNIREP (uncorrected, box, GG, or HF) at this point
@@ -299,5 +300,31 @@ class NonCentralityDistribution(object):
     def forceSymmetric(self, m: np.matrix):
         """generated source for method forceSymmetric"""
         return np.tril(m) + np.triu(m.T, 1)
+
+    def __unconditional_power_simpson_term(self, fcrit, df1, df2, t):
+        """
+        calculate the integration performed in glueck and muller 200?? eq ??
+        """
+        # check bounds H0 ,H1
+        if self.H1 < self.H0:
+            raise IOError("H1 is greater than H0")
+        elif round(self.H1, 12) == round(self.H0, 12):
+            return 0
+        else:
+            t1 = probf(fcrit=fcrit,
+                       df1=df1,
+                       df2=df2,
+                       noncen=t)[0]
+            t2_noncentrality = (fcrit * df2)/(df2+2)
+            t2 = probf(fcrit=fcrit,
+                       df1=df1+2,
+                       df2=df2,
+                       noncen=t2_noncentrality)[0]
+            return self.cdf(t) * (t1 - t2)
+
+    def unconditional_power_simpson(self, fcrit, df1, df2):
+        y = lambda x: self.__unconditional_power_simpson_term(fcrit=fcrit, df1=df1, df2=df2, t=x)
+        bounds = [self.H0, self.H1]
+        return 1 - probf(fcrit=fcrit, df1=df1, df2=df2, noncen=self.H1)[0] - (0.50 * integrate.simps([y(x) for x in bounds]))
 
 
