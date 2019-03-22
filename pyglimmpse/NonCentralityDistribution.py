@@ -96,7 +96,7 @@ class NonCentralityDistribution(object):
             # for the distribution of the non-centrality parameter.
             # See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details.
             self.sEigenValues, svecs = np.linalg.eig(self.S)
-            # self.sEigenValues = self.sEigenValues[::-1]
+            self.sEigenValues = self.sEigenValues[::-1]
             svecs = np.flip(svecs, 1)
             svec = np.matrix(svecs).T
 
@@ -325,6 +325,9 @@ class NonCentralityDistribution(object):
     def unconditional_power_simpson(self, fcrit, df1, df2):
         y = lambda x: self.__unconditional_power_simpson_term(fcrit=fcrit, df1=df1, df2=df2, t=x)
         bounds = [self.H0, self.H1]
-        return 1 - probf(fcrit=fcrit, df1=df1, df2=df2, noncen=self.H1)[0] - (0.50 * integrate.simps([y(x) for x in bounds]))
+        t1, fmethod = probf(fcrit=fcrit, df1=df1, df2=df2, noncen=self.H1)
+        t2 = (0.50 * integrate.simps([y(x) for x in bounds]))
+        prob = 1 - t1 - t2
+        return prob, fmethod
 
 

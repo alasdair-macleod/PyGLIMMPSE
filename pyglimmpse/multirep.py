@@ -711,7 +711,7 @@ def _multi_power(alpha: float,
         omega = __calc_quantile_omega(noncentrality_dist, quantile)
         prob, fmethod = probf(fcrit, df1, df2, omega)
     elif noncentrality_dist and not quantile:
-        prob = noncentrality_dist.unconditional_power_simpson(fcrit=fcrit, df1=df1, df2=df2)
+        prob, fmethod = noncentrality_dist.unconditional_power_simpson(fcrit=fcrit, df1=df1, df2=df2)
     else:
         prob, fmethod = probf(fcrit, df1, df2, omega)
 
