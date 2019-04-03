@@ -56,3 +56,8 @@ class Constants(Enum):
     SIGMA_ESTIMATED = 'sigma estimated'
     INTERNAL_PILOT = 'internal pilot'
 
+    INVALID_DISTRIBUTION_NONCENTRALITY_PARAMETER = 'INVALID_DISTRIBUTION_NONCENTRALITY_PARAMETER'
+
+
+    ERR_NOT_POSITIVE_DEFINITE = 'Sigma star is not positive definite.'
+

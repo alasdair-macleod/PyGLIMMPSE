@@ -1,5 +1,5 @@
 from scipy import special
-from scipy.stats import norm
+from scipy.stats import norm, poisson, beta
 import math
 
 from pyglimmpse.constants import Constants
@@ -85,3 +85,34 @@ def _nonadjusted(df1, df2, fcrit, noncen):
     prob = special.ncfdtr(df1, df2, noncen, fcrit)
     fmethod = Constants.FMETHOD_NOAPPROXIMATION
     return prob, fmethod
+
+def probf_baharev(df1, df2, noncen, fcrit):
+    x = 1 - special.btdtri(df1, df2, fcrit)
+    eps  = 1.0e-7
+    itr_cnt = 0
+    f = None
+
+    while itr_cnt <= 10:
+        mu = noncen/2.0
+        ql = poisson.ppf(eps, mu)
+        qu = poisson.ppf(1-eps, mu)
+        k = qu
+        c = beta.cdf(x, df1 + k, df2)
+        d = x * (1.0-x) / (df1 + k - 1.0) * beta.pdf(x, df1 + k - 1, df2, 0)
+        p = poisson.pmf(k, mu)
+        f=p*c
+        p = k/mu*p
+
+        k = qu - 1
+        while k >= ql:
+            c=c+d
+            d= (df1 + k) / (x * (df1 + k + df2 - 1)) * d
+            f=f+p*c
+            p=k/mu*p
+            k = k-1
+        itr_cnt = itr_cnt+1
+
+    if (itr_cnt == 11):
+        print("newton iteration failed")
+
+    return f
