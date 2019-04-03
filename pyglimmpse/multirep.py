@@ -700,11 +700,14 @@ def _multi_power(alpha: float,
     """ The common part for these four multirep methods computing power"""
     noncentrality_dist = None
     quantile = None
+    confidence_interval = None
     for key, value in kwargs.items():
         if key == 'noncentrality_distribution':
             noncentrality_dist = value
         if key == 'quantile':
             quantile = value
+        if key == 'confidence_interval':
+            confidence_interval = value
 
     fcrit = finv(1 - alpha, df1, df2)
     if noncentrality_dist and quantile:
@@ -721,6 +724,20 @@ def _multi_power(alpha: float,
         powerval = 1 - prob
     powerval = float(powerval)
     power = Power(powerval, omega, fmethod)
+    if confidence_interval:
+        power.glmmpcl(
+                  alphatest=alpha,
+                  dfh=df1,
+                  n2=confidence_interval.n_est,
+                  dfe1=df1,
+                  dfe2=df2,
+                  cl_type=Constants.CLTYPE_DESIRED_KNOWN,
+                  n_est=confidence_interval.n_est,
+                  alpha_cl=confidence_interval.lower_tail,
+                  alpha_cu=confidence_interval.upper_tail,
+                  fcrit=fcrit,
+                  tolerance=1e-12,
+                  omega=omega)
     return power
 
 
