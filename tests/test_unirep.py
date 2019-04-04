@@ -8,6 +8,32 @@ from pyglimmpse.constants import Constants
 from pyglimmpse.unirep import _geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon, OptionalArgs
 
 
+class ConfidenceInterval(object):
+    """
+    Class holding required information to calculate confidence intervals.
+    """
+
+    def __init__(self,
+                 beta_known: bool = True,
+                 lower_tail: float = 0.05,
+                 upper_tail: float = 0.0,
+                 rank_est: int = 1,
+                 n_est: int = 1):
+        """
+        Class describing a Confidence Interval
+        :param beta_known:
+        :param lower_tail:
+        :param upper_tail:
+        :param rank_est:
+        :param n_est:
+        :param kwargs:
+        """
+        self.beta_known = beta_known
+        self.lower_tail = lower_tail
+        self.upper_tail = upper_tail
+        self.rank_est = rank_est
+        self.n_est = n_est
+
 class TestUnirep(TestCase):
 
     def test_geisser_greenhouse_muller_barton_1989(self):
@@ -97,12 +123,14 @@ class TestUnirep(TestCase):
         rank_X = 1
         total_N = 20
 
-        n_est = 10
-        rank_est = 1
+        confidence_interval = ConfidenceInterval(beta_known=False,
+                                                 lower_tail=0.01,
+                                                 upper_tail=0.01,
+                                                 n_est=10,
+                                                 rank_est=1)
+
         tolerance = 0.000000000000001
 
-        alpha_cl = 0.01
-        alpha_cu = 0.01
 
         hypo_sum_square = np.matrix([[0.3125, 0.625, -0.625, 0.3125],
                                      [0.625, 1.25, -1.25, 0.625],
@@ -128,10 +156,7 @@ class TestUnirep(TestCase):
                                                       approximation=approximation,
                                                       epsilon_estimator=Constants.EPSILON_MULLER2004,
                                                       unirepmethod=Constants.SIGMA_KNOWN,
-                                                      n_est=n_est,
-                                                      rank_est=rank_est,
-                                                      alpha_cl=alpha_cl,
-                                                      alpha_cu=alpha_cu,
+                                                      confidence_interval=confidence_interval,
                                                       n_ip=1,
                                                       rank_ip=1,
                                                       tolerance=tolerance)
@@ -147,15 +172,16 @@ class TestUnirep(TestCase):
         rank_X = 1
         total_N = 20
 
-        alpha_cl = 0.01
-        alpha_cu = 0.01
+        confidence_interval = ConfidenceInterval(beta_known=False,
+                                                 lower_tail=0.01,
+                                                 upper_tail=0.01,
+                                                 n_est=10,
+                                                 rank_est=1)
+
         tolerance = 0.000000000000001
 
         approximation = Constants.GG
         unirepmethod = Constants.UCDF_MULLER2004_APPROXIMATION
-
-        n_est=10
-        rank_est=1
 
         hypo_sum_square = np.matrix([[0.3125, 0.625, -0.625, 0.3125],
                                      [0.625, 1.25, -1.25, 0.625],
@@ -190,10 +216,7 @@ class TestUnirep(TestCase):
                                                       approximation=approximation,
                                                       epsilon_estimator=Constants.EPSILON_MULLER2004.value,
                                                       unirepmethod=Constants.SIGMA_KNOWN.value,
-                                                      n_est=n_est,
-                                                      rank_est=rank_est,
-                                                      alpha_cl=alpha_cl,
-                                                      alpha_cu=alpha_cu,
+                                                      confidence_interval=confidence_interval,
                                                       n_ip=1,
                                                       rank_ip=1,
                                                       tolerance=tolerance)
