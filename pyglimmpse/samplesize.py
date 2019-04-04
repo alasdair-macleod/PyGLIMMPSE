@@ -59,7 +59,7 @@ def samplesize(test,
                            alpha=alpha,
                            sigma_star=sigma_star,
                            delta_es=delta_es)
-        if type(upper_power.power) is str or math.isnan(upper_power.power):
+        if type(upper_power.power) is str:
             raise ValueError('Upper power is not calculable. Check that your design is realisable.'
                              ' Usually the easies way to do this is to increase sample size')
         upper_bound_smallest_group_size += upper_bound_smallest_group_size
@@ -100,7 +100,7 @@ def samplesize(test,
                                                   **kwargs),
                                              targetPower)
 
-        total_per_group_n = optimize.bisect(f, lower_bound_smallest_group_size, upper_bound_smallest_group_size)
+        total_per_group_n = math.floor(optimize.bisect(f, lower_bound_smallest_group_size, upper_bound_smallest_group_size))
         power = test(rank_C=rank_C,
                      rank_X=rank_X,
                      relative_group_sizes=relative_group_sizes,
