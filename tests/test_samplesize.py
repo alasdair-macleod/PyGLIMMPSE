@@ -11,7 +11,6 @@ class TestSamplesize(TestCase):
 
     def test_samplesize_hlt(self):
         c_matrix=np.matrix([[1]])
-        u_matrix=np.matrix([[1]])
         m=np.matrix([[1]])
         sigma_star=np.matrix([[312.5]])
         theta=np.matrix([[52]])
@@ -34,7 +33,7 @@ class TestSamplesize(TestCase):
                                             relative_group_sizes=groups,
                                             starting_smallest_group_size=10)
         self.assertEqual(50, size)
-        self.assertEqual(round(power, 8), round(0.9, 8))
+        self.assertEqual(round(power.power, 8), round(0.9, 8))
 
     def test_samplesize_hlt_multi_group(self):
         m=np.matrix([[1.16666667, 0.16666667], [0.16666667, 0.66666667]])
@@ -55,7 +54,7 @@ class TestSamplesize(TestCase):
                                             delta_es=delta,
                                             relative_group_sizes=groups)
 
-        self.assertEqual(round(0.9086544301747213, 8), round(power, 8))
+        self.assertEqual(round(0.9086544301747213, 8), round(power.power, 8))
         self.assertEqual(369, size)
 
 

@@ -59,7 +59,7 @@ def samplesize(test,
                            alpha=alpha,
                            sigma_star=sigma_star,
                            delta_es=delta_es)
-        if type(upper_power.power) is str:
+        if type(upper_power.power) is str or math.isnan(upper_power.power):
             raise ValueError('Upper power is not calculable. Check that your design is realisable.'
                              ' Usually the easies way to do this is to increase sample size')
         upper_bound_smallest_group_size += upper_bound_smallest_group_size
@@ -96,7 +96,8 @@ def samplesize(test,
                                                   rep_N=n,
                                                   alpha=alpha,
                                                   sigma_star=sigma_star,
-                                                  delta_es=delta_es),
+                                                  delta_es=delta_es,
+                                                  **kwargs),
                                              targetPower)
 
         total_per_group_n = optimize.bisect(f, lower_bound_smallest_group_size, upper_bound_smallest_group_size)
@@ -106,7 +107,8 @@ def samplesize(test,
                      rep_N=total_per_group_n,
                      alpha=alpha,
                      sigma_star=sigma_star,
-                     delta_es=delta_es)
+                     delta_es=delta_es,
+                     **kwargs)
 
         if power.power < targetPower:
             power = test(rank_C=rank_C,
@@ -115,11 +117,12 @@ def samplesize(test,
                          rep_N=total_per_group_n+1,
                          alpha=alpha,
                          sigma_star=sigma_star,
-                         delta_es=delta_es)
+                         delta_es=delta_es,
+                         **kwargs)
             if power.power < targetPower:
                 raise ValueError('Samplesize cannot be calculated. Please check your design.')
         total_N = sum([math.ceil(total_per_group_n) * g for g in relative_group_sizes])
-    return total_N, power.power
+    return total_N, power
 
 def _calc_err_sum_square(total_n, rank_x, sigma_star):
     """
