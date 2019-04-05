@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 import numpy as np
+
+from pyglimmpse.exceptions.glimmpse_exception import GlimmpseValidationException, GlimmpseCalculationException
+
 """ generated source for module WeightedSumOfNoncentralChiSquaresDistribution """
 # 
 #  * Java Statistics.  A java library providing power/sample size estimation for 
@@ -86,7 +89,7 @@ class Counter(object):
         """ generated source for method increment """
         self.count += 1
         if self.count > self.maxSteps:
-            raise Exception("Exceeded max iterations")
+            raise GlimmpseCalculationException("Exceeded max iterations")
 
     def getCount(self):
         """ generated source for method getCount """
@@ -135,11 +138,11 @@ class WeightedSumOfNoncentralChiSquaresDistribution(object):
     def __init__(self, chiSquareTerms, normalCoefficient, accuracy):
         """ generated source for method __init__ """
         if chiSquareTerms == None or len(chiSquareTerms) == 0:
-            raise Exception("No chi-square terms specified")
+            raise GlimmpseValidationException("No chi-square terms specified")
         if np.isnan(normalCoefficient):
-            raise Exception("Invalid coefficient for the normal term")
+            raise GlimmpseValidationException("Invalid coefficient for the normal term")
         if np.isnan(accuracy) or accuracy <= 0:
-            raise Exception("Accuracy must be greater than 0")
+            raise GlimmpseValidationException("Accuracy must be greater than 0")
         self.chiSquareTerms = chiSquareTerms
         self.accuracy = accuracy
         self.normalCoefficient = normalCoefficient
@@ -148,7 +151,7 @@ class WeightedSumOfNoncentralChiSquaresDistribution(object):
         self.minLambda = min(chiSquareTerms, key=lambda x: x.getLambda()).getLambda()
         self.maxLambdaAbsValue = (-self.minLambda if self.maxLambda < -self.minLambda else self.maxLambda)
         if self.maxLambda == 0 and self.minLambda == 0 and normalCoefficient == 0:
-            raise Exception("At least one of min/max lambda values or coefficient of the normal term must be non-zero")
+            raise GlimmpseValidationException("At least one of min/max lambda values or coefficient of the normal term must be non-zero")
         #  Build a list of ranks for chi squares based on the absolute value of the lambdas
         sortedList = []
         for chiSquare in self.chiSquareTerms:
@@ -257,7 +260,7 @@ class WeightedSumOfNoncentralChiSquaresDistribution(object):
             if numTermsMain > 1.5 * numTermsAux:
                 #  perform the auxilliary integration, provided we have enough iterations left
                 if numTermsAux > self.MAX_STEPS - counter.getCount():
-                    raise Exception("Number of auxiliary integration terms exceeds max number of iteration steps allowed")
+                    raise GlimmpseCalculationException("Number of auxiliary integration terms exceeds max number of iteration steps allowed")
                 integrationLimit = 2 * np.pi / self.integrationIntervalAux
                 if integrationLimit <= np.abs(quantile):
                     tauSquared = self.lowerConvergenceFactor + self.upperConvergenceFactor
@@ -271,7 +274,7 @@ class WeightedSumOfNoncentralChiSquaresDistribution(object):
                 break
         #  perform main integration
         if numTermsMain > self.MAX_STEPS - counter.getCount():
-            raise Exception("Number of main integration terms exceeds max number of iteration steps allowed")
+            raise GlimmpseCalculationException("Number of main integration terms exceeds max number of iteration steps allowed")
         integralSum += self.integrate(int(np.round(numTermsMain)), integrationInterval, quantile, np.NaN)
         prob = 0.5 - integralSum
         return prob

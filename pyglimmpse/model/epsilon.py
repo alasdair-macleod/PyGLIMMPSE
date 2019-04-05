@@ -1,5 +1,8 @@
 import numpy as np
 
+from pyglimmpse.exceptions.glimmpse_exception import GlimmpseValidationException
+
+
 class Epsilon:
     """
     LIBRARY?????
@@ -29,7 +32,7 @@ class Epsilon:
         slam3, sum of eigenvalues
         """
         if rank_U != np.shape(sigma_star)[0]:
-            raise Exception("rank of U should equal to nrows of sigma_star")
+            raise GlimmpseValidationException("rank of U should equal to nrows of sigma_star")
 
         # Get eigenvalues of covariance matrix associated with E. This is NOT
         # the USUAL sigma. This cov matrix is that of (Y-YHAT)*U, not of (Y-YHAT).

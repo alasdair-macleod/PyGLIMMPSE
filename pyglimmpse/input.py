@@ -1,4 +1,6 @@
 from pyglimmpse.constants import Constants
+from pyglimmpse.exceptions.glimmpse_exception import GlimmpseValidationException
+
 
 class Scalar:
 
@@ -38,7 +40,7 @@ class CL:
                 assert rank_est is not None
 
             else:
-                raise Exception('sigma_type need to be estimated to calculate CL')
+                raise GlimmpseValidationException('sigma_type need to be estimated to calculate CL')
 
         else:
             self.cl_type = Constants.CLTYPE_NOT_DESIRED
@@ -51,7 +53,7 @@ class CL:
                         alpha_cl >= 1 or \
                         alpha_cu >= 1 or \
                 (alpha_cl + alpha_cu >= 1):
-            raise Exception('ERROR 35: ALPHA_CL and ALPHA_CU must both be >= 0 and <= 1.')
+            raise GlimmpseValidationException('ERROR 35: ALPHA_CL and ALPHA_CU must both be >= 0 and <= 1.')
         self.alpha_cl = alpha_cl
         self.alpha_cu = alpha_cu
 
@@ -70,7 +72,7 @@ class IP:
             assert rank_ip is not None
 
             if n_ip <= rank_ip:
-                raise Exception('ERROR 90: N_IP must > RANK_IP')
+                raise GlimmpseValidationException('ERROR 90: N_IP must > RANK_IP')
 
         self.n_ip = n_ip
         self.rank_ip = rank_ip

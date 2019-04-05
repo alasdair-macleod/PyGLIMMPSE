@@ -2,6 +2,7 @@ import warnings
 import inspect
 import numpy as np
 
+from pyglimmpse.exceptions.glimmpse_exception import GlimmpseValidationException
 from pyglimmpse.finv import finv
 
 from pyglimmpse.constants import Constants
@@ -777,7 +778,7 @@ def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
 
     #todo is this true for ALL epsilon? If so build into the class and remove this method.
     if rank_U != np.shape(sigma_star)[0]:
-        raise Exception("rank of U should be equal to the number of rows in sigma_star")
+        raise GlimmpseValidationException("rank of U should be equal to the number of rows in sigma_star")
 
     # Get eigenvalues of covariance matrix associated with E. This is NOT
     # the USUAL sigma. This cov matrix is that of (Y-YHAT)*U, not of (Y-YHAT).
@@ -1005,7 +1006,7 @@ def _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_
     # Enter loop to compute E1-E5 based on estimated SIGMA
     nu_est = n_est - rank_est
     if nu_est <= 1:
-        raise Exception("ERROR 81: Too few estimation df in LASTUNI. df = N_EST - RANK_EST <= 1.")
+        raise GlimmpseValidationException("ERROR 81: Too few estimation df in LASTUNI. df = N_EST - RANK_EST <= 1.")
     # For POWERCALC =6=HF, =7=CM, =8=GG critical values
     epstilde_r = ((nu_est + 1) * hypothesis_error.q3 - 2 * hypothesis_error.q4) / (rank_U * (nu_est * hypothesis_error.q4 - hypothesis_error.q3))
     epstilde_r_min = min(epstilde_r, 1)
@@ -1103,10 +1104,10 @@ def _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U):
     if rank_U > nue and (approximation == Constants.UN or approximation == Constants.GG or approximation == Constants.BOX):
         warnings.warn('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are '
                       'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
-        raise Exception('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are'
+        raise GlimmpseValidationException('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are'
                       'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
     if np.isnan(exeps) or nue <= 0:
-        raise Exception("exeps is NaN or total_N  <= rank_X")
+        raise GlimmpseValidationException("exeps is NaN or total_N  <= rank_X")
     undf1 = rank_C * rank_U
     undf2 = rank_U * nue
     return undf1, undf2

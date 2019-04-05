@@ -6,6 +6,7 @@ import scipy.integrate as integrate
 
 from pyglimmpse.WeightedSumOfNoncentralChiSquaresDistribution import WeightedSumOfNoncentralChiSquaresDistribution
 from pyglimmpse.constants import Constants
+from pyglimmpse.exceptions.glimmpse_exception import GlimmpseCalculationException, GlimmpseValidationException
 from pyglimmpse.probf import probf
 
 """ generated source for module NonCentralityDistribution """
@@ -243,9 +244,9 @@ class NonCentralityDistribution(object):
                 # return power based on the non-central F
                 x = (nuStarNegative * lambdaStarNegative) / (nuStarPositive * lambdaStarPositive)
                 return f(x, nuStarPositive, nuStarNegative)
-        except Exception as e:
+        except GlimmpseCalculationException as e:
             print("exiting cdf abnormally", e)
-            raise Exception(e)
+            raise GlimmpseCalculationException(e)
 
     def inverseCDF(self, quantile):
         """ generated source for method inverseCDF """
@@ -254,15 +255,15 @@ class NonCentralityDistribution(object):
         quantFunc = lambda n: quantile -  self.cdf(n)
         try:
             return optimize.bisect(quantFunc, self.H0, self.H1)
-        except Exception as e:
-            raise Exception("Failed to determine non-centrality quantile: " + e.args[0])
+        except GlimmpseCalculationException as e:
+            raise GlimmpseCalculationException("Failed to determine non-centrality quantile: " + e.args[0])
 
     def NonCentralityQuantileFunction(self, quantile):
         """ generated source for class NonCentralityQuantileFunction """
         try:
             return self.cdf(n) - quantile
-        except Exception as pe:
-            raise Exception(pe, pe)
+        except GlimmpseCalculationException as pe:
+            raise GlimmpseCalculationException(pe, pe)
 
     def getSigmaStarInverse(self, sigma_star, test):
         """ generated source for method getSigmaStarInverse """
@@ -292,7 +293,7 @@ class NonCentralityDistribution(object):
     def isPositiveDefinite(self, m: np.matrix):
         """generated source for method isPositiveDefinite"""
         if m.shape[0] != m.shape[1]:
-            raise Exception("Matrix must be non-null, square")
+            raise GlimmpseValidationException("Matrix must be non-null, square")
         eigenvalues = np.linalg.eigvals(m)
         test = [val > 0.0 for val in eigenvalues]
         return all(test)
@@ -307,7 +308,7 @@ class NonCentralityDistribution(object):
         """
         # check bounds H0 ,H1
         if self.H1 < self.H0:
-            raise IOError("H1 is greater than H0")
+            raise GlimmpseValidationException("H1 is greater than H0")
         elif round(self.H1, 12) == round(self.H0, 12):
             return 0
         else:
