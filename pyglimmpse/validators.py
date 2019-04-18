@@ -2,6 +2,7 @@ import warnings
 import functools
 
 from pyglimmpse.constants import Constants
+from pyglimmpse.exceptions.glimmpse_exception import GlimmpseValidationException
 
 
 def check_options( function ):
@@ -18,7 +19,7 @@ def check_options( function ):
                 Option = value
 
         if CL and Option and CL.cl_type == Constants.CLTYPE_NOT_DESIRED and Option.opt_noncencl:
-            raise Exception("ERROR 83: NONCENCL is not a valid option when CL not desired.")
+            raise GlimmpseValidationException("ERROR 83: NONCENCL is not a valid option when CL not desired.")
         return function( **kwargs )
     return check_options_wrapper
 
@@ -36,10 +37,10 @@ def repn_positive( function ):
                 Option = value
         # Check repn
         if Scalar and Scalar.rep_n <= Scalar.tolerance:
-            raise Exception('ERROR 10: All REPN values must be > TOLERANCE > 0.')
+            raise GlimmpseValidationException('ERROR 10: All REPN values must be > TOLERANCE > 0.')
 
         if Scalar and Option and Option.opt_fracrepn and Scalar.rep_n % 1 != 1:
-            raise Exception('ERROR 11: All REPN values must be positive integers. To allow fractional REPN values, '
+            raise GlimmpseValidationException('ERROR 11: All REPN values must be positive integers. To allow fractional REPN values, '
                             'specify opt_fracrepn')
         return function(**kwargs)
     return repn_positive_wrapper
@@ -58,17 +59,17 @@ def parameters_positive(function):
         if Scalar:
             # Check sigscal
             if Scalar.sigma_scalar <= Scalar.tolerance:
-                raise Exception('ERROR 12: All SIGSCAL values must be > TOLERANCE > 0.')
+                raise GlimmpseValidationException('ERROR 12: All SIGSCAL values must be > TOLERANCE > 0.')
 
             # Check alpha
             if Scalar.alpha <= Scalar.tolerance or Scalar.alpha >= 1:
-                raise Exception('ERROR 13: All ALPHA values must be > TOLERANCE > 0 and < 1.')
+                raise GlimmpseValidationException('ERROR 13: All ALPHA values must be > TOLERANCE > 0 and < 1.')
 
             # Check tolerance
             if Scalar.tolerance <= 0:
-                raise Exception('ERROR 17: User specified TOLERANCE <= zero.')
+                raise GlimmpseValidationException('ERROR 17: User specified TOLERANCE <= zero.')
             if Scalar.tolerance >= 0.01:
-                raise Exception('WARNING 6: User specified TOLERANCE >= 0.01. This is the value assumed to be numeric '
+                raise GlimmpseValidationException('WARNING 6: User specified TOLERANCE >= 0.01. This is the value assumed to be numeric '
                                 'zero and affects many calculations. Please check that this value is correct.')
             return function(**kwargs)
         return parameters_positive_wrapper
@@ -110,6 +111,6 @@ def valid_internal_pilot(function):
                 IP = value
         # Check IP_PLAN and SIGTYPE
         if IP.ip_plan and CL.sigma_type:
-            raise Exception('ERROR 91: SIGMA must be known when planning an internal pilot.')
+            raise GlimmpseValidationException('ERROR 91: SIGMA must be known when planning an internal pilot.')
         return function(**kwargs)
     return valid_internal_pilot_wrapper

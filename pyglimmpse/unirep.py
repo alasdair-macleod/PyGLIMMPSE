@@ -2,6 +2,7 @@ import warnings
 import inspect
 import numpy as np
 
+from pyglimmpse.exceptions.glimmpse_exception import GlimmpseValidationException
 from pyglimmpse.finv import finv
 
 from pyglimmpse.constants import Constants
@@ -194,44 +195,6 @@ def _unirep_power(epsilon_estimator,
     return power
 
 
-def __process_optional_args(**kwargs) -> OptionalArgs:
-    """
-
-    :param kwargs:
-    :return:
-    """
-    args = OptionalArgs()
-    if kwargs is not None:
-        if 'optional_args' in kwargs.keys():
-            kwargs = kwargs['optional_args']
-        for key, value in kwargs.items():
-            if key == "epsilon_estimator":
-                args.epsilon_estimator = value
-            elif key == "unirepmethod":
-                args.unirepmethod = value
-            elif key == "n_est":
-                args.n_est = value
-            elif key == "rank_est":
-                args.rank_est = value
-            elif key == "alpha_cl":
-                args.alpha_cl = value
-            elif key == "alpha_cu":
-                args.alpha_cu = value
-            elif key == "n_ip":
-                args.n_ip = value
-            elif key == "rank_ip":
-                args.rank_ip = value
-            elif key == "rank_ip":
-                args.rank_ip = value
-            elif key == "approximation":
-                args.approximation = value
-            elif key == "tolerance":
-                args.tolerance = value
-            else:
-                raise IOError("unirep power recieved an unexpected keyword argument: " + key)
-    return args
-
-
 def _unirep_power_known_sigma(rank_C,
                               rank_U,
                               total_N,
@@ -292,24 +255,34 @@ def _unirep_power_known_sigma(rank_C,
     power: Power
         power for the univariate test.
     """
-    optional_args = __process_optional_args(**kwargs)
+    # optional_args = __process_optional_args(**kwargs)
+    approximation = Constants.UCDF_MULLER2004_APPROXIMATION
+    confidence_interval = None
+    noncentrality_dist = None
+    quantile = None
+    tolerance = 1e-12
+    for key, value in kwargs.items():
+        if key == 'approximation':
+            approximation = value
+        if key == 'confidence_interval':
+            confidence_interval = value
+        if key == 'noncentrality_distribution':
+            noncentrality_dist = value
+        if key == 'quantile':
+            quantile = value
+        if key == 'tolerance':
+            tolerance = value
+
     nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(optional_args.approximation, expected_epsilon, nue, rank_C, rank_U)
+    undf1, undf2 = _calc_undf1_undf2(approximation, expected_epsilon, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(epsilon, expected_epsilon, hypothesis_error, rank_C, rank_U, optional_args.unirepmethod)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_known_sigma(epsilon, expected_epsilon, hypothesis_error, rank_C, rank_U, Constants.SIGMA_KNOWN)
     omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
     fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
 
-    noncentrality_dist = None
-    quantile = None
-    for key, value in kwargs.items():
-        if key == 'noncentrality_distribution':
-            noncentrality_dist = value
-        if key == 'quantile':
-            quantile = value
     if noncentrality_dist and quantile:
         omega = __calc_quantile_omega(noncentrality_dist, quantile)
         df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
@@ -322,19 +295,20 @@ def _unirep_power_known_sigma(rank_C,
         # UCDFTEMP[]=4 reverts to UCDFTEMP[]=2 if exact CDF fails
         df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
 
-    power = Power(power, omega, optional_args.unirepmethod)
-    power.glmmpcl(alphatest=alpha,
-                  dfh=df1,
-                  n2=total_N,
-                  dfe1=optional_args.n_est-optional_args.rank_est,
-                  dfe2=df2,
-                  cl_type=Constants.CLTYPE_DESIRED_KNOWN,
-                  n_est=optional_args.n_est,
-                  alpha_cl=optional_args.alpha_cl,
-                  alpha_cu=optional_args.alpha_cu,
-                  fcrit=fcrit,
-                  tolerance=optional_args.tolerance,
-                  omega=omega)
+    power = Power(power, omega, Constants.SIGMA_KNOWN)
+    if confidence_interval:
+        power.glmmpcl(alphatest=alpha,
+                      dfh=df1,
+                      n2=total_N,
+                      dfe1=confidence_interval.n_est-confidence_interval.rank_est,
+                      dfe2=df2,
+                      cl_type=Constants.CLTYPE_DESIRED_KNOWN,
+                      n_est=confidence_interval.n_est,
+                      alpha_cl=confidence_interval.lower_tail,
+                      alpha_cu=confidence_interval.upper_tail,
+                      fcrit=fcrit,
+                      tolerance=tolerance,
+                      omega=omega)
 
     return power
 
@@ -409,34 +383,52 @@ def _unirep_power_estimated_sigma(rank_C,
     power: Power
         power for the univariate test.
     """
-    optional_args = __process_optional_args(**kwargs)
+    approximation = Constants.UCDF_MULLER2004_APPROXIMATION
+    confidence_interval = None
+    noncentrality_dist = None
+    quantile = None
+    tolerance = 1e-12
+    for key, value in kwargs.items():
+        if key == 'approximation':
+            approximation = value
+        if key == 'confidence_interval':
+            confidence_interval = value
+        if key == 'noncentrality_distribution':
+            noncentrality_dist = value
+        if key == 'quantile':
+            quantile = value
+        if key == 'tolerance':
+            tolerance = value
+
+    # optional_args = __process_optional_args(**kwargs)
     # E = SIGMASTAR # (N - rX)
     nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(optional_args.approximation, expected_epsilon, nue, rank_C, rank_U)
+    undf1, undf2 = _calc_undf1_undf2(approximation, expected_epsilon, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(optional_args.approximation, epsilon, hypothesis_error, nue, rank_C, rank_U, optional_args.unirepmethod, optional_args.n_est, optional_args.rank_est)
+    cl1df, e_1_2, e_3_5, e_4, omegaua = _calc_multipliers_est_sigma(approximation, epsilon, hypothesis_error, nue, rank_C, rank_U, Constants.SIGMA_ESTIMATED, confidence_interval.n_est, confidence_interval.rank_est)
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
     omega = e_3_5 * hypothesis_error.q2 / hypothesis_error.lambar
-    if optional_args.approximation == Constants.CM:
+    if approximation == Constants.CM:
         omega = omegaua
     fcrit = finv(1 - alpha, undf1 * e_1_2, undf2 * e_1_2)
 
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
-    power = Power(power, omega, optional_args.unirepmethod)
-    # power.glmmpcl(alphatest=alpha,
-    #               dfh=cl1df,
-    #               n2=total_N,
-    #               dfe1=df1,
-    #               dfe2=df2,
-    #               cl_type=Constants.CLTYPE_DESIRED_KNOWN,
-    #               n_est=optional_args.n_est,
-    #               alpha_cl=optional_args.alpha_cl,
-    #               alpha_cu=optional_args.alpha_cu,
-    #               fcrit=fcrit,
-    #               tolerance=optional_args.tolerance,
-    #               omega=omega)
+    power = Power(power, omega, Constants.SIGMA_ESTIMATED)
+    if confidence_interval:
+        power.glmmpcl(alphatest=alpha,
+                      dfh=cl1df,
+                      n2=total_N,
+                      dfe1=df1,
+                      dfe2=df2,
+                      cl_type=Constants.CLTYPE_DESIRED_KNOWN,
+                      n_est=confidence_interval.n_est,
+                      alpha_cl=confidence_interval.lower_tail,
+                      alpha_cu=confidence_interval.upper_tail,
+                      fcrit=fcrit,
+                      tolerance=tolerance,
+                      omega=omega)
 
     return power
 
@@ -510,13 +502,29 @@ def _unirep_power_known_sigma_internal_pilot(rank_C,
     power: Power
         power for the univariate test.
     """
-    optional_args = __process_optional_args(**kwargs)
+    approximation = Constants.UCDF_MULLER2004_APPROXIMATION
+    internal_pilot = None
+    noncentrality_dist = None
+    quantile = None
+    tolerance = 1e-12
+    for key, value in kwargs.items():
+        if key == 'approximation':
+            approximation = value
+        if key == 'internal_pilot':
+            internal_pilot = value
+        if key == 'noncentrality_distribution':
+            noncentrality_dist = value
+        if key == 'quantile':
+            quantile = value
+        if key == 'tolerance':
+            tolerance = value
+    # optional_args = __process_optional_args(**kwargs)
     # E = SIGMASTAR # (N - rX)
     nue = total_N - rank_X
-    undf1, undf2 = _calc_undf1_undf2(optional_args.approximation, expected_epsilon, nue, rank_C, rank_U)
+    undf1, undf2 = _calc_undf1_undf2(approximation, expected_epsilon, nue, rank_C, rank_U)
     # Create defaults - same for either SIGMA known or estimated
     hypothesis_error = HypothesisError(hypo_sum_square, sigma_star, rank_U)
-    e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(optional_args.approximation, expected_epsilon, epsilon, hypothesis_error, sigmastareval, rank_C, rank_U, optional_args.n_ip, optional_args.rank_ip)
+    e_1_2, e_3_5, e_4 = _calc_multipliers_internal_pilot(approximation, expected_epsilon, epsilon, hypothesis_error, sigmastareval, rank_C, rank_U, internal_pilot.n_ip, internal_pilot.rank_ip)
 
     # Error checking
     e_1_2 = _err_checking(e_1_2, rank_U)
@@ -770,7 +778,7 @@ def _calc_epsilon(sigma_star: np.matrix, rank_U: float) -> Epsilon:
 
     #todo is this true for ALL epsilon? If so build into the class and remove this method.
     if rank_U != np.shape(sigma_star)[0]:
-        raise Exception("rank of U should be equal to the number of rows in sigma_star")
+        raise GlimmpseValidationException("rank of U should be equal to the number of rows in sigma_star")
 
     # Get eigenvalues of covariance matrix associated with E. This is NOT
     # the USUAL sigma. This cov matrix is that of (Y-YHAT)*U, not of (Y-YHAT).
@@ -998,7 +1006,7 @@ def _calc_multipliers_est_sigma(approximation, eps, hypothesis_error, nue, rank_
     # Enter loop to compute E1-E5 based on estimated SIGMA
     nu_est = n_est - rank_est
     if nu_est <= 1:
-        raise Exception("ERROR 81: Too few estimation df in LASTUNI. df = N_EST - RANK_EST <= 1.")
+        raise GlimmpseValidationException("ERROR 81: Too few estimation df in LASTUNI. df = N_EST - RANK_EST <= 1.")
     # For POWERCALC =6=HF, =7=CM, =8=GG critical values
     epstilde_r = ((nu_est + 1) * hypothesis_error.q3 - 2 * hypothesis_error.q4) / (rank_U * (nu_est * hypothesis_error.q4 - hypothesis_error.q3))
     epstilde_r_min = min(epstilde_r, 1)
@@ -1096,10 +1104,10 @@ def _calc_undf1_undf2(approximation, exeps, nue, rank_C, rank_U):
     if rank_U > nue and (approximation == Constants.UN or approximation == Constants.GG or approximation == Constants.BOX):
         warnings.warn('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are '
                       'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
-        raise Exception('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are'
+        raise GlimmpseValidationException('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are'
                       'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
     if np.isnan(exeps) or nue <= 0:
-        raise Exception("exeps is NaN or total_N  <= rank_X")
+        raise GlimmpseValidationException("exeps is NaN or total_N  <= rank_X")
     undf1 = rank_C * rank_U
     undf2 = rank_U * nue
     return undf1, undf2

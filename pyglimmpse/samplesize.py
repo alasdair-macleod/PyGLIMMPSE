@@ -96,17 +96,19 @@ def samplesize(test,
                                                   rep_N=n,
                                                   alpha=alpha,
                                                   sigma_star=sigma_star,
-                                                  delta_es=delta_es),
+                                                  delta_es=delta_es,
+                                                  **kwargs),
                                              targetPower)
 
-        total_per_group_n = optimize.bisect(f, lower_bound_smallest_group_size, upper_bound_smallest_group_size)
+        total_per_group_n = math.floor(optimize.bisect(f, lower_bound_smallest_group_size, upper_bound_smallest_group_size))
         power = test(rank_C=rank_C,
                      rank_X=rank_X,
                      relative_group_sizes=relative_group_sizes,
                      rep_N=total_per_group_n,
                      alpha=alpha,
                      sigma_star=sigma_star,
-                     delta_es=delta_es)
+                     delta_es=delta_es,
+                     **kwargs)
 
         if power.power < targetPower:
             power = test(rank_C=rank_C,
@@ -115,11 +117,12 @@ def samplesize(test,
                          rep_N=total_per_group_n+1,
                          alpha=alpha,
                          sigma_star=sigma_star,
-                         delta_es=delta_es)
+                         delta_es=delta_es,
+                         **kwargs)
             if power.power < targetPower:
                 raise ValueError('Samplesize cannot be calculated. Please check your design.')
         total_N = sum([math.ceil(total_per_group_n) * g for g in relative_group_sizes])
-    return total_N, power.power
+    return total_N, power
 
 def _calc_err_sum_square(total_n, rank_x, sigma_star):
     """

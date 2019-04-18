@@ -742,7 +742,7 @@ def _multi_power(alpha: float,
 
 
 def __calc_quantile_omega(noncentrality_distribution, quantile):
-    omega = noncentrality_distribution.inverseCDF(0.5)
+    omega = noncentrality_distribution.inverseCDF(quantile)
     return omega
 
 
