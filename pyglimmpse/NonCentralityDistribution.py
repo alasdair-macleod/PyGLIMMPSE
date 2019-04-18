@@ -97,12 +97,12 @@ class NonCentralityDistribution(object):
             # for the distribution of the non-centrality parameter.
             # See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details.
             self.sEigenValues, svecs = np.linalg.eig(self.S)
-            self.sEigenValues = self.sEigenValues[::-1]
+            self.sEigenValues = np.sort(self.sEigenValues)[::-1]
             svecs = np.flip(svecs, 1)
             svec = np.matrix(svecs).T
 
             if len(self.sEigenValues) > 0:
-                self.H0 = self.H1 * (1 - self.sEigenValues[0])
+                self.H0 = self.H1 *(1 - self.sEigenValues[0])
             if self.H0 <= 0:
                 self.H0 = 0
 
