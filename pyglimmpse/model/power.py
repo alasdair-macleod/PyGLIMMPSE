@@ -66,10 +66,10 @@ class Power:
                 alphatest,
                 dfh,   # df1
                 n2,    # total_N ??? what is this
-                dfe1,
                 dfe2,  # df2
                 cl_type,
                 n_est,
+                rank_est,
                 alpha_cl,
                 alpha_cu,
                 fcrit,
@@ -124,6 +124,7 @@ class Power:
             if np.isnan(self.power):
                 warnings.warn('Powerwarn16: Confidence limits are missing because power is missing.')
             else:
+                dfe1 = n_est - rank_est
                 self.lower_bound = self._calc_lower_bound(alphatest, alpha_cl, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance)
                 self.upper_bound = self._calc_upper_bound(alphatest, alpha_cu, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance)
                 self._warn_conservative_ci(alpha_cl, cl_type, n2, n_est)

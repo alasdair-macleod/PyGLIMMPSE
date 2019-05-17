@@ -297,12 +297,13 @@ def _unirep_power_known_sigma(rank_C,
 
     power = Power(power, omega, Constants.SIGMA_KNOWN)
     if confidence_interval:
+        cl_type = _get_cl_type(confidence_interval)
         power.glmmpcl(alphatest=alpha,
                       dfh=df1,
                       n2=total_N,
                       dfe1=confidence_interval.n_est-confidence_interval.rank_est,
                       dfe2=df2,
-                      cl_type=Constants.CLTYPE_DESIRED_KNOWN,
+                      cl_type=cl_type,
                       n_est=confidence_interval.n_est,
                       alpha_cl=confidence_interval.lower_tail,
                       alpha_cu=confidence_interval.upper_tail,
@@ -312,6 +313,12 @@ def _unirep_power_known_sigma(rank_C,
 
     return power
 
+
+def _get_cl_type(confidence_interval):
+    cl_type = Constants.CLTYPE_DESIRED_KNOWN
+    if not confidence_interval.beta_known:
+        cl_type = Constants.CLTYPE_DESIRED_ESTIMATE
+    return cl_type
 
 def _unirep_power_estimated_sigma(rank_C,
                                   rank_U,
@@ -417,12 +424,13 @@ def _unirep_power_estimated_sigma(rank_C,
     df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
     power = Power(power, omega, Constants.SIGMA_ESTIMATED)
     if confidence_interval:
+        cl_type = _get_cl_type(confidence_interval)
         power.glmmpcl(alphatest=alpha,
                       dfh=cl1df,
                       n2=total_N,
                       dfe1=df1,
                       dfe2=df2,
-                      cl_type=Constants.CLTYPE_DESIRED_KNOWN,
+                      cl_type=cl_type,
                       n_est=confidence_interval.n_est,
                       alpha_cl=confidence_interval.lower_tail,
                       alpha_cu=confidence_interval.upper_tail,
