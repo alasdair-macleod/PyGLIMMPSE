@@ -63,6 +63,7 @@ class Power:
         self.error_message = error_message
 
     def glmmpcl(self,
+                multirep,
                 alphatest,
                 dfh,   # df1
                 n2,    # total_N ??? what is this
@@ -74,7 +75,8 @@ class Power:
                 alpha_cu,
                 fcrit,
                 tolerance,
-                omega):
+                omega,
+                **kwargs):
         """
         This function computes confidence intervals for noncentrality and
         power for a General Linear Hypothesis (GLH  Ho:C*beta=theta0) test
@@ -120,13 +122,36 @@ class Power:
             noncentrality parameter
 
         """
+        df1_unirep = None
+        if 'df1_unirep' in kwargs.keys():
+            df1_unirep = kwargs['df1_unirep']
         if cl_type == Constants.CLTYPE_DESIRED_KNOWN or cl_type == Constants.CLTYPE_DESIRED_ESTIMATE:
             if np.isnan(self.power):
                 warnings.warn('Powerwarn16: Confidence limits are missing because power is missing.')
             else:
                 dfe1 = n_est - rank_est
-                self.lower_bound = self._calc_lower_bound(alphatest, alpha_cl, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance)
-                self.upper_bound = self._calc_upper_bound(alphatest, alpha_cu, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance)
+                self.lower_bound = self._calc_lower_bound(multirep=multirep,
+                                                          alphatest=alphatest,
+                                                          alpha_cl=alpha_cl,
+                                                          cl_type=cl_type,
+                                                          dfe1=dfe1,
+                                                          dfe2=dfe2,
+                                                          dfh=dfh,
+                                                          fcrit=fcrit,
+                                                          omega=omega,
+                                                          tolerance=tolerance,
+                                                          df1_unirep=df1_unirep)
+                self.upper_bound = self._calc_upper_bound(multirep=multirep,
+                                                          alphatest=alphatest,
+                                                          alpha_cu=alpha_cu,
+                                                          cl_type=cl_type,
+                                                          dfe1=dfe1,
+                                                          dfe2=dfe2,
+                                                          dfh=dfh,
+                                                          fcrit=fcrit,
+                                                          noncen_e=omega,
+                                                          tolerance=tolerance,
+                                                          df1_unirep=df1_unirep)
                 self._warn_conservative_ci(alpha_cl, cl_type, n2, n_est)
         else:
             self.lower_bound = None
@@ -145,33 +170,74 @@ class Power:
             if self.upper_bound and self.upper_bound.noncentrality_parameter and alpha_cl == 0 and self.upper_bound.noncentrality_parameter == 0:
                 warnings.warn('The upper confidence limit on power is conservative.')
 
-    def _calc_upper_bound(self, alphatest, alpha_cu, cl_type, dfe1, dfe2, dfh, fcrit, noncen_e, tolerance):
+    def _calc_upper_bound(self, multirep, alphatest, alpha_cu, cl_type, dfe1, dfe2, dfh, fcrit, noncen_e, tolerance, **kwargs):
         """Calculate upper bound for noncentrality"""
+        df1_unirep = None
+        if 'df1_unirep' in kwargs.keys():
+            df1_unirep = kwargs['df1_unirep']
         lower_tail_prob = 1 - alpha_cu
         upper_tail_prob = alpha_cu
         # default values if alpha < tolerance
         noncentrality = float('Inf')
         prob = 0
-        power = self._calc_bound(alphatest, alpha_cu, lower_tail_prob, upper_tail_prob, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, noncen_e, tolerance)
+        power = self._calc_bound(multirep=multirep,
+                                 alphatest=alphatest,
+                                 alpha=alpha_cu,
+                                 lower_tail_prob=lower_tail_prob,
+                                 upper_tail_prob=upper_tail_prob,
+                                 prob=prob,
+                                 noncentrality=noncentrality,
+                                 cl_type=cl_type,
+                                 dfe1=dfe1,
+                                 dfe2=dfe2,
+                                 dfh=dfh,
+                                 fcrit=fcrit,
+                                 omega=noncen_e,
+                                 tolerance=tolerance,
+                                 df1_unirep=df1_unirep)
         return power
 
-    def _calc_lower_bound(self, alphatest, alpha_cl, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance):
+    def _calc_lower_bound(self, multirep, alphatest, alpha_cl, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance, **kwargs):
         """Calculate lower bound for noncentrality"""
+        df1_unirep = None
+        if 'df1_unirep' in kwargs.keys():
+            df1_unirep = kwargs['df1_unirep']
         lower_tail_prob = alpha_cl
         upper_tail_prob = 1 - alpha_cl
         # default values if alpha < tolerance
         noncentrality = 0
         prob = 1 - alphatest
-        power = self._calc_bound(alphatest, alpha_cl, lower_tail_prob, upper_tail_prob, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance)
+        power = self._calc_bound(multirep=multirep,
+                                 alphatest=alphatest,
+                                 alpha=alpha_cl,
+                                 lower_tail_prob=lower_tail_prob,
+                                 upper_tail_prob=upper_tail_prob,
+                                 prob=prob,
+                                 noncentrality=noncentrality,
+                                 cl_type=cl_type,
+                                 dfe1=dfe1,
+                                 dfe2=dfe2,
+                                 dfh=dfh,
+                                 fcrit=fcrit,
+                                 omega=omega,
+                                 tolerance=tolerance,
+                                 df1_unirep=df1_unirep)
         return power
 
-    def _calc_bound(self, alphatest, alpha, lower_tail_prob, upper_tail_prob, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance):
+    def _calc_bound(self, multirep, alphatest, alpha, lower_tail_prob, upper_tail_prob, prob, noncentrality, cl_type, dfe1, dfe2, dfh, fcrit, omega, tolerance, **kwargs):
         """Calculate power bounds """
+        df1_unirep = None
+        if 'df1_unirep' in kwargs.keys():
+            df1_unirep = kwargs['df1_unirep']
         fmethod = Constants.FMETHOD_MISSING
         if alpha > tolerance:
             if cl_type == Constants.CLTYPE_DESIRED_KNOWN:
-                chi = chi2.ppf(lower_tail_prob, dfe1)
-                noncentrality = (chi / dfe1) * omega
+                if multirep:
+                    chi = chi2.ppf(lower_tail_prob, dfe1)
+                    noncentrality = (chi / dfe1) * omega
+                else:
+                    chi = chi2.ppf(lower_tail_prob, dfh)
+                    noncentrality = (chi / dfh) * omega
             elif cl_type == Constants.CLTYPE_DESIRED_ESTIMATE:
                 f_a = omega / dfh
                 bound = finv(upper_tail_prob, dfh, dfe1)
@@ -179,7 +245,10 @@ class Power:
                     noncentrality = 0
                 else:
                     noncentrality = special.ncfdtrinc(dfh, dfe1, upper_tail_prob, f_a)
-            prob, fmethod = probf(fcrit, dfh, dfe2, noncentrality)
+            if multirep:
+                prob, fmethod = probf(fcrit, dfh, dfe2, noncentrality)
+            else:
+                prob, fmethod = probf(fcrit, df1_unirep, dfe2, noncentrality)
         if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
             power_bound = alphatest
         else:

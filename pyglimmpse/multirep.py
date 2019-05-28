@@ -728,19 +728,19 @@ def _multi_power(alpha: float,
     if confidence_interval:
         cl_type = _get_cl_type(confidence_interval)
 
-        power.glmmpcl(
-                  alphatest=alpha,
-                  dfh=df1,
-                  n2=total_N,
-                  dfe2=df2,
-                  cl_type=cl_type,
-                  n_est=confidence_interval.n_est,
-            rank_est=confidence_interval.rank_est,
-                  alpha_cl=confidence_interval.lower_tail,
-                  alpha_cu=confidence_interval.upper_tail,
-                  fcrit=fcrit,
-                  tolerance=1e-12,
-                  omega=omega)
+        power.glmmpcl(multirep=True,
+                      alphatest=alpha,
+                      dfh=df1,
+                      n2=total_N,
+                      dfe2=df2,
+                      cl_type=cl_type,
+                      n_est=confidence_interval.n_est,
+                      rank_est=confidence_interval.rank_est,
+                      alpha_cl=confidence_interval.lower_tail,
+                      alpha_cu=confidence_interval.upper_tail,
+                      fcrit=fcrit,
+                      tolerance=1e-12,
+                      omega=omega)
     return power
 
 
