@@ -5,6 +5,7 @@ from pyglimmpse import unirep
 from pyglimmpse.model import epsilon
 
 from pyglimmpse.constants import Constants
+from pyglimmpse.model.epsilon import Epsilon
 from pyglimmpse.unirep import _geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon, OptionalArgs
 
 
@@ -115,8 +116,8 @@ class TestUnirep(TestCase):
     def test_unirep_power_estimated_sigma_hf(self):
         """ case 1: should return expected value, for hf method """
         expected = 0.98471
-        approximation = Constants.HF
-        unirepmethod = Constants.UCDF_MULLER2004_APPROXIMATION
+        unirep_method = Constants.HF
+        approximation_method = Constants.UCDF_MULLER2004_APPROXIMATION
         alpha = 0.05
         rank_C = 1
         rank_U = 4
@@ -141,8 +142,9 @@ class TestUnirep(TestCase):
                                       [1.055e-15, -8.24e-18, 1.05659, -3.19e-17],
                                       [1.648e-17, 5.624e-16, -3.19e-17, 0.89699]])
         exeps = 0.7203684
-        eps = 0.7203684
-
+        # eps = 0.7203684
+        sigma_star = error_sum_square / (total_N - rank_X)
+        eps = _calc_epsilon(sigma_star=sigma_star, rank_U=rank_U)
 
         result = unirep._unirep_power_estimated_sigma(rank_C=rank_C,
                                                       rank_U=rank_U,
@@ -153,7 +155,7 @@ class TestUnirep(TestCase):
                                                       expected_epsilon=exeps,
                                                       epsilon=eps,
                                                       alpha=alpha,
-                                                      approximation=approximation,
+                                                      unirep_method=unirep_method,
                                                       epsilon_estimator=Constants.EPSILON_MULLER2004,
                                                       unirepmethod=Constants.SIGMA_KNOWN,
                                                       confidence_interval=confidence_interval,
@@ -180,8 +182,8 @@ class TestUnirep(TestCase):
 
         tolerance = 0.000000000000001
 
-        approximation = Constants.GG
-        unirepmethod = Constants.UCDF_MULLER2004_APPROXIMATION
+        unirep_method = Constants.GG
+        approximation_method = Constants.UCDF_MULLER2004_APPROXIMATION
 
         hypo_sum_square = np.matrix([[0.3125, 0.625, -0.625, 0.3125],
                                      [0.625, 1.25, -1.25, 0.625],
@@ -202,7 +204,9 @@ class TestUnirep(TestCase):
         ep = _calc_epsilon(sigma_star, rank_U)
 
         exeps = 0.7203684
-        eps = 0.7203684
+        # eps = 0.7203684
+        sigma_star = error_sum_square / (total_N - rank_X)
+        eps = _calc_epsilon(sigma_star=sigma_star, rank_U=rank_U)
 
         result = unirep._unirep_power_estimated_sigma(rank_C=rank_C,
                                                       rank_U=rank_U,
@@ -213,7 +217,7 @@ class TestUnirep(TestCase):
                                                       expected_epsilon=exeps,
                                                       epsilon=eps,
                                                       alpha=alpha,
-                                                      approximation=approximation,
+                                                      unirep_method=unirep_method,
                                                       epsilon_estimator=Constants.EPSILON_MULLER2004.value,
                                                       unirepmethod=Constants.SIGMA_KNOWN.value,
                                                       confidence_interval=confidence_interval,
