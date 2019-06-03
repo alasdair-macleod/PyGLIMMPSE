@@ -728,7 +728,7 @@ def _multi_power(alpha: float,
     if confidence_interval:
         cl_type = _get_cl_type(confidence_interval)
 
-        power.glmmpcl(multirep=True,
+        power.glmmpcl(is_multirep=True,
                       alphatest=alpha,
                       dfh=df1,
                       n2=total_N,

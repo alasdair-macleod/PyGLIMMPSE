@@ -310,21 +310,6 @@ def _unirep_power_known_sigma(rank_C,
         df1, df2, power = _calc_power_muller_approx(undf1, undf2, omega, alpha, e_3_5, e_4, fcrit)
 
     power = Power(power, omega, Constants.SIGMA_KNOWN)
-    # if confidence_interval:
-    #     cl_type = _get_cl_type(confidence_interval)
-    #     power.glmmpcl(multirep=False,
-    #                   alphatest=alpha,
-    #                   dfh=df1,
-    #                   n2=total_N,
-    #                   rank_est=confidence_interval.rank_est,
-    #                   dfe2=df2,
-    #                   cl_type=cl_type,
-    #                   n_est=confidence_interval.n_est,
-    #                   alpha_cl=confidence_interval.lower_tail,
-    #                   alpha_cu=confidence_interval.upper_tail,
-    #                   fcrit=fcrit,
-    #                   tolerance=tolerance,
-    #                   omega=omega)
 
     return power
 
@@ -449,7 +434,7 @@ def _unirep_power_estimated_sigma(rank_C,
     power = Power(power, omega, Constants.SIGMA_ESTIMATED)
     if confidence_interval:
         cl_type = _get_cl_type(confidence_interval)
-        power.glmmpcl(multirep=False,
+        power.glmmpcl(is_multirep=False,
                       alphatest=alpha,
                       dfh=cl1df,
                       n2=total_N,

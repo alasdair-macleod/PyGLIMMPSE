@@ -19,10 +19,10 @@ class TestGlmmpcl(TestCase):
         dfh = 20
         dfe2 = 28
         fcrit = finv(1 - alphatest, dfh, dfe2)
-        actual = expected.glmmpcl(multirep=True,
+        actual = expected.glmmpcl(is_multirep=True,
                                   alphatest=0.05,
-                                  dfh=20,   # df1
-                                  n2=30,    # total_N ??? what is this
+                                  dfh=20,  # df1
+                                  n2=30,  # total_N ??? what is this
                                   dfe2=28,  # df2
                                   cl_type=Constants.CLTYPE_DESIRED_KNOWN,
                                   n_est=20,
