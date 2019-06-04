@@ -372,9 +372,10 @@ class TestMultirep(TestCase):
         df1 = 3
         df2 = 4
         omega = 3
+        total_N = 10
 
         expected = Power(0.138179071626, 3, Constants.FMETHOD_NORMAL_LR)
-        actual = multirep._multi_power(alpha, df1, df2, omega)
+        actual = multirep._multi_power(alpha, df1, df2, omega, total_N)
         self.assertEqual(round(expected.power, 4), round(actual.power, 4))
         self.assertEqual(expected.noncentrality_parameter, actual.noncentrality_parameter)
 

@@ -61,7 +61,7 @@ def hlt_one_moment_null_approximator(rank_C: float,
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_hlt_omega(min_rank_C_U, eval_HINVE, rank_X, total_N, df2)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     return _undefined_power()
 
 
@@ -118,7 +118,7 @@ def hlt_two_moment_null_approximator(rank_C: float,
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_hlt_omega(min_rank_C_U, eval_HINVE, rank_X, total_N, df2)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     else:
         return _undefined_power()
 
@@ -178,7 +178,7 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float,
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     else:
         return _undefined_power()
 
@@ -238,7 +238,7 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float,
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
-        return _multi_power(alpha, df1, df2, omega, **kwargs)
+        return _multi_power(alpha, df1, df2, omega, total_N, **kwargs)
     else:
         return _undefined_power()
 
@@ -301,7 +301,7 @@ def pbt_one_moment_null_approx(rank_C: float,
                 omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             else:
                 omega = df2 * v / (min_rank_C_U - v)
-            power = _multi_power(alpha, df1, df2, omega)
+            power = _multi_power(alpha, df1, df2, omega, total_N)
             return power
     else:
         return _undefined_power()
@@ -365,7 +365,7 @@ def pbt_two_moment_null_approx(rank_C: float,
             else:
                 omega = df2 * v / (min_rank_C_U - v)
 
-            power = _multi_power(alpha, df1, df2, omega)
+            power = _multi_power(alpha, df1, df2, omega, total_N)
             return power
 
     return _undefined_power()
@@ -427,7 +427,7 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float,
             warnings.warn('Power is missing because because the min_rank_C_U - v  <= 0.')
         else:
             omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
-            power = _multi_power(alpha, df1, df2, omega)
+            power = _multi_power(alpha, df1, df2, omega, total_N)
             return power
     return _undefined_power()
 
@@ -488,7 +488,7 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float,
             return _undefined_power(warning_message_min_rank_C_U)
         else:
             omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
-            power = _multi_power(alpha, df1, df2, omega)
+            power = _multi_power(alpha, df1, df2, omega, total_N)
             return power
     warning_message_df2_eval_HINVE = 'Power is missing because df2 or eval_HINVE is not valid.'
     warnings.warn(warning_message_df2_eval_HINVE)
@@ -548,7 +548,7 @@ def wlk_two_moment_null_approx(rank_C: float,
         warnings.warn(warning_message)
         return _undefined_power(warning_message)
     else:
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
 
 
 def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
@@ -628,7 +628,7 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     return _undefined_power()
 
 
@@ -682,7 +682,7 @@ def special(rank_C: float,
 
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = eval_HINVE[0] * (total_N - rank_X)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     return _undefined_power()
 
 
@@ -696,6 +696,7 @@ def _multi_power(alpha: float,
                  df1: float,
                  df2: float,
                  omega: float,
+                 total_N: float,
                  **kwargs) -> Power:
     """ The common part for these four multirep methods computing power"""
     noncentrality_dist = None
@@ -725,20 +726,29 @@ def _multi_power(alpha: float,
     powerval = float(powerval)
     power = Power(powerval, omega, fmethod)
     if confidence_interval:
-        power.glmmpcl(
-                  alphatest=alpha,
-                  dfh=df1,
-                  n2=confidence_interval.n_est,
-                  dfe1=df1,
-                  dfe2=df2,
-                  cl_type=Constants.CLTYPE_DESIRED_KNOWN,
-                  n_est=confidence_interval.n_est,
-                  alpha_cl=confidence_interval.lower_tail,
-                  alpha_cu=confidence_interval.upper_tail,
-                  fcrit=fcrit,
-                  tolerance=1e-12,
-                  omega=omega)
+        cl_type = _get_cl_type(confidence_interval)
+
+        power.glmmpcl(is_multirep=True,
+                      alphatest=alpha,
+                      dfh=df1,
+                      n2=total_N,
+                      dfe2=df2,
+                      cl_type=cl_type,
+                      n_est=confidence_interval.n_est,
+                      rank_est=confidence_interval.rank_est,
+                      alpha_cl=confidence_interval.lower_tail,
+                      alpha_cu=confidence_interval.upper_tail,
+                      fcrit=fcrit,
+                      tolerance=1e-12,
+                      omega=omega)
     return power
+
+
+def _get_cl_type(confidence_interval):
+    cl_type = Constants.CLTYPE_DESIRED_KNOWN
+    if not confidence_interval.beta_known:
+        cl_type = Constants.CLTYPE_DESIRED_ESTIMATE
+    return cl_type
 
 
 def __calc_quantile_omega(noncentrality_distribution, quantile):
