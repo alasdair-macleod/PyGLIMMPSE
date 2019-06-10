@@ -97,7 +97,7 @@ class TestNoncentralityDist(TestCase):
         stdevG = 1.0
 
         perGroupN = 5
-        tests = [Constants.UN.value, Constants.HF.value, Constants.GG.value, Constants.BOX.value]
+        tests = [Constants.UN, Constants.HF, Constants.GG, Constants.BOX]
 
         noncen_dists = []
         for test in tests:
