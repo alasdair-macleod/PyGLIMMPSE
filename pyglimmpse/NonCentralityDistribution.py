@@ -243,7 +243,7 @@ class NonCentralityDistribution(object):
                 # create a central F to approximate the distribution of the non-centrality parameter
                 # return power based on the non-central F
                 x = (nuStarNegative * lambdaStarNegative) / (nuStarPositive * lambdaStarPositive)
-                return f(x, nuStarPositive, nuStarNegative)
+                return f.cdf(x, nuStarPositive, nuStarNegative)
         except GlimmpseCalculationException as e:
             print("exiting cdf abnormally", e)
             raise GlimmpseCalculationException(e)
@@ -252,7 +252,7 @@ class NonCentralityDistribution(object):
         """ generated source for method inverseCDF """
         if self.H1 <= 0:
             return 0
-        quantFunc = lambda n: quantile -  self.cdf(n)
+        quantFunc = lambda n: quantile - self.cdf(n)
         try:
             return optimize.bisect(quantFunc, self.H0, self.H1)
         except GlimmpseCalculationException as e:
@@ -269,7 +269,7 @@ class NonCentralityDistribution(object):
         """ generated source for method getSigmaStarInverse """
         if not self.isPositiveDefinite(sigma_star):
             self.errors.append(Constants.ERR_NOT_POSITIVE_DEFINITE)
-        if test == Constants.HLT or test == Constants.HLT.value:
+        if test == Constants.HLT or test == Constants.HLT.value or test.value == Constants.HLT.value:
             return np.linalg.inv(sigma_star)
         else:
             # stat should only be UNIREP (uncorrected, box, GG, or HF) at this point

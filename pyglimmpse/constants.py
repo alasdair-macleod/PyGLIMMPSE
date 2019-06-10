@@ -40,7 +40,7 @@ class Constants(Enum):
     FMETHOD_MISSING = '5 Power missing'
 
     COLLAPSE = 'special'
-    HLT = 'Hotelling - Lawley trace'
+    HLT = 'Hotelling Lawley Trace'
     PBT = 'Pillai - Bartletttrace'
     WLK = 'Wilks Lambda'
     UN = 'uncorrected univariate approach to repeated measures'
