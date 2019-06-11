@@ -2,6 +2,7 @@
 import numpy as np
 from scipy import optimize
 from scipy.stats import f
+from scipy import special
 import scipy.integrate as integrate
 
 from pyglimmpse.WeightedSumOfNoncentralChiSquaresDistribution import WeightedSumOfNoncentralChiSquaresDistribution
@@ -312,15 +313,9 @@ class NonCentralityDistribution(object):
         elif round(self.H1, 12) == round(self.H0, 12):
             return 0
         else:
-            t1 = probf(fcrit=fcrit,
-                       df1=df1,
-                       df2=df2,
-                       noncen=t)[0]
-            t2_noncentrality = (fcrit * df2)/(df2+2)
-            t2 = probf(fcrit=fcrit,
-                       df1=df1+2,
-                       df2=df2,
-                       noncen=t2_noncentrality)[0]
+            t1 = special.ncfdtr(df1,df2,t,fcrit)
+            t2_fcrit = (fcrit * df1)/(df1+2)
+            t2 = special.ncfdtr(df1+2,df2,t,t2_fcrit)
             return self.cdf(t) * (t1 - t2)
 
     def unconditional_power_simpson(self, fcrit, df1, df2):
@@ -328,7 +323,7 @@ class NonCentralityDistribution(object):
         bounds = [self.H0, self.H1]
         t1, fmethod = probf(fcrit=fcrit, df1=df1, df2=df2, noncen=self.H1)
         t2 = (0.50 * integrate.simps([y(x) for x in bounds]))
-        prob = 1 - t1 - t2
+        prob = t1 + t2
         return prob, fmethod
 
 
