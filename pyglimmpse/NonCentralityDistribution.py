@@ -321,9 +321,33 @@ class NonCentralityDistribution(object):
     def unconditional_power_simpson(self, fcrit, df1, df2):
         y = lambda x: self.__unconditional_power_simpson_term(fcrit=fcrit, df1=df1, df2=df2, t=x)
         bounds = [self.H0, self.H1]
-        t1, fmethod = probf(fcrit=fcrit, df1=df1, df2=df2, noncen=self.H1)
-        t2 = (0.50 * integrate.simps([y(x) for x in bounds]))
+        t1 = special.ncfdtr(df1, df2, self.H1, fcrit)
+        # t2 = (0.50 * integrate.simps([y(x) for x in bounds]))
+
+        n = 32
+        h = (self.H1 - self.H0) / n
+        x = list()
+        fx = list()
+        i = 0
+        while i <= n:
+            x.append(self.H0 + i * h)
+            fx.append(y(x[i]))
+            i += 1
+
+        res = 0
+        i = 0
+        while i<=n:
+            if i == 0 or i == n:
+                res += fx[i]
+            elif i % 2 != 0:
+                res += 4 * fx[i]
+            else:
+                res += 2 * fx[i]
+            i += 1
+        res = res * (h/3)
+        t2 = res/2
+
         prob = t1 + t2
-        return prob, fmethod
+        return prob, None
 
 
