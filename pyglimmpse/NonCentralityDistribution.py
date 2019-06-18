@@ -321,23 +321,21 @@ class NonCentralityDistribution(object):
             t2 = special.ncfdtr(df1+2,df2,t,t2_fcrit)
             return self.cdf(t) * (t1 - t2)
 
-    def intervals(self, first, last, spacing, fcrit, df1, df2):
-        y = lambda x: self.__unconditional_power_simpson_term(fcrit=fcrit, df1=df1, df2=df2, t=x)
-        step = (last - first)/spacing
-        arr = [first + (step * i) for i in range(spacing - 1)]
-        arr.append(last)
-        ret = [y(x) for x in arr]
-        return ret
-
     def unconditional_power_simpson(self, fcrit, df1, df2):
+        """
+        Calculates unconditional power using integration by simpsons rule.
+
+        :param fcrit:
+        :param df1:
+        :param df2:
+        :return:
+        """
         y = lambda x: self.__unconditional_power_simpson_term(fcrit=fcrit, df1=df1, df2=df2, t=x)
         bounds = [self.H0, self.H1]
 
         t1 = special.ncfdtr(df1, df2, self.H1, fcrit)
-        t2 = (0.50 * integrate.simps([y(x) for x in bounds]))
-        tf = (0.50 * integrate.simps([y(x) for x in bounds], None, 1, -1, 'first'))
-        tL = (0.50 * integrate.simps([y(x) for x in bounds], None, 1, -1, 'last'))
 
+        # set up properties for integration by Simpson's rule
         n = 2
         old_prob = 1
         max_iterations = math.pow(64, 2)
@@ -363,8 +361,8 @@ class NonCentralityDistribution(object):
 
             res = res * (h/3)
             t2 = res/2
-
             prob = t1 + t2
+
             #check delta
             if n >= max_iterations:
                 end_condition = True
@@ -377,35 +375,5 @@ class NonCentralityDistribution(object):
 
 
         return prob, None
-
-    def _basic_simps(self, y, start, stop, x, dx, axis):
-        nd = len(y)
-        if start is None:
-            start = 0
-        step = 2
-        slice_all = (slice(None),) * nd
-        slice0 = tupleset(slice_all, axis, slice(start, stop, step))
-        slice1 = tupleset(slice_all, axis, slice(start + 1, stop + 1, step))
-        slice2 = tupleset(slice_all, axis, slice(start + 2, stop + 2, step))
-
-        if x is None:  # Even spaced Simpson's rule.
-            result = np.sum(dx / 3.0 * (y[slice0] + 4 * y[slice1] + y[slice2]),
-                            axis=axis)
-        else:
-            # Account for possibly different spacings.
-            #    Simpson's rule changes a bit.
-            h = np.diff(x, axis=axis)
-            sl0 = tupleset(slice_all, axis, slice(start, stop, step))
-            sl1 = tupleset(slice_all, axis, slice(start + 1, stop + 1, step))
-            h0 = h[sl0]
-            h1 = h[sl1]
-            hsum = h0 + h1
-            hprod = h0 * h1
-            h0divh1 = h0 / h1
-            tmp = hsum / 6.0 * (y[slice0] * (2 - 1.0 / h0divh1) +
-                                y[slice1] * hsum * hsum / hprod +
-                                y[slice2] * (2 - h0divh1))
-            result = np.sum(tmp, axis=axis)
-        return result
 
 
