@@ -171,8 +171,13 @@ class TestNoncentralityDist(TestCase):
         # integral result 0.02625710980203323
         # result 0.8045605423465413
 
+        # 0.5127311459742605
+        # 0.21502204564774394
+
         expected = 0.8045605423465413
-        actual = noncen_dists[0].unconditional_power_simpson(fcrit, df1, df2)
-        actual = noncen_dists[1].unconditional_power_simpson(fcrit, df1, df2)
-        actual = noncen_dists[2].unconditional_power_simpson(fcrit, df1, df2)
-        self.assertAlmostEqual(expected, actual, 3)
+        a = noncen_dists[0].unconditional_power_simpson(fcrit, df1, df2)
+        b = noncen_dists[1].unconditional_power_simpson(fcrit, df1, df2)
+        c = noncen_dists[2].unconditional_power_simpson(fcrit, df1, df2)
+        self.assertAlmostEqual(expected, a[0], 4)
+        self.assertAlmostEqual(0.5127311459742605, b[0], 4)
+        self.assertAlmostEqual(0.21502204564774394, c[0], 4)

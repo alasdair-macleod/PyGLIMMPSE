@@ -324,11 +324,6 @@ class NonCentralityDistribution(object):
     def unconditional_power_simpson(self, fcrit, df1, df2):
         """
         Calculates unconditional power using integration by simpsons rule.
-
-        :param fcrit:
-        :param df1:
-        :param df2:
-        :return:
         """
         y = lambda x: self.__unconditional_power_simpson_term(fcrit=fcrit, df1=df1, df2=df2, t=x)
         bounds = [self.H0, self.H1]
