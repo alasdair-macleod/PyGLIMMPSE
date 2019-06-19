@@ -121,3 +121,63 @@ class TestNoncentralityDist(TestCase):
 
     def test_probf(self):
         print(probf(0.05, 0.5, 0.5, 10.0))
+
+    def test_unconditional_power_simpson(self):
+        """
+        Test for model as described in .....
+        :return:
+        """
+        Cf = np.matrix([[1.0, -1.0, 0.0], [1.0, 0.0, -1.0]])
+        Cg = np.matrix([[0.0], [0.0]])
+        C = np.concatenate((Cf, Cg), axis=1)
+
+        Bf = np.matrix([[1.0, 0.0, 0.0, 0.0], [0.0, 2.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]])
+        Bg = np.matrix([[0.5, 0.5, 0.5, 0.0]])
+        beta_scale = [0.4997025, 0.8075886, 1.097641]
+        B = [np.concatenate((Bf * scale, Bg), axis=0) for scale in beta_scale]
+
+        U = np.matrix([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]])
+
+        Theta = [C * b * U for b in B]
+        Theta0 = np.matrix([[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]])
+        thetaDiff = [t - Theta0 for t in Theta]
+
+        FEssence = np.matrix([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        SigmaError = np.matrix([[0.75, -0.25, -0.25, 0.0], [-0.25, 0.75, -0.25, 0.0], [-0.25, -0.25, 0.75, 0.0], [0, 0, 0, 1.0]])
+        sigmaStar = U.T * SigmaError * U
+        stdevG = 1.0
+
+        perGroupN = 5
+        tests = [Constants.HLT]
+
+        noncen_dists = []
+        for test in tests:
+            for theta_diff in thetaDiff:
+                noncen_dists.append(NonCentralityDistribution(
+                    test=test,
+                    FEssence=FEssence,
+                    perGroupN=perGroupN,
+                    CFixed=Cf,
+                    CGaussian=Cg,
+                    thetaDiff=theta_diff,
+                    stddevG=stdevG,
+                    sigmaStar=sigmaStar,
+                    exact=False))
+
+        fcrit = 3.1639338863418063
+        df1 = 8.0
+        df2 = 9.384615384615383
+
+        # integral result 0.02625710980203323
+        # result 0.8045605423465413
+
+        # 0.5127311459742605
+        # 0.21502204564774394
+
+        expected = 0.8045605423465413
+        a = noncen_dists[0].unconditional_power_simpson(fcrit, df1, df2)
+        b = noncen_dists[1].unconditional_power_simpson(fcrit, df1, df2)
+        c = noncen_dists[2].unconditional_power_simpson(fcrit, df1, df2)
+        self.assertAlmostEqual(expected, a[0], 4)
+        self.assertAlmostEqual(0.5127311459742605, b[0], 4)
+        self.assertAlmostEqual(0.21502204564774394, c[0], 4)

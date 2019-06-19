@@ -1,7 +1,11 @@
 #!/usr/bin/env python
+import math
+
 import numpy as np
 from scipy import optimize
+from scipy.integrate.quadrature import tupleset
 from scipy.stats import f
+from scipy import special
 import scipy.integrate as integrate
 
 from pyglimmpse.WeightedSumOfNoncentralChiSquaresDistribution import WeightedSumOfNoncentralChiSquaresDistribution
@@ -312,23 +316,59 @@ class NonCentralityDistribution(object):
         elif round(self.H1, 12) == round(self.H0, 12):
             return 0
         else:
-            t1 = probf(fcrit=fcrit,
-                       df1=df1,
-                       df2=df2,
-                       noncen=t)[0]
-            t2_noncentrality = (fcrit * df2)/(df2+2)
-            t2 = probf(fcrit=fcrit,
-                       df1=df1+2,
-                       df2=df2,
-                       noncen=t2_noncentrality)[0]
+            t1 = special.ncfdtr(df1,df2,t,fcrit)
+            t2_fcrit = (fcrit * df1)/(df1+2)
+            t2 = special.ncfdtr(df1+2,df2,t,t2_fcrit)
             return self.cdf(t) * (t1 - t2)
 
     def unconditional_power_simpson(self, fcrit, df1, df2):
+        """
+        Calculates unconditional power using integration by simpsons rule.
+        """
         y = lambda x: self.__unconditional_power_simpson_term(fcrit=fcrit, df1=df1, df2=df2, t=x)
         bounds = [self.H0, self.H1]
-        t1, fmethod = probf(fcrit=fcrit, df1=df1, df2=df2, noncen=self.H1)
-        t2 = (0.50 * integrate.simps([y(x) for x in bounds]))
-        prob = 1 - t1 - t2
-        return prob, fmethod
+
+        t1 = special.ncfdtr(df1, df2, self.H1, fcrit)
+
+        # set up properties for integration by Simpson's rule
+        n = 2
+        old_prob = 1
+        max_iterations = math.pow(64, 2)
+
+        # start iteration
+        end_condition = False
+        while not end_condition:
+            h = (self.H1 - self.H0) / n
+            x = []
+            fx = []
+            for i in range(n):
+                x.append(self.H0 + i * h)
+                fx.append(y(x[i]))
+
+            res = 0
+            for i in range(n):
+                if i == 0 or i == n:
+                    res += fx[i]
+                elif i % 2 != 0:
+                    res += 4 * fx[i]
+                else:
+                    res += 2 * fx[i]
+
+            res = res * (h/3)
+            t2 = res/2
+            prob = t1 + t2
+
+            #check delta
+            if n >= max_iterations:
+                end_condition = True
+            delta = math.fabs(prob - old_prob)
+            r_limit = math.pow(10, -6) * (math.fabs(prob) + math.fabs(old_prob)) * 0.5
+            if (delta <= r_limit) or (delta <= math.pow(10, -6)):
+                end_condition = True
+            old_prob = prob
+            n = n * 2
+
+
+        return prob, None
 
 
