@@ -11,7 +11,6 @@ class TestSamplesize(TestCase):
 
     def test_samplesize_hlt(self):
         c_matrix=np.matrix([[1]])
-        u_matrix=np.matrix([[1]])
         m=np.matrix([[1]])
         sigma_star=np.matrix([[312.5]])
         theta=np.matrix([[52]])
@@ -26,16 +25,15 @@ class TestSamplesize(TestCase):
 
         size, power = samplesize.samplesize(test=test,
                                             rank_C=np.linalg.matrix_rank(c_matrix),
-                                            rank_U=np.linalg.matrix_rank(u_matrix),
                                             alpha=alpha,
                                             sigma_star=sigma_star,
                                             targetPower=target_power,
                                             rank_X=np.linalg.matrix_rank(essence_design_matrix),
-                                            delta=delta,
+                                            delta_es=delta,
                                             relative_group_sizes=groups,
                                             starting_smallest_group_size=10)
-        self.assertEqual(size, 50)
-        self.assertEqual(round(power, 8), round(0.9010195056728821, 8))
+        self.assertEqual(49, size)
+        self.assertEqual(round(power.power, 8), round(0.90101951, 8))
 
     def test_samplesize_hlt_multi_group(self):
         m=np.matrix([[1.16666667, 0.16666667], [0.16666667, 0.66666667]])
@@ -49,16 +47,15 @@ class TestSamplesize(TestCase):
         test = hlt_two_moment_null_approximator_obrien_shieh
         size, power = samplesize.samplesize(test=test,
                                             rank_C=2,
-                                            rank_U=1,
                                             alpha=alpha,
                                             sigma_star=sigma_star,
                                             targetPower=target_power,
                                             rank_X=3,
-                                            delta=delta,
+                                            delta_es=delta,
                                             relative_group_sizes=groups)
 
-        self.assertEqual(round(0.904593341412432, 8) , round(power, 8))
-        self.assertEqual(369, size)
+        self.assertEqual(round(0.90459334, 8), round(power.power, 8))
+        self.assertEqual(360, size)
 
 
     # def test_samplesize_uncorrected(self):

@@ -10,13 +10,14 @@ from pyglimmpse.probf import probf
 
 
 def hlt_one_moment_null_approximator(rank_C: float,
-                                     rank_U: float,
                                      rank_X: float,
-                                     total_N: float,
+                                     relative_group_sizes,
+                                     rep_N: float,
                                      alpha: float,
-                                     error_sum_square: np.matrix,
-                                     hypothesis_sum_square: np.matrix,
-                                     tolerance=1e-12) -> Power:
+                                     sigma_star: np.matrix,
+                                     delta_es: np.matrix,
+                                     tolerance=1e-12,
+                                     **kwargs) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -49,24 +50,31 @@ def hlt_one_moment_null_approximator(rank_C: float,
     # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 1  Pillai (1954, 55) 1 moment null approx
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
+
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
     df2 = _hlt_one_moment_df2(min_rank_C_U, rank_U, rank_X, total_N)
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_hlt_omega(min_rank_C_U, eval_HINVE, rank_X, total_N, df2)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     return _undefined_power()
 
 
 def hlt_two_moment_null_approximator(rank_C: float,
-                                     rank_U: float,
                                      rank_X: float,
-                                     total_N: float,
+                                     relative_group_sizes,
+                                     rep_N: float,
                                      alpha: float,
-                                     error_sum_square: np.matrix,
-                                     hypothesis_sum_square: np.matrix,
-                                     tolerance=1e-12) -> Power:
+                                     sigma_star: np.matrix,
+                                     delta_es: np.matrix,
+                                     tolerance=1e-12,
+                                     **kwargs) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -99,25 +107,32 @@ def hlt_two_moment_null_approximator(rank_C: float,
     """  # MMETHOD default= [4,2,2]
     # MultiHLT  Choices for Hotelling-Lawley Trace
     #       = 2  McKeon (1974) two moment null approx
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
+
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
     df2 = _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N)
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_hlt_omega(min_rank_C_U, eval_HINVE, rank_X, total_N, df2)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     else:
         return _undefined_power()
 
 
 def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float,
-                                                  rank_U: float,
                                                   rank_X: float,
-                                                  total_N: float,
+                                                  relative_group_sizes,
+                                                  rep_N: float,
                                                   alpha: float,
-                                                  error_sum_square: np.matrix,
-                                                  hypothesis_sum_square: np.matrix,
-                                                  tolerance=1e-12) -> Power:
+                                                  sigma_star: np.matrix,
+                                                  delta_es: np.matrix,
+                                                  tolerance=1e-12,
+                                                  **kwargs) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -147,6 +162,11 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float,
     power
         power for Hotelling-Lawley trace & CL if requested
     """
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
 
@@ -159,19 +179,20 @@ def hlt_one_moment_null_approximator_obrien_shieh(rank_C: float,
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     else:
         return _undefined_power()
 
 
 def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float,
-                                                  rank_U: float,
                                                   rank_X: float,
-                                                  total_N: float,
+                                                  relative_group_sizes,
+                                                  rep_N: float,
                                                   alpha: float,
-                                                  error_sum_square: np.matrix,
-                                                  hypothesis_sum_square: np.matrix,
-                                                  tolerance=1e-12) -> Power:
+                                                  sigma_star: np.matrix,
+                                                  delta_es: np.matrix,
+                                                  tolerance=1e-12,
+                                                  **kwargs) -> Power:
     """
     This function calculates power for Hotelling-Lawley trace
     based on the Pillai F approximation. HLT is the "population value"
@@ -201,6 +222,11 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float,
     power
         power for Hotelling-Lawley trace & CL if requested
     """
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
 
@@ -213,19 +239,20 @@ def hlt_two_moment_null_approximator_obrien_shieh(rank_C: float,
     # df2 need to > 0 and eigenvalues not missing
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = _calc_omega(min_rank_C_U, eval_HINVE, rank_X, total_N)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N, **kwargs)
     else:
         return _undefined_power()
 
 
 def pbt_one_moment_null_approx(rank_C: float,
-                               rank_U: float,
                                rank_X: float,
-                               total_N: float,
+                               relative_group_sizes,
+                               rep_N: float,
                                alpha: float,
-                               error_sum_square: np.matrix,
-                               hypothesis_sum_square: np.matrix,
-                               tolerance=1e-12) -> Power:
+                               sigma_star: np.matrix,
+                               delta_es: np.matrix,
+                               tolerance=1e-12,
+                               **kwargs) -> Power:
     """
     This function calculates power for Pillai-Bartlett trace based on the F approx. method.
     V is the "population value" of PBT.
@@ -255,6 +282,11 @@ def pbt_one_moment_null_approx(rank_C: float,
     power
         a power object
     """
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
     df2 = _pbt_one_moment_df2(rank_C, rank_U, rank_X, total_N)
@@ -270,20 +302,21 @@ def pbt_one_moment_null_approx(rank_C: float,
                 omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
             else:
                 omega = df2 * v / (min_rank_C_U - v)
-            power = _multi_power(alpha, df1, df2, omega)
+            power = _multi_power(alpha, df1, df2, omega, total_N)
             return power
     else:
         return _undefined_power()
 
 
 def pbt_two_moment_null_approx(rank_C: float,
-                               rank_U: float,
                                rank_X: float,
-                               total_N: float,
+                               relative_group_sizes,
+                               rep_N: float,
                                alpha: float,
-                               error_sum_square: np.matrix,
-                               hypothesis_sum_square: np.matrix,
-                               tolerance=1e-12) -> Power:
+                               sigma_star: np.matrix,
+                               delta_es: np.matrix,
+                               tolerance=1e-12,
+                               **kwargs) -> Power:
     """
         This function calculates power for Pillai-Bartlett trace based on the F approx. method.
         V is the "population value" of PBT.
@@ -313,6 +346,11 @@ def pbt_two_moment_null_approx(rank_C: float,
         power
             a power object
         """
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     min_rank_C_U = min(rank_C, rank_U)
     df1, df2 = _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N)
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
@@ -328,20 +366,21 @@ def pbt_two_moment_null_approx(rank_C: float,
             else:
                 omega = df2 * v / (min_rank_C_U - v)
 
-            power = _multi_power(alpha, df1, df2, omega)
+            power = _multi_power(alpha, df1, df2, omega, total_N)
             return power
 
     return _undefined_power()
 
 
 def pbt_one_moment_null_approx_obrien_shieh(rank_C: float,
-                                            rank_U: float,
                                             rank_X: float,
-                                            total_N: float,
+                                            relative_group_sizes,
+                                            rep_N: float,
                                             alpha: float,
-                                            error_sum_square: np.matrix,
-                                            hypothesis_sum_square: np.matrix,
-                                            tolerance=1e-12) -> Power:
+                                            sigma_star: np.matrix,
+                                            delta_es: np.matrix,
+                                            tolerance=1e-12,
+                                            **kwargs) -> Power:
     """
         This function calculates power for Pillai-Bartlett trace based on the F approx. method.
         V is the "population value" of PBT.
@@ -371,6 +410,11 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float,
         power
             a power object
         """
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
     df2 = _pbt_one_moment_df2(rank_C, rank_U, rank_X, total_N)
@@ -384,19 +428,20 @@ def pbt_one_moment_null_approx_obrien_shieh(rank_C: float,
             warnings.warn('Power is missing because because the min_rank_C_U - v  <= 0.')
         else:
             omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
-            power = _multi_power(alpha, df1, df2, omega)
+            power = _multi_power(alpha, df1, df2, omega, total_N)
             return power
     return _undefined_power()
 
 
 def pbt_two_moment_null_approx_obrien_shieh(rank_C: float,
-                                            rank_U: float,
                                             rank_X: float,
-                                            total_N: float,
+                                            relative_group_sizes,
+                                            rep_N: float,
                                             alpha: float,
-                                            error_sum_square: np.matrix,
-                                            hypothesis_sum_square: np.matrix,
-                                            tolerance=1e-12) -> Power:
+                                            sigma_star: np.matrix,
+                                            delta_es: np.matrix,
+                                            tolerance=1e-12,
+                                            **kwargs) -> Power:
     """
     This function calculates power for Pillai-Bartlett trace based on the F approx. method.
     V is the "population value" of PBT.
@@ -426,6 +471,11 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float,
     power
         a power object
     """
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     min_rank_C_U = min(rank_C, rank_U)
     df1, df2 = _pbt_two_moment_df1_df2(rank_C, rank_U, rank_X, total_N)
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
@@ -439,7 +489,7 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float,
             return _undefined_power(warning_message_min_rank_C_U)
         else:
             omega = total_N * min_rank_C_U * v / (min_rank_C_U - v)
-            power = _multi_power(alpha, df1, df2, omega)
+            power = _multi_power(alpha, df1, df2, omega, total_N)
             return power
     warning_message_df2_eval_HINVE = 'Power is missing because df2 or eval_HINVE is not valid.'
     warnings.warn(warning_message_df2_eval_HINVE)
@@ -448,13 +498,19 @@ def pbt_two_moment_null_approx_obrien_shieh(rank_C: float,
 
 
 def wlk_two_moment_null_approx(rank_C: float,
-                               rank_U: float,
                                rank_X: float,
-                               total_N: float,
+                               relative_group_sizes,
+                               rep_N: float,
                                alpha: float,
-                               error_sum_square: np.matrix,
-                               hypothesis_sum_square: np.matrix,
-                               tolerance=1e-12) -> Power:
+                               sigma_star: np.matrix,
+                               delta_es: np.matrix,
+                               tolerance=1e-12,
+                               **kwargs) -> Power:
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
@@ -493,17 +549,18 @@ def wlk_two_moment_null_approx(rank_C: float,
         warnings.warn(warning_message)
         return _undefined_power(warning_message)
     else:
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
 
 
 def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
-                                            rank_U: float,
                                             rank_X: float,
-                                            total_N: float,
+                                            relative_group_sizes,
+                                            rep_N: float,
                                             alpha: float,
-                                            error_sum_square: np.matrix,
-                                            hypothesis_sum_square: np.matrix,
-                                            tolerance=1e-12) -> Power:
+                                            sigma_star: np.matrix,
+                                            delta_es: np.matrix,
+                                            tolerance=1e-12,
+                                            **kwargs) -> Power:
     """
     This function calculates power for Wilk's Lambda based on
     the F approx. method.  W is the "population value" of Wilks` Lambda,
@@ -532,6 +589,11 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
     power
         power for Hotelling-Lawley trace & CL if requested
     """
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
     eval_HINVE = _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square)
@@ -567,18 +629,19 @@ def wlk_two_moment_null_approx_obrien_shieh(rank_C: float,
     if df2 <= tolerance or np.isnan(w) or np.isnan(omega):
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
     else:
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     return _undefined_power()
 
 
 def special(rank_C: float,
-            rank_U: float,
             rank_X: float,
-            total_N: float,
+            relative_group_sizes,
+            rep_N: float,
             alpha: float,
-            error_sum_square: np.matrix,
-            hypothesis_sum_square: np.matrix,
-            tolerance=1e-12) -> Power:
+            sigma_star: np.matrix,
+            delta_es: np.matrix,
+            tolerance=1e-12,
+            **kwargs) -> Power:
     """
     This function performs two disparate tasks. For B=1 (UNIVARIATE
     TEST), the powers are calculated more efficiently. For A=1 (SPECIAL
@@ -608,6 +671,11 @@ def special(rank_C: float,
     power
         power for Hotelling-Lawley trace & CL if requested
     """
+    error_sum_square, hypothesis_sum_square, rank_U, total_N = calc_properties(delta_es=delta_es,
+                                                                               rank_X=rank_X,
+                                                                               relative_group_sizes=relative_group_sizes,
+                                                                               rep_N=rep_N,
+                                                                               sigma_star=sigma_star)
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
     df2 = total_N - rank_X - rank_U + 1
@@ -615,7 +683,7 @@ def special(rank_C: float,
 
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = eval_HINVE[0] * (total_N - rank_X)
-        return _multi_power(alpha, df1, df2, omega)
+        return _multi_power(alpha, df1, df2, omega, total_N)
     return _undefined_power()
 
 
@@ -625,17 +693,68 @@ def _df1_rank_c_u(rank_C: float, rank_U: float) -> float:
     return df1
 
 
-def _multi_power(alpha: float, df1: float, df2: float, omega: float) -> Power:
+def _multi_power(alpha: float,
+                 df1: float,
+                 df2: float,
+                 omega: float,
+                 total_N: float,
+                 **kwargs) -> Power:
     """ The common part for these four multirep methods computing power"""
+    noncentrality_dist = None
+    quantile = None
+    confidence_interval = None
+    for key, value in kwargs.items():
+        if key == 'noncentrality_distribution':
+            noncentrality_dist = value
+        if key == 'quantile':
+            quantile = value
+        if key == 'confidence_interval':
+            confidence_interval = value
+
     fcrit = finv(1 - alpha, df1, df2)
-    prob, fmethod = probf(fcrit, df1, df2, omega)
+    if noncentrality_dist and quantile:
+        omega = __calc_quantile_omega(noncentrality_dist, quantile)
+        prob, fmethod = probf(fcrit, df1, df2, omega)
+    elif noncentrality_dist and not quantile:
+        prob, fmethod = noncentrality_dist.unconditional_power_simpson(fcrit=fcrit, df1=df1, df2=df2)
+    else:
+        prob, fmethod = probf(fcrit, df1, df2, omega)
+
     if fmethod == Constants.FMETHOD_NORMAL_LR and prob == 1:
         powerval = alpha
     else:
         powerval = 1 - prob
     powerval = float(powerval)
     power = Power(powerval, omega, fmethod)
+    if confidence_interval:
+        cl_type = _get_cl_type(confidence_interval)
+
+        power.glmmpcl(is_multirep=True,
+                      alphatest=alpha,
+                      dfh=df1,
+                      n2=total_N,
+                      dfe2=df2,
+                      cl_type=cl_type,
+                      n_est=confidence_interval.n_est,
+                      rank_est=confidence_interval.rank_est,
+                      alpha_cl=confidence_interval.lower_tail,
+                      alpha_cu=confidence_interval.upper_tail,
+                      fcrit=fcrit,
+                      tolerance=1e-12,
+                      omega=omega)
     return power
+
+
+def _get_cl_type(confidence_interval):
+    cl_type = Constants.CLTYPE_DESIRED_KNOWN
+    if not confidence_interval.beta_known:
+        cl_type = Constants.CLTYPE_DESIRED_ESTIMATE
+    return cl_type
+
+
+def __calc_quantile_omega(noncentrality_distribution, quantile):
+    omega = noncentrality_distribution.inverseCDF(quantile)
+    return omega
 
 
 def _trace(eval_HINVE, rank_X, total_N):
@@ -676,7 +795,7 @@ def _hlt_two_moment_df2(rank_C, rank_U, rank_X, total_N):
 
 
 def _valid_df2_eigenvalues(eval_HINVE: [], df2=1, tolerance=1e-12) -> bool:
-    """check that df2 is positive and thath the eigenvalues have been calculates"""
+    """check that df2 is positive and thath the eigenvalues have been calculated"""
     # df2 need to be > 0 and eigenvalues not missing
     if df2 <= tolerance or np.isnan(df2) or np.isnan(eval_HINVE[0]):
         warnings.warn('Power is missing because because the noncentrality could not be computed.')
@@ -728,11 +847,56 @@ def _undefined_power(error_message=None):
     return Power(float('nan'), float('nan'), Constants.FMETHOD_MISSING, error_message)
 
 
+def calc_properties(delta_es, rank_X, relative_group_sizes, rep_N, sigma_star):
+    """
+    Calculate properties of this design for a given samplesize.
+
+    :param delta_es:
+    :param rank_X:
+    :param relative_group_sizes:
+    :param rep_N:
+    :param sigma_star:
+    :return:
+    """
+    rank_U = np.shape(sigma_star)[0]
+    total_N = rep_N * sum(relative_group_sizes)
+    error_sum_square = calc_error_sum_square(total_n=total_N,
+                                             rank_x=rank_X,
+                                             sigma_star=sigma_star)
+    hypothesis_sum_square = calc_hypothesis_sum_square(repeated_rows_in_design_matrix=rep_N,
+                                                       delta=delta_es)
+    return error_sum_square, hypothesis_sum_square, rank_U, total_N
+
+
 def _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square):
     """ Calculate eigenvalues for H*INV(E) for Multi-rep"""
+    # inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square))
+    # hei_orth = inverse_error_sum * hypothesis_sum_square * inverse_error_sum.T
+    #
+    #
+    # # we use a singular value decomposition here rather than calvulating eigenvalues
+    # # for numerical stability. We can do this because hei_orth is a square
+    # # symmetric non-negative definite matrix.
+    # eval = np.linalg.svd(hei_orth, full_matrices=True, compute_uv=False)
+
     inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square))
     hei_orth = inverse_error_sum * hypothesis_sum_square * inverse_error_sum.T
     hei_orth_symm = (hei_orth + hei_orth.T) / 2
     eigenvaluesorted = np.sort(linalg.eigh(hei_orth_symm, eigvals_only=True))[::-1]
     eval = eigenvaluesorted[0:min_rank_C_U]
     return eval
+
+def calc_error_sum_square(total_n, rank_x, sigma_star):
+    """
+    Calculate error sum of squares matrix = nu_e * sigma star
+
+    :param total_n: total samplesize
+    :param rank_x: rank of the design matrix X
+    :param sigma_star: sigma star
+    :return: error sums of squares matrix
+    """
+    nu_e = total_n - rank_x
+    return nu_e * sigma_star
+
+def calc_hypothesis_sum_square(repeated_rows_in_design_matrix, delta):
+    return repeated_rows_in_design_matrix * delta

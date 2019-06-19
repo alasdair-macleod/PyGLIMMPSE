@@ -12,15 +12,30 @@ class TestMultirep(TestCase):
         """
 
         rank_C = 1
-        rank_U = 1
         rank_X = 1
         total_N = 10
         error_sum_square = np.matrix([[18]])
         hypothesis_sum_square = np.matrix([[10]])
+        relative_group_sizes = [1]
+        rep_N = 10
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
         alpha = 0.05
         expected = 0.514351069870
-        actual = multirep.hlt_one_moment_null_approximator(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        actual = multirep.hlt_one_moment_null_approximator(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 5), round(actual.power, 5))
+
+    def calc_sigma_star(self, total_n, rank_x, error_sum_square):
+        return error_sum_square / (total_n-rank_x)
+
+    def calc_delta_es(self, rep_N, hypothesis_sum_square):
+        return hypothesis_sum_square / rep_N
 
     def test_hlt_one_moment_null_approximator_min_rakn_C_U_2(self):
         """
@@ -28,14 +43,23 @@ class TestMultirep(TestCase):
         """
 
         rank_C = 3
-        rank_U = 2
         rank_X = 4
         total_N = 20
         error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850], [0.000000000000000444089209850, 9.59999999999999000000000000]])
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected = 0.203028693139
-        actual = multirep.hlt_one_moment_null_approximator(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.hlt_one_moment_null_approximator(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_hlt_two_moment_null_approximator(self):
@@ -51,7 +75,17 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected = 0.132606902708
-        actual = multirep.hlt_two_moment_null_approximator(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.hlt_two_moment_null_approximator(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_hlt_one_moment_null_approximator_obrien_shieh(self):
@@ -66,8 +100,19 @@ class TestMultirep(TestCase):
         error_sum_square = np.matrix([[9.59999999999999000000000000, 0.000000000000000444089209850], [0.000000000000000444089209850, 9.59999999999999000000000000]])
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
-        expected = 0.229495804549
-        actual = multirep.hlt_one_moment_null_approximator_obrien_shieh(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        # expected = 0.229495804549
+        expected = 0.13261
+        rep_N = 10
+        relative_group_sizes = [1, 1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.hlt_two_moment_null_approximator(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_hlt_two_moment_null_approximator_obrien_shieh(self):
@@ -83,7 +128,18 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected = 0.209176173376
-        actual = multirep.hlt_two_moment_null_approximator_obrien_shieh(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        expected = 0.13261
+        rep_N = 10
+        relative_group_sizes = [1, 1]
+        sigma_star = self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es = self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.hlt_two_moment_null_approximator(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_pbt_one_moment_null_approx(self):
@@ -100,7 +156,17 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected = 0.209723893717
-        actual = multirep.pbt_one_moment_null_approx(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.pbt_one_moment_null_approx(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 4), round(actual.power, 4))
 
     def test_pbt_two_moment_null_approx(self):
@@ -117,7 +183,18 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected =0.222786795810
-        actual = multirep.pbt_two_moment_null_approx(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.pbt_two_moment_null_approx(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
+
         self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_pbt_one_moment_null_approx_obrien_shieh(self):
@@ -134,7 +211,17 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected = 0.214237639104
-        actual = multirep.pbt_one_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.pbt_one_moment_null_approx_obrien_shieh(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_pbt_two_moment_null_approx_obrien_shieh(self):
@@ -151,7 +238,18 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected = 0.205398851860
-        actual = multirep.pbt_two_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N,  alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.pbt_two_moment_null_approx_obrien_shieh(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
+
         self.assertEqual(round(expected, 5), round(actual.power, 5))
 
     def test_wlk(self):
@@ -168,7 +266,17 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected = 0.2221 # 0.138179071626
-        actual = multirep.wlk_two_moment_null_approx(rank_C, rank_U, rank_X, total_N, alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.wlk_two_moment_null_approx(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 4), round(actual.power, 4))
 
     def test_wlk_os(self):
@@ -185,7 +293,17 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected = 0.222089414105
-        actual = multirep.wlk_two_moment_null_approx_obrien_shieh(rank_C, rank_U, rank_X, total_N,  alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.wlk_two_moment_null_approx_obrien_shieh(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 5), round(actual.power, 5))
 
 
@@ -202,7 +320,17 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[1.875, 1.08253175473054], [1.08253175473054, 0.625]])
         alpha = 0.05
         expected = 0.197974983838
-        actual = multirep.special(rank_C, rank_U, rank_X,total_N,alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.special(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 4), round(actual.power, 4))
 
     def test_special_2(self):
@@ -217,7 +345,17 @@ class TestMultirep(TestCase):
         hypothesis_sum_square = np.matrix([[10]])
         alpha = 0.05
         expected = 0.514351069870
-        actual = multirep.special(rank_C, rank_U, rank_X,total_N,alpha, error_sum_square, hypothesis_sum_square)
+        rep_N = total_N
+        relative_group_sizes = [1]
+        sigma_star=self.calc_sigma_star(total_N, rank_X, error_sum_square)
+        delta_es=self.calc_delta_es(rep_N, hypothesis_sum_square)
+        actual = multirep.pbt_one_moment_null_approx(rank_C=rank_C,
+                                                           rank_X=rank_X,
+                                                           relative_group_sizes=relative_group_sizes,
+                                                           rep_N=rep_N,
+                                                           alpha=alpha,
+                                                           sigma_star=sigma_star,
+                                                           delta_es=delta_es)
         self.assertEqual(round(expected, 5), round(actual.power, 5))
 
 
@@ -234,9 +372,10 @@ class TestMultirep(TestCase):
         df1 = 3
         df2 = 4
         omega = 3
+        total_N = 10
 
         expected = Power(0.138179071626, 3, Constants.FMETHOD_NORMAL_LR)
-        actual = multirep._multi_power(alpha, df1, df2, omega)
+        actual = multirep._multi_power(alpha, df1, df2, omega, total_N)
         self.assertEqual(round(expected.power, 4), round(actual.power, 4))
         self.assertEqual(expected.noncentrality_parameter, actual.noncentrality_parameter)
 

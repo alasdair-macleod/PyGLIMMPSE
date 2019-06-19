@@ -1,16 +1,39 @@
 from unittest import TestCase
 import numpy as np
-from pyglimmpse.finv import finv
 
 from pyglimmpse import unirep
 from pyglimmpse.model import epsilon
 
 from pyglimmpse.constants import Constants
-from pyglimmpse.input import Option
 from pyglimmpse.model.epsilon import Epsilon
-from pyglimmpse.unirep import _err_checking, _calc_multipliers_est_sigma, _calc_undf1_undf2, \
-    _geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon, OptionalArgs
+from pyglimmpse.unirep import _geisser_greenhouse_muller_edwards_simpson_taylor_2007, _calc_epsilon, OptionalArgs
 
+
+class ConfidenceInterval(object):
+    """
+    Class holding required information to calculate confidence intervals.
+    """
+
+    def __init__(self,
+                 beta_known: bool = True,
+                 lower_tail: float = 0.05,
+                 upper_tail: float = 0.0,
+                 rank_est: int = 1,
+                 n_est: int = 1):
+        """
+        Class describing a Confidence Interval
+        :param beta_known:
+        :param lower_tail:
+        :param upper_tail:
+        :param rank_est:
+        :param n_est:
+        :param kwargs:
+        """
+        self.beta_known = beta_known
+        self.lower_tail = lower_tail
+        self.upper_tail = upper_tail
+        self.rank_est = rank_est
+        self.n_est = n_est
 
 class TestUnirep(TestCase):
 
@@ -93,20 +116,22 @@ class TestUnirep(TestCase):
     def test_unirep_power_estimated_sigma_hf(self):
         """ case 1: should return expected value, for hf method """
         expected = 0.98471
-        approximation = Constants.HF
-        unirepmethod = Constants.UCDF_MULLER2004_APPROXIMATION
+        unirep_method = Constants.HF
+        approximation_method = Constants.UCDF_MULLER2004_APPROXIMATION
         alpha = 0.05
         rank_C = 1
         rank_U = 4
         rank_X = 1
         total_N = 20
 
-        n_est = 10
-        rank_est = 1
+        confidence_interval = ConfidenceInterval(beta_known=False,
+                                                 lower_tail=0.01,
+                                                 upper_tail=0.01,
+                                                 n_est=10,
+                                                 rank_est=1)
+
         tolerance = 0.000000000000001
 
-        alpha_cl = 0.01
-        alpha_cu = 0.01
 
         hypo_sum_square = np.matrix([[0.3125, 0.625, -0.625, 0.3125],
                                      [0.625, 1.25, -1.25, 0.625],
@@ -117,30 +142,26 @@ class TestUnirep(TestCase):
                                       [1.055e-15, -8.24e-18, 1.05659, -3.19e-17],
                                       [1.648e-17, 5.624e-16, -3.19e-17, 0.89699]])
         exeps = 0.7203684
-        eps = 0.7203684
-
-        optional_args = OptionalArgs()
-        optional_args.approximation = approximation
-        optional_args.epsilon_estimator = Constants.EPSILON_MULLER2004
-        optional_args.unirepmethod = Constants.SIGMA_KNOWN
-        optional_args.n_est = n_est
-        optional_args.rank_est = rank_est
-        optional_args.alpha_cl = alpha_cl
-        optional_args.alpha_cu = alpha_cu
-        optional_args.n_ip = 1
-        optional_args.rank_ip = 1
-        optional_args.tolerance = tolerance
+        # eps = 0.7203684
+        sigma_star = error_sum_square / (total_N - rank_X)
+        eps = _calc_epsilon(sigma_star=sigma_star, rank_U=rank_U)
 
         result = unirep._unirep_power_estimated_sigma(rank_C=rank_C,
                                                       rank_U=rank_U,
                                                       total_N=total_N,
                                                       rank_X=rank_X,
-                                                      error_sum_square=error_sum_square,
+                                                      sigma_star=error_sum_square/(total_N-rank_X),
                                                       hypo_sum_square=hypo_sum_square,
                                                       expected_epsilon=exeps,
                                                       epsilon=eps,
                                                       alpha=alpha,
-                                                      optional_args=optional_args)
+                                                      unirep_method=unirep_method,
+                                                      epsilon_estimator=Constants.EPSILON_MULLER2004,
+                                                      unirepmethod=Constants.SIGMA_KNOWN,
+                                                      confidence_interval=confidence_interval,
+                                                      n_ip=1,
+                                                      rank_ip=1,
+                                                      tolerance=tolerance)
         actual = result.power
         self.assertAlmostEqual(actual, expected, places=5)
 
@@ -153,15 +174,16 @@ class TestUnirep(TestCase):
         rank_X = 1
         total_N = 20
 
-        alpha_cl = 0.01
-        alpha_cu = 0.01
+        confidence_interval = ConfidenceInterval(beta_known=False,
+                                                 lower_tail=0.01,
+                                                 upper_tail=0.01,
+                                                 n_est=10,
+                                                 rank_est=1)
+
         tolerance = 0.000000000000001
 
-        approximation = Constants.GG
-        unirepmethod = Constants.UCDF_MULLER2004_APPROXIMATION
-
-        n_est=10
-        rank_est=1
+        unirep_method = Constants.GG
+        approximation_method = Constants.UCDF_MULLER2004_APPROXIMATION
 
         hypo_sum_square = np.matrix([[0.3125, 0.625, -0.625, 0.3125],
                                      [0.625, 1.25, -1.25, 0.625],
@@ -182,29 +204,25 @@ class TestUnirep(TestCase):
         ep = _calc_epsilon(sigma_star, rank_U)
 
         exeps = 0.7203684
-        eps = 0.7203684
-
-        optional_args = OptionalArgs()
-        optional_args.approximation = approximation
-        optional_args.epsilon_estimator = Constants.EPSILON_MULLER2004
-        optional_args.unirepmethod = Constants.SIGMA_KNOWN
-        optional_args.n_est = n_est
-        optional_args.rank_est = rank_est
-        optional_args.alpha_cl = alpha_cl
-        optional_args.alpha_cu = alpha_cu
-        optional_args.n_ip = 1
-        optional_args.rank_ip = 1
-        optional_args.tolerance = tolerance
+        # eps = 0.7203684
+        sigma_star = error_sum_square / (total_N - rank_X)
+        eps = _calc_epsilon(sigma_star=sigma_star, rank_U=rank_U)
 
         result = unirep._unirep_power_estimated_sigma(rank_C=rank_C,
                                                       rank_U=rank_U,
                                                       total_N=total_N,
                                                       rank_X=rank_X,
-                                                      error_sum_square=error_sum_square,
+                                                      sigma_star=error_sum_square/(total_N-rank_X),
                                                       hypo_sum_square=hypo_sum_square,
                                                       expected_epsilon=exeps,
                                                       epsilon=eps,
                                                       alpha=alpha,
-                                                      optional_args=optional_args)
+                                                      unirep_method=unirep_method,
+                                                      epsilon_estimator=Constants.EPSILON_MULLER2004.value,
+                                                      unirepmethod=Constants.SIGMA_KNOWN.value,
+                                                      confidence_interval=confidence_interval,
+                                                      n_ip=1,
+                                                      rank_ip=1,
+                                                      tolerance=tolerance)
         actual = result.power
         self.assertAlmostEqual(actual, expected, places=5)

@@ -40,7 +40,7 @@ class Constants(Enum):
     FMETHOD_MISSING = '5 Power missing'
 
     COLLAPSE = 'special'
-    HLT = 'Hotelling - Lawley trace'
+    HLT = 'Hotelling Lawley Trace'
     PBT = 'Pillai - Bartletttrace'
     WLK = 'Wilks Lambda'
     UN = 'uncorrected univariate approach to repeated measures'
@@ -55,4 +55,9 @@ class Constants(Enum):
     SIGMA_KNOWN = 'sigma known'
     SIGMA_ESTIMATED = 'sigma estimated'
     INTERNAL_PILOT = 'internal pilot'
+
+    INVALID_DISTRIBUTION_NONCENTRALITY_PARAMETER = 'INVALID_DISTRIBUTION_NONCENTRALITY_PARAMETER'
+
+
+    ERR_NOT_POSITIVE_DEFINITE = 'Sigma star is not positive definite.'
 
