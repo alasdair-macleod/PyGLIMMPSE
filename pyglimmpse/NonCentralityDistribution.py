@@ -222,7 +222,7 @@ class NonCentralityDistribution(object):
                     return probf(fcrit=Fstar,
                                  df1=Nstar,
                                  df2=1,
-                                 noncen=lastPositiveNoncentrality)
+                                 noncen=lastPositiveNoncentrality)[0]
                 elif lastPositiveNoncentrality == 0 and lastNegativeNoncentrality > 0:
                     # print("fcrit", 1 / Fstar)
                     # print("df1", 1)
