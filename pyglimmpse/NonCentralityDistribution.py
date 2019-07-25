@@ -94,39 +94,39 @@ class NonCentralityDistribution(object):
             sigmaStarInverse = self.getSigmaStarInverse(sigmaStar, test)
             H1matrix = thetaDiff.T * self.T1 * thetaDiff * sigmaStarInverse
             self.H1 = np.trace(H1matrix)
-            # Matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s.
-            self.S = self.FT1.T * thetaDiff * sigmaStarInverse * thetaDiff.T * self.FT1 * (1 / self.H1)
-            # We use the S matrix to generate the F-critical, numerical df's, and denominator df's
-            # for a central F distribution.  The resulting F distribution is used as an approximation
-            # for the distribution of the non-centrality parameter.
-            # See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details.
-            self.sEigenValues, svecs = np.linalg.eig(self.S)
-            self.sEigenValues = np.sort(self.sEigenValues)[::-1]
-            svecs = np.flip(svecs, 1)
-            svec = np.matrix(svecs).T
+            if self.H1 > 0:
+                # Matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s.
+                self.S = self.FT1.T * thetaDiff * sigmaStarInverse * thetaDiff.T * self.FT1 * (1 / self.H1)
+                # We use the S matrix to generate the F-critical, numerical df's, and denominator df's
+                # for a central F distribution.  The resulting F distribution is used as an approximation
+                # for the distribution of the non-centrality parameter.
+                # See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details.
+                self.sEigenValues, svecs = np.linalg.eig(self.S)
+                self.sEigenValues = np.sort(self.sEigenValues)[::-1]
+                svecs = np.flip(svecs, 1)
+                svec = np.matrix(svecs).T
 
-            if len(self.sEigenValues) > 0:
-                self.H0 = self.H1 *(1 - self.sEigenValues[0])
-            if self.H0 <= 0:
-                self.H0 = 0
+                if len(self.sEigenValues) > 0:
+                    self.H0 = self.H1 *(1 - self.sEigenValues[0])
+                if self.H0 <= 0:
+                    self.H0 = 0
 
-            for value in self.sEigenValues:
-                if value > 0:
-                    self.sStar += 1
-            # TODO: throw error if sStar is <= 0
-            # TODO: NO: throw error if sStar != sEigenValues.length instead???
-            # create square matrix using these
-            self.mzSq = svec * self.FT1.T * CGaussian * (1 / stddevG)
-            i = 0
-            while i < self.mzSq.shape[0]:
-                j = 0
-                #while j < self.mzSq.getColumnDimension():
-                while j <  self.mzSq.shape[1]:
-                    entry = self.mzSq[i, j]
-                    self.mzSq[i, j] = entry * entry
-                    j += 1
-                i += 1
-            pass
+                for value in self.sEigenValues:
+                    if value > 0:
+                        self.sStar += 1
+                # TODO: throw error if sStar is <= 0
+                # TODO: NO: throw error if sStar != sEigenValues.length instead???
+                # create square matrix using these
+                self.mzSq = svec * self.FT1.T * CGaussian * (1 / stddevG)
+                i = 0
+                while i < self.mzSq.shape[0]:
+                    j = 0
+                    #while j < self.mzSq.getColumnDimension():
+                    while j <  self.mzSq.shape[1]:
+                        entry = self.mzSq[i, j]
+                        self.mzSq[i, j] = entry * entry
+                        j += 1
+                    i += 1
         except Exception as e:
             raise e
 
