@@ -55,6 +55,8 @@ def upoly(factor_list):
         return_list['u_threeways'] = u_threeways
 
     return return_list
+
+
 def orpol(x, maxdegree=None, weights=None):
     """
     The orpol function generates orthogonal polynomials on a discrete set of points.
