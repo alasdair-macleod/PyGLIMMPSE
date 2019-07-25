@@ -42,10 +42,11 @@ def samplesize(test,
     lower_power = Power()
     smallest_group_size = starting_smallest_group_size
     upper_bound_smallest_group_size = starting_smallest_group_size
+    upper_bound_total_N = upper_bound_smallest_group_size * sum(relative_group_sizes)
 
     # find a samplesize which produces power greater than or equal to the desired power
     while (np.isnan(upper_power.power) or upper_power.power <= targetPower)\
-            and upper_bound_smallest_group_size < max_n:
+            and upper_bound_total_N < max_n:
 
         upper_bound_total_N = upper_bound_smallest_group_size * sum(relative_group_sizes)
         if upper_bound_total_N >= max_n:
@@ -66,6 +67,8 @@ def samplesize(test,
 
     # find a samplesize for the per group n/2 + 1 to define the lower bound of our search.
     #undo last doubling
+    if upper_power.power is None or math.isnan(upper_power.power):
+        raise ValueError('Could not find a samplesize which achieves the target power. Please check your design.')
     upper_bound_smallest_group_size = upper_bound_smallest_group_size / 2
     # note we are using floor division
     lower_bound_smallest_group_size = upper_bound_smallest_group_size//2
