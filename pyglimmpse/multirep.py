@@ -896,7 +896,7 @@ def calc_error_sum_square(total_n, rank_x, sigma_star):
     :return: error sums of squares matrix
     """
     nu_e = total_n - rank_x
-    return nu_e * sigma_star
+    return float(nu_e) * sigma_star
 
 def calc_hypothesis_sum_square(repeated_rows_in_design_matrix, delta):
-    return repeated_rows_in_design_matrix * delta
+    return float(repeated_rows_in_design_matrix) * delta
