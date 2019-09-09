@@ -171,4 +171,12 @@ class TestProbf(TestCase):
 
         x = 1
 
+    def test_probf_chi2(self):
+        """ Should have the correct power and fmethod """
+        expected = (0.031833, Constants.FMETHOD_CHI2)
+        result = probf(66.3490, 1, 10**10, 100)
+        actual = (round(result[0], 6), result[1])
+        self.assertEqual(expected, actual)
+
+
 

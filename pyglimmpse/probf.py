@@ -1,5 +1,5 @@
 from scipy import special
-from scipy.stats import norm, poisson, beta
+from scipy.stats import norm, poisson, beta, ncx2
 import math
 
 from pyglimmpse.constants import Constants
@@ -40,6 +40,8 @@ def probf(fcrit, df1, df2, noncen):
           and 10 ** 0.6 <= df2 < 10**9.2
           and noncen < 10**6.4):
         prob, fmethod = _tiku_approximation(df1, df2, fcrit, noncen)
+    elif df2 > 10**9.4:
+        prob, fmethod = _chi2_approximation(df1, fcrit, noncen)
     else:
         zscore = _get_zscore(df1, df2, fcrit, noncen)
         prob, fmethod = _normal_approximation(zscore)
@@ -79,6 +81,10 @@ def _tiku_approximation(df1, df2, fcrit, noncen):
     fcrit_tiku = (fcrit - b_tiku) / c_tiku
     prob = special.ncfdtr(df1_tiku, df2, 0, fcrit_tiku)
     fmethod = Constants.FMETHOD_TIKU
+    return prob, fmethod
+def _chi2_approximation(df1, fcrit, noncen):
+    prob = ncx2.cdf(x=fcrit, df=df1, nc=noncen)
+    fmethod = Constants.FMETHOD_CHI2
     return prob, fmethod
 def _nonadjusted(df1, df2, fcrit, noncen):
     """CDF function (no approximation)"""

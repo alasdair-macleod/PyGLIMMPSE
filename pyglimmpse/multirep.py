@@ -859,7 +859,7 @@ def calc_properties(delta_es, rank_X, relative_group_sizes, rep_N, sigma_star):
     :return:
     """
     rank_U = np.shape(sigma_star)[0]
-    total_N = rep_N * sum(relative_group_sizes)
+    total_N = rep_N * sum(relative_group_sizes) * 1.0
     error_sum_square = calc_error_sum_square(total_n=total_N,
                                              rank_x=rank_X,
                                              sigma_star=sigma_star)
