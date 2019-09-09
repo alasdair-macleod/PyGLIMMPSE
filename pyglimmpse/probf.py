@@ -1,5 +1,5 @@
 from scipy import special
-from scipy.stats import norm, poisson, beta, chi2
+from scipy.stats import norm, poisson, beta, ncx2
 import math
 
 from pyglimmpse.constants import Constants
@@ -83,7 +83,7 @@ def _tiku_approximation(df1, df2, fcrit, noncen):
     fmethod = Constants.FMETHOD_TIKU
     return prob, fmethod
 def _chi2_approximation(df1, fcrit, noncen):
-    prob = chi2.cdf(fcrit, df1, noncen)
+    prob = ncx2.cdf(x=fcrit, df=df1, nc=noncen)
     fmethod = Constants.FMETHOD_CHI2
     return prob, fmethod
 def _nonadjusted(df1, df2, fcrit, noncen):
