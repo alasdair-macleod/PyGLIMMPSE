@@ -683,7 +683,7 @@ def special(rank_C: float,
 
     if _valid_df2_eigenvalues(eval_HINVE, df2, tolerance):
         omega = eval_HINVE[0] * (total_N - rank_X)
-        return _multi_power(alpha, df1, df2, omega, total_N)
+        return _multi_power(alpha, df1, df2, omega, total_N, **kwargs)
     return _undefined_power()
 
 

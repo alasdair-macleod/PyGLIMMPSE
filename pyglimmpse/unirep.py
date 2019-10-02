@@ -1124,8 +1124,10 @@ def _calc_undf1_undf2(unirep_method, exeps, nue, rank_C, rank_U):
     if rank_U > nue and (unirep_method == Constants.UN or unirep_method == Constants.GG or unirep_method == Constants.BOX):
         warnings.warn('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are '
                       'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
-        raise GlimmpseValidationException('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are'
-                      'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
+        '''During the sample size searching process, the smaller sample size can raise this error but we dont want to 
+        stop searching '''
+        # raise GlimmpseValidationException('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are'
+        #               'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
     if np.isnan(exeps) or nue <= 0:
         raise GlimmpseValidationException("exeps is NaN or total_N  <= rank_X")
     undf1 = rank_C * rank_U

@@ -113,11 +113,12 @@ def samplesize(test,
                      delta_es=delta_es,
                      **kwargs)
 
-        if power.power < targetPower:
+        if (power.power < targetPower) or np.isnan(power.power):
+            total_per_group_n = total_per_group_n + 1
             power = test(rank_C=rank_C,
                          rank_X=rank_X,
                          relative_group_sizes=relative_group_sizes,
-                         rep_N=total_per_group_n+1,
+                         rep_N=total_per_group_n,
                          alpha=alpha,
                          sigma_star=sigma_star,
                          delta_es=delta_es,
