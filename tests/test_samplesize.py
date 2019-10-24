@@ -32,7 +32,7 @@ class TestSamplesize(TestCase):
                                             delta_es=delta,
                                             relative_group_sizes=groups,
                                             starting_smallest_group_size=10)
-        self.assertEqual(49, size)
+        self.assertEqual(50, size)
         self.assertEqual(round(power.power, 8), round(0.90101951, 8))
 
     def test_samplesize_hlt_multi_group(self):
@@ -55,7 +55,7 @@ class TestSamplesize(TestCase):
                                             relative_group_sizes=groups)
 
         self.assertEqual(round(0.90459334, 8), round(power.power, 8))
-        self.assertEqual(360, size)
+        self.assertEqual(369, size)
 
 
     # def test_samplesize_uncorrected(self):
