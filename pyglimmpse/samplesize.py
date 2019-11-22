@@ -89,6 +89,15 @@ def samplesize(test,
     # 3. The upper bound != lower bound and lower bound is less than the required power.
     # In this case we bisection search
     #
+    while math.isnan(lower_power.power) and lower_bound_smallest_group_size < upper_bound_smallest_group_size:
+        lower_bound_smallest_group_size = lower_bound_smallest_group_size + 1
+        lower_power = test(rank_C=rank_C,
+                           rank_X=rank_X,
+                           relative_group_sizes=relative_group_sizes,
+                           rep_N=lower_bound_smallest_group_size,
+                           alpha=alpha,
+                           sigma_star=sigma_star,
+                           delta_es=delta_es)
     if lower_power.power >= targetPower:
         total_N = lower_bound_smallest_group_size * sum(relative_group_sizes)
         power = lower_power
