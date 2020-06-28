@@ -676,6 +676,10 @@ def special(rank_C: float,
                                                                                relative_group_sizes=relative_group_sizes,
                                                                                rep_N=rep_N,
                                                                                sigma_star=sigma_star)
+    try:
+        np.linalg.cholesky(error_sum_square)
+    except:
+        return _undefined_power()
     min_rank_C_U = min(rank_C, rank_U)
     df1 = _df1_rank_c_u(rank_C, rank_U)
     df2 = total_N - rank_X - rank_U + 1
