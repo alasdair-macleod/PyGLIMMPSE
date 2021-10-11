@@ -39,11 +39,12 @@ def ranksymm(matrix: np.matrix, tolerance: float) -> np.matrix:
         raise GlimmpseValidationException("Matrix {0} has MAX(ABS(all elements)) = exact zero.".format(matrix))
 
     nmatrix = matrix / maxabsval
-    evals = np.linalg.eigvals(nmatrix)
-
     # matrix not symmetric
     if abs(nmatrix - nmatrix.T).max() >= tolerance ** 0.5:
         raise GlimmpseValidationException("Matrix {0} is not symmetric within sqrt(tolerance).".format(matrix))
+    # get the eigenvalues of nmatrix using a singular value decomposition
+    # evals is an array of dimension 1 x b
+    evals, vecs = np.linalg.eigh(nmatrix)
 
     # matrix not non-negative definite
     if evals.min() < -tolerance ** 0.5:

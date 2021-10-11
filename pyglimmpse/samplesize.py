@@ -40,9 +40,13 @@ def samplesize(test,
     # declare variables prior to integration
     upper_power = Power()
     lower_power = Power()
+    lowest_realizeable_power = Power()
+    lowest_realizeable_total_N = 0
     smallest_group_size = starting_smallest_group_size
     upper_bound_smallest_group_size = starting_smallest_group_size
     upper_bound_total_N = upper_bound_smallest_group_size * sum(relative_group_sizes)
+
+    smallest_design_found = False
 
     # find a samplesize which produces power greater than or equal to the desired power
     while (np.isnan(upper_power.power) or upper_power.power <= targetPower)\
@@ -64,11 +68,19 @@ def samplesize(test,
             raise ValueError('Upper power is not calculable. Check that your design is realisable.'
                              ' Usually the easies way to do this is to increase sample size')
         upper_bound_smallest_group_size += upper_bound_smallest_group_size
+        if not np.isnan(upper_power.power) and not smallest_design_found:
+            lowest_realizeable_power = upper_power
+            lowest_realizeable_total_N = upper_bound_total_N
+            smallest_design_found = True
+
+    if lowest_realizeable_power.power >= targetPower:
+        return lowest_realizeable_total_N, lowest_realizeable_power
 
     # find a samplesize for the per group n/2 + 1 to define the lower bound of our search.
     #undo last doubling
     if upper_power.power is None or math.isnan(upper_power.power):
         raise ValueError('Could not find a samplesize which achieves the target power. Please check your design.')
+
     upper_bound_smallest_group_size = upper_bound_smallest_group_size / 2
     # note we are using floor division
     lower_bound_smallest_group_size = upper_bound_smallest_group_size//2

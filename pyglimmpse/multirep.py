@@ -886,8 +886,10 @@ def _calc_eval(min_rank_C_U, error_sum_square, hypothesis_sum_square):
     inverse_error_sum = np.linalg.inv(np.linalg.cholesky(error_sum_square))
     hei_orth = inverse_error_sum * hypothesis_sum_square * inverse_error_sum.T
     hei_orth_symm = (hei_orth + hei_orth.T) / 2
-    eigenvaluesorted = np.sort(linalg.eigh(hei_orth_symm, eigvals_only=True))[::-1]
-    eval = eigenvaluesorted[0:min_rank_C_U]
+    # get the eigenvalues of hei_orth_symm using a singular value decomposition
+    # eigenvalues is an array of dimension 1 x b
+    eigenvalues = np.linalg.svd(hei_orth_symm, full_matrices=False, compute_uv=False, hermitian=True)
+    eval = eigenvalues[0:min_rank_C_U]
     return eval
 
 def calc_error_sum_square(total_n, rank_x, sigma_star):
