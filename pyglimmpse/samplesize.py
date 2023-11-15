@@ -7,6 +7,7 @@ import sys
 from pyglimmpse.constants import Constants
 from pyglimmpse.model.power import Power, subtrtact_target_power
 from scipy import optimize
+from pyglimmpse.exceptions.glimmpse_exception import GlimmpseValidationException
 
 
 def samplesize(test,
@@ -57,16 +58,19 @@ def samplesize(test,
             upper_bound_smallest_group_size = upper_bound_total_N/max_n
 
         # call power for this sample size
-        upper_power = test(rank_C=rank_C,
-                           rank_X=rank_X,
-                           relative_group_sizes=relative_group_sizes,
-                           rep_N=upper_bound_smallest_group_size,
-                           alpha=alpha,
-                           sigma_star=sigma_star,
-                           delta_es=delta_es)
-        if type(upper_power.power) is str:
-            raise ValueError('Upper power is not calculable. Check that your design is realisable.'
-                             ' Usually the easies way to do this is to increase sample size')
+        try:
+            upper_power = test(rank_C=rank_C,
+                               rank_X=rank_X,
+                               relative_group_sizes=relative_group_sizes,
+                               rep_N=upper_bound_smallest_group_size,
+                               alpha=alpha,
+                               sigma_star=sigma_star,
+                               delta_es=delta_es)
+            if type(upper_power.power) is str:
+                raise ValueError('Upper power is not calculable. Check that your design is realisable.'
+                                 ' Usually the easies way to do this is to increase sample size')
+        except GlimmpseValidationException as e:
+            upper_power.power == np.nan
         upper_bound_smallest_group_size += upper_bound_smallest_group_size
         if not np.isnan(upper_power.power) and not smallest_design_found:
             lowest_realizeable_power = upper_power

@@ -51,6 +51,6 @@ class Epsilon:
     def esigEvals(self):
         # get the eigenvalues of self.esig using a singular value decomposition
         # seval is an array of dimension 1 x b
-        seval = np.linalg.svd(self.esig, full_matrices=False, compute_uv=False, hermitian=True).T
+        seval = np.matrix(np.linalg.svd(self.esig, full_matrices=False, compute_uv=False, hermitian=True)).T
         esigEvals = np.sum(seval * seval.T)
         return esigEvals
