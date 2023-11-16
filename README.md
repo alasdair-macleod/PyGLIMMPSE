@@ -8,5 +8,5 @@ python setup.py sdist
 
 python setup.py bdist_wheel
 
-python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*29*
+python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*33*
 `
