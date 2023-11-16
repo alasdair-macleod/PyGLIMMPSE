@@ -43,7 +43,7 @@ class TestRanksymm(TestCase):
             res = ranksymm(m, 0.0000000000001)
 
     def test_negativedefine(self):
-        """It should raise an exception if the matrix is negative defined"""
+        """It should raise an exception if the matrix is negative definite"""
         m = np.matrix([[1, 2], [2, 1]])
 
         with self.assertRaises(GlimmpseValidationException):

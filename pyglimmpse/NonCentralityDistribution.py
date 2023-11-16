@@ -79,7 +79,6 @@ class NonCentralityDistribution(object):
             #  get design matrix for fixed parameters only
             #self.qF = FEssence.getColumnDimension()
             self.qF = FEssence.shape[1]
-            #  a = CFixedRand.getCombinedMatrix().getRowDimension();
             #  get fixed contrasts
 
             #  build intermediate terms h1, S
@@ -95,29 +94,35 @@ class NonCentralityDistribution(object):
             H1matrix = thetaDiff.T * self.T1 * thetaDiff * sigmaStarInverse
             self.H1 = np.trace(H1matrix)
             if self.H1 > 0:
+                # We could use this to truncate the eigenvectors and eigenvalues
+                # thus removing 'zero dust' values
+                # a = thetaDiff.shape[0]
+                # b = thetaDiff.shape[1]
+                # s = min(a,b)
+
                 # Matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s.
                 self.S = self.FT1.T * thetaDiff * sigmaStarInverse * thetaDiff.T * self.FT1 * (1 / self.H1)
-                # We use the S matrix to generate the F-critical, numerical df's, and denominator df's
+                self.S = self.forceSymmetric(self.S)
+                # We use the S matrix to generate the F critical value, numerical df's, and denominator df's
                 # for a central F distribution.  The resulting F distribution is used as an approximation
                 # for the distribution of the non-centrality parameter.
                 # See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details.
-                self.sEigenValues, svecs = np.linalg.eig(self.S)
-                self.sEigenValues = np.sort(self.sEigenValues)[::-1]
-                svecs = np.flip(svecs, 1)
-                svec = np.matrix(svecs).T
 
-                if len(self.sEigenValues) > 0:
-                    self.H0 = self.H1 *(1 - self.sEigenValues[0])
+                # get the eigenvalues of self.S using a singular value decomposition
+                svecsT, sEigenValuesT, vh = np.linalg.svd(self.S, full_matrices=False, compute_uv=True, hermitian=True)
+                self.sEigenValues = np.matrix(sEigenValuesT).T
+
+                self.H0 = self.H1 * (1 - self.sEigenValues.item(0))
                 if self.H0 <= 0:
                     self.H0 = 0
 
-                for value in self.sEigenValues:
+                for value in self.sEigenValues[0]:
                     if value > 0:
                         self.sStar += 1
                 # TODO: throw error if sStar is <= 0
                 # TODO: NO: throw error if sStar != sEigenValues.length instead???
                 # create square matrix using these
-                self.mzSq = svec * self.FT1.T * CGaussian * (1 / stddevG)
+                self.mzSq = svecsT * self.FT1.T * CGaussian * (1 / stddevG)
                 i = 0
                 while i < self.mzSq.shape[0]:
                     j = 0
@@ -246,6 +251,14 @@ class NonCentralityDistribution(object):
 
                 # create a central F to approximate the distribution of the non-centrality parameter
                 # return power based on the non-central F
+                if isinstance(nuStarPositive, complex):
+                    nuStarPositive = nuStarPositive.real
+                if isinstance(nuStarNegative, complex):
+                    nuStarNegative = nuStarNegative.real
+                if isinstance(lambdaStarPositive, complex):
+                    lambdaStarPositive = lambdaStarPositive.real
+                if isinstance(lambdaStarNegative, complex):
+                    lambdaStarNegative = lambdaStarNegative.real
                 x = (nuStarNegative * lambdaStarNegative) / (nuStarPositive * lambdaStarPositive)
                 return f.cdf(x, nuStarPositive, nuStarNegative)
         except GlimmpseCalculationException as e:
@@ -298,7 +311,9 @@ class NonCentralityDistribution(object):
         """generated source for method isPositiveDefinite"""
         if m.shape[0] != m.shape[1]:
             raise GlimmpseValidationException("Matrix must be non-null, square")
-        eigenvalues = np.linalg.eigvals(m)
+        # get the eigenvalues of m using a singular value decomposition
+        # m is an array of dimension 1 x b
+        eigenvalues = np.linalg.svd(m, full_matrices=False, compute_uv=False, hermitian=True)
         test = [val > 0.0 for val in eigenvalues]
         return all(test)
 
@@ -312,7 +327,7 @@ class NonCentralityDistribution(object):
         """
         # check bounds H0 ,H1
         if self.H1 < self.H0:
-            raise GlimmpseValidationException("H1 is greater than H0")
+            raise GlimmpseValidationException("H0 is greater than H1")
         elif round(self.H1, 12) == round(self.H0, 12):
             return 0
         else:

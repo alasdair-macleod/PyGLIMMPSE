@@ -60,7 +60,9 @@ class TestUnirep(TestCase):
     def test_chi_muller_muller_barton_1989(self):
         expected = 0.3412303
         actual = unirep._chi_muller_muller_barton_1989(sigma_star=np.matrix([[1, 2, 3], [3, 4, 5], [4, 5, 6]]),
-                                                       rank_U=3, total_N=20, rank_X=5)
+                                                       rank_U=3,
+                                                       total_N=20,
+                                                       rank_X=5)
         self.assertAlmostEqual(actual, expected, places=6)
 
     def test_chi_muller_muller_edwards_simpson_taylor_2007(self):

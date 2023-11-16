@@ -1,3 +1,4 @@
+import math
 import warnings
 import inspect
 import numpy as np
@@ -195,7 +196,9 @@ def _unirep_power(epsilon_estimator,
                                               **kwargs)
 
     if sigma_source == Constants.INTERNAL_PILOT:
-        sigmastareval = np.linalg.eigvals(sigma_star)
+        # get the eigenvalues of sigma_star using a singular value decomposition
+        # sigmastareval is an array of dimension 1 x b
+        sigmastareval = np.linalg.svd(sigma_star, full_matrices=False, compute_uv=False, hermitian=True)
         power = _unirep_power_known_sigma_internal_pilot(rank_C,
                                                          rank_U,
                                                          total_N,
@@ -618,7 +621,7 @@ def _geisser_greenhouse_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix
 
     nu = total_N - rank_X
     expt1 = 2 * nu * epsilon.slam2 + nu ** 2 * epsilon.slam1
-    expt2 = nu * (nu + 1) * epsilon.slam2 + nu * epsilon.nameME()
+    expt2 = nu * (nu + 1) * epsilon.slam2 + nu * epsilon.esigEvals()
 
     # Define GG Approx E(.) for Method 1
     expected_epsilon = (1 / rank_U) * (expt1 / expt2)
@@ -753,8 +756,11 @@ def _hyuhn_feldt_muller_edwards_simpson_taylor_2007(sigma_star: np.matrix, rank_
     epsilon = _calc_epsilon(sigma_star, rank_U)
     # Computation of EXP(T1) and EXP(T2)
     nu = total_N - rank_X
+    # for valid error degrees of freedom, nu must be strictly greater than 4
+    if nu < 4:
+        return np.nan
     expt1 = 2 * nu * epsilon.slam2 + nu ** 2 * epsilon.slam1
-    expt2 = nu * (nu + 1) * epsilon.slam2 + nu * epsilon.nameME()
+    expt2 = nu * (nu + 1) * epsilon.slam2 + nu * epsilon.esigEvals()
     num01 = (1 / rank_U) * ((nu + 1) * expt1 - 2 * expt2)
     den01 = nu * expt2 - expt1
     expected_epsilon = num01 / den01
@@ -1129,7 +1135,7 @@ def _calc_undf1_undf2(unirep_method, exeps, nue, rank_C, rank_U):
         # raise GlimmpseValidationException('Power is missing, because Uncorrected, Geisser-Greenhouse and Box tests are'
         #               'poorly behaved (super low power and test size) when B > N-R, i.e., HDLSS.')
     if np.isnan(exeps) or nue <= 0:
-        raise GlimmpseValidationException("exeps is NaN or total_N  <= rank_X")
+        raise GlimmpseValidationException(Constants.ERR_ERROR_DEG_FREEDOM.value)
     undf1 = rank_C * rank_U
     undf2 = rank_U * nue
     return undf1, undf2

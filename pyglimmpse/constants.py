@@ -61,4 +61,6 @@ class Constants(Enum):
 
 
     ERR_NOT_POSITIVE_DEFINITE = 'Sigma star is not positive definite.'
+    ERR_ERROR_DEG_FREEDOM = 'Error degrees of freedom must be positive. To achieve this increase smallest group size'
+
 

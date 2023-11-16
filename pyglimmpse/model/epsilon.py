@@ -5,7 +5,6 @@ from pyglimmpse.exceptions.glimmpse_exception import GlimmpseValidationException
 
 class Epsilon:
     """
-    LIBRARY?????
     This class produces matrices required for Geisser-Greenhouse,
     Huynh-Feldt or uncorrected repeated measures power calculations. It
     is the first step. Program uses approximations of expected values of
@@ -38,7 +37,8 @@ class Epsilon:
         # the USUAL sigma. This cov matrix is that of (Y-YHAT)*U, not of (Y-YHAT).
         # The covariance matrix is normalized to minimize numerical problems
         self.esig = sigma_star / np.trace(sigma_star)
-        seigval = np.linalg.eigvals(self.esig)
+        # get the eigenvalues of self.esig using a singular value decomposition
+        seigval = np.linalg.svd(self.esig, full_matrices=False, compute_uv=False, hermitian=True)
         deigval_array, mtp_array = np.unique(seigval, return_counts=True)
         self.slam1 = np.sum(seigval) ** 2
         self.slam2 = np.sum(np.square(seigval))
@@ -48,7 +48,9 @@ class Epsilon:
         self.deigval = np.matrix(deigval_array).T
         self.mtp = np.matrix(mtp_array).T
 
-    def nameME(self):
-        seval = np.matrix(np.linalg.eigvals(self.esig)).T
-        nameME = np.sum(seval * seval.T)
-        return nameME
+    def esigEvals(self):
+        # get the eigenvalues of self.esig using a singular value decomposition
+        # seval is an array of dimension 1 x b
+        seval = np.matrix(np.linalg.svd(self.esig, full_matrices=False, compute_uv=False, hermitian=True)).T
+        esigEvals = np.sum(seval * seval.T)
+        return esigEvals
